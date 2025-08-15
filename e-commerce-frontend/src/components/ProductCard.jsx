@@ -63,7 +63,7 @@ const ProductCard = ({
         )}
 
         {/* Wishlist button */}
-        <div className="absolute top-2 right-2 bg-white hover:bg-pink-100 z-20 shadow rounded-full p-1 transition group">
+        <div className="absolute top-2 right-2 bg-white hover:bg-pink-100 z-20 shadow rounded-full p-0 transition group">
           <div className="relative">
             <IconButton
               aria-label="wishlist"
