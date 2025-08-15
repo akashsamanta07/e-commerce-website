@@ -1,0 +1,105 @@
+/* Make Swiper 60% width on large screens, 100% on less than lg screens */
+.mySwiper1 {
+  width: 100%;
+  background: white;
+}
+
+@media (min-width: 1024px) {
+  .mySwiper1 {
+    width: 60%;
+  }
+}
+
+/* Swiper pagination (dots) styling */
+.mySwiper1 .swiper-pagination-bullet {
+  background: #e5e7eb; /* Tailwind gray-200 */
+  opacity: 1;
+  border: 5px solid #d1d5db; /* Tailwind gray-300 */
+  margin: 0 4px !important;
+  transition: background 0.2s, border 0.2s;
+}
+
+.mySwiper1 .swiper-pagination-bullet-active {
+  background: #ec4899; /* Tailwind pink-600 */
+  border: 5px solid #ec4899;
+}
+
+.swiper-slide {
+  /* background-color: white; */
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Animation for text sliding in from right when slide is active --- */
+.first-slider-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  /* Start off-screen to the right */
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.7s cubic-bezier(0.4,0,0.2,1);
+  z-index: 2;
+}
+
+/* When the slide is active, animate the text in */
+.swiper-slide-active .first-slider-content {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Ensure image is visible and not covered by text */
+.first-slider-img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+  display: block;
+  z-index: 1;
+}
+/* Reduce text size on overlay for all screens */
+.first-slider-content-bg {
+  background: inherit;
+  padding-right: 2rem; /* base size, smaller than default */
+}
+
+/* Wrap long title text in the slider */
+.first-slider-content-bg h2 {
+  font-size: 1.5rem; /* smaller than default heading */
+  word-break: break-word;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: normal;
+  /* Ensures long words or titles wrap to the next line */
+}
+
+.first-slider-content-bg p {
+  font-size: 1rem;
+}
+
+.first-slider-content-bg button {
+  font-size: 0.95rem;
+  padding: 0.5rem 1.25rem;
+}
+
+/* Responsive adjustments for text content and further reduce text size on small screens */
+@media (max-width: 600px) {
+  .first-slider-content-bg h2 {
+    font-size: 0.6rem;
+  }
+  .first-slider-content-bg p {
+
+    font-size: 0.5rem;
+  }
+  .first-slider-content-bg button {
+    font-size: 0.4rem;
+    padding: 0.2rem 0.3rem;
+    border-radius: 5px;
+  }
+}
+
+
+

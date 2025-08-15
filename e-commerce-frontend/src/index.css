@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body{
+  background-color: #f5f0f0;
+}
+.Container {
+  width: 94% !important;
+  margin: auto !important;
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: 95% !important;
+  }
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+}
