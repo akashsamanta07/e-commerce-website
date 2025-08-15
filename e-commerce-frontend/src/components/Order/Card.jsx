@@ -134,7 +134,7 @@ function Card({ header2, onClose }) {
             </button>
           </div>
         ) : (
-          <div className="w-full h-[45vh] flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden">
+          <div className="w-full h-[30vh] flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden">
             {cartItems.map((item) => (
               <div key={item.id} className="w-full flex flex-row items-center justify-center border-b py-3 gap-3 lg:gap-4">
                 <div className="w-[5rem] h-[5rem] lg:w-[6rem] lg:h-[6rem] flex-shrink-0 flex items-center justify-center overflow-hidden rounded">
