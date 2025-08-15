@@ -30,15 +30,25 @@ const ProductCard = ({
     if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
     tooltipTimeout.current = setTimeout(() => {
       setShowWishlistTooltip(false);
-    }, 500);
+    }, 1000);
   };
 
+  // Modified notify to show toast in the bottom corner on mobile, smaller size
   const notify = () => {
     onAddToCart();
-    if(cardlist.includes(id)){
-            toast.warning("Item already added", { autoClose: 1000 })
-    }else{
-        toast.success("Item successfully added", { autoClose: 1000 });
+    const isMobile = window.innerWidth <= 640;
+    const toastOptions = {
+      autoClose: 1000,
+      position: "top-right",
+      className: isMobile ? "text-xs px-2 py-1 rounded-md" : "",
+      style: isMobile
+        ? { minWidth: "150px", maxWidth: "60vw", fontSize: "0.85rem", borderRadius: "10px", margin: "0.5rem" }
+        : {},
+    };
+    if (cardlist.includes(id)) {
+      toast.warning("Item already added", toastOptions);
+    } else {
+      toast.success("Item successfully added", toastOptions);
     }
   };
 
@@ -56,14 +66,14 @@ const ProductCard = ({
         </Link>
         {/* Discount badge */}
         {discountPercent && (
-          <div className="absolute top-2 left-2 bg-pink-600 text-white px-2 py-1 rounded-md flex items-center font-semibold text-xs z-10 shadow min-h-[22px] gap-1">
+          <div className="absolute top-2 left-1 bg-pink-600 text-white px-2 py-1 rounded-md flex items-center font-semibold text-xs z-10 shadow min-h-[22px] gap-1">
             <MdLocalOffer className="mr-1 text-base" />
             {discountPercent}%
           </div>
         )}
 
         {/* Wishlist button */}
-        <div className="absolute top-2 right-2 bg-white hover:bg-pink-100 z-20 shadow rounded-full p-0 transition group">
+        <div className="absolute top-[0.2rem] right-2 bg-white hover:bg-pink-100 z-20 shadow rounded-full p-0 transition group">
           <div className="relative">
             <IconButton
               aria-label="wishlist"
