@@ -6,7 +6,7 @@ import dumy from '../assets/dumy.jpg';
 import { Link } from 'react-router-dom';
 
 // Dummy products
-const PRODUCTS = [
+const products = [
   {
     id: 1,
     imageUrl: dumy,
@@ -99,8 +99,8 @@ const PRODUCTS = [
   },
 ];
 
-function DefaultProduct({ product, name ,category}) {
-    let { wishlistcount, setwishlistcount, cartCount, setCartCount,wishlist,setWishlist,cardlist,setcardlist }= product;
+function DefaultProduct({ product, name, category }) {
+  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cardlist, setcardlist } = product;
   const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
 
@@ -178,9 +178,15 @@ function DefaultProduct({ product, name ,category}) {
     }
   };
 
+  // cardlist is an array of objects: [{id, quantity}]
   const handleAddToCard = (id) => {
-    if (!cardlist.includes(id)) {
-      setcardlist([...cardlist, id]);
+    const existing = cardlist.find(item => item.id === id);
+    if (existing) {
+      // Already in cart, do nothing (or you could increase quantity if desired)
+      return;
+    } else {
+      // Add new item with quantity 1
+      setcardlist([...cardlist, { id, quantity: 1 }]);
       setCartCount(cartCount + 1);
     }
   };
@@ -190,7 +196,7 @@ function DefaultProduct({ product, name ,category}) {
       <div className="Container px-3 py-2 lg:py-3 flex items-center justify-between">
         {/* Left Section */}
         <div className="flex flex-col gap-1 md:w-1/3">
-          <h2 className="text-xl md:text-2xl font-bold text-gray-900">{ name }</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">{name}</h2>
         </div>
         {/* View All Button (shows only if scroll is needed) */}
         {showViewAll && (
@@ -212,7 +218,7 @@ function DefaultProduct({ product, name ,category}) {
         ref={scrollRef}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {PRODUCTS.map((product) => (
+        {products.map((product) => (
           <ProductCard
             key={product.id}
             id={product.id}

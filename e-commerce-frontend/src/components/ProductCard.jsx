@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 
 const ProductCard = ({
-    id,
+  id,
   imageUrl,
   discountPercent,
   isWishlisted,
@@ -20,7 +20,7 @@ const ProductCard = ({
   onToggleWishlist,
   cardlist
 }) => {
-  // Fix: Add tooltip state for wishlist button
+  // Tooltip state for wishlist button
   const [showWishlistTooltip, setShowWishlistTooltip] = useState(false);
   const tooltipTimeout = useRef(null);
 
@@ -33,9 +33,14 @@ const ProductCard = ({
     }, 1000);
   };
 
+  // Helper: check if product is already in cartlist (array of {id, quantity})
+  const isInCart = cardlist.find(item => item.id === id);
+
   // Modified notify to show toast in the bottom corner on mobile, smaller size
   const notify = () => {
-    onAddToCart();
+    if (!isInCart && onAddToCart) {
+      onAddToCart();
+    }
     const isMobile = window.innerWidth <= 640;
     const toastOptions = {
       autoClose: 1000,
@@ -45,13 +50,12 @@ const ProductCard = ({
         ? { minWidth: "150px", maxWidth: "60vw", fontSize: "0.85rem", borderRadius: "10px", margin: "0.5rem" }
         : {},
     };
-    if (cardlist.includes(id)) {
+    if (isInCart) {
       toast.warning("Item already added", toastOptions);
     } else {
       toast.success("Item successfully added", toastOptions);
     }
   };
-
 
   return (
     <div className="product-card bg-white rounded-xl shadow-md flex flex-col w-[10.2rem] lg:w-[14rem] border-[1px] border-gray-300 shrink-0 cursor-pointer">

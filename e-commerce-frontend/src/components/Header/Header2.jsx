@@ -9,7 +9,7 @@ import { DrawerContentCart } from '../Slideber.jsx';
 import { Link } from "react-router-dom";
 
 function Header2({ header2 }) {
-  let { cartCount, search, setSearch, wishlistcount, setmenu, setsubcategory: setsubcategory } = header2;
+  let { cartCount, search, setSearch, wishlistcount, setmenu, setsubcategory } = header2;
   const [openMenu, setOpenMenu] = useState(false);
   const [openCart, setOpenCart] = useState(false);
   let menuobj = {
@@ -25,13 +25,6 @@ function Header2({ header2 }) {
     // You can add search logic here
   };
 
-  // Handler for "Continue Shopping" button
-  const handleContinueShopping = () => {
-    setOpenCart(false);
-    // Optionally, navigate to shop or home page
-    window.location.href = '/';
-  };
-
   return (
     <div className='bg-white border-b border-gray-200'>
       {/* Drawers */}
@@ -39,7 +32,7 @@ function Header2({ header2 }) {
         <DrawerContentMenu menuobj={menuobj} />
       </SlideDrawer>
       <SlideDrawer open={openCart} side="right" onClose={() => setOpenCart(false)}>
-        <DrawerContentCart cartCount={cartCount} onContinueShopping={handleContinueShopping} />
+        <DrawerContentCart header2={header2} onClose={() => setOpenCart(false)}/>
       </SlideDrawer>
       <div className="Container border-b border-gray-200 py-2 md:py-3">
         <div className="w-full flex items-center justify-between gap-[10px]">

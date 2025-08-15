@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingCart } from 'react-icons/fa';
-import { IconButton } from '@mui/material';
+import { IconButton, Button } from '@mui/material';
+import { ExpandMore } from '@mui/icons-material';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import './swiper.css'
@@ -31,10 +32,14 @@ const product = {
         {name:"Akash",date:"12-3-2023",comment:"Good product",rating:4.2},
         {name:"Priya",date:"15-4-2023",comment:"Loved the sound quality!",rating:5},
         {name:"Rahul",date:"20-5-2023",comment:"Comfortable and stylish.",rating:4},
+        {name:"Priya",date:"15-4-2023",comment:"Loved the sound quality!",rating:5},
+        {name:"Rahul",date:"20-5-2023",comment:"Comfortable and stylish.",rating:4},
+        
     ]
 };
 
 function Description({desc}) {
+    // cardlist is now an array of objects: [{id, quantity}]
     let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cardlist, setcardlist } = desc;
     let iswishlisted = wishlist.includes(product.id);
     const [count, setCount] = useState(1);
@@ -50,6 +55,14 @@ function Description({desc}) {
     });
     const [showReviewForm, setShowReviewForm] = useState(false);
 
+    // For "Show More" reviews
+    const REVIEWS_PER_PAGE = 3;
+    const [visibleReviews, setVisibleReviews] = useState(REVIEWS_PER_PAGE);
+
+    const handleShowMoreReviews = () => {
+        setVisibleReviews((prev) => Math.min(prev + REVIEWS_PER_PAGE, reviews.length));
+    };
+
     const handleToggleWishlist = (id) => {
         if (wishlist.includes(id)) {
             setwishlistcount(wishlistcount - 1);
@@ -60,9 +73,16 @@ function Description({desc}) {
         }
     };
 
-    const handleAddToCard = (id) => {
-        if (!cardlist.includes(id)) {
-            setcardlist([...cardlist, id]);
+    // Helper to find item in cardlist by id
+    const findCartItemIndex = (id) => cardlist.findIndex(item => item.id === id);
+
+    // Add to cart logic: cardlist is array of {id, quantity}, unique by id, min quantity 1
+    const handleAddToCard = (id, qty) => {
+        const idx = findCartItemIndex(id);
+        if (idx === -1) {
+            // Not in cart, add with at least 1 quantity
+            const newItem = { id, quantity: Math.max(1, qty) };
+            setcardlist([...cardlist, newItem]);
             setCartCount(cartCount + 1);
         }
     };
@@ -77,13 +97,23 @@ function Description({desc}) {
     };
 
     const notify = () => {
-        handleAddToCard(product.id);
-        if(cardlist.includes(product.id)){
-            toast.warning("Item already added", { autoClose: 1000 })
-        }else{
-            toast.success("Item successfully added", { autoClose: 1000 });
+        const idx = findCartItemIndex(product.id);
+        const isMobile = window.innerWidth <= 640;
+        const toastOptions = {
+          autoClose: 1000,
+          position: "top-right",
+          className: isMobile ? "text-xs px-2 py-1 rounded-md" : "",
+          style: isMobile
+            ? { minWidth: "150px", maxWidth: "60vw", fontSize: "0.85rem", borderRadius: "10px", margin: "0.5rem" }
+            : {},
+        };
+        if (idx !== -1) {
+          toast.warning("Item already added", toastOptions);
+        } else {
+          handleAddToCard(product.id, count);
+          toast.success("Item successfully added", toastOptions);
         }
-    };
+      };
 
     // Helper to render stars
     const renderStars = (rating, size = "text-yellow-400", clickable = false, onClick = null) => {
@@ -157,6 +187,7 @@ function Description({desc}) {
         setReviews([newReview, ...reviews]);
         setReviewForm({ name: '', rating: 0, comment: '' });
         setShowReviewForm(false);
+        setVisibleReviews((prev) => prev + 1); // Show the new review if hidden
         toast.success("Review submitted!", { autoClose: 1200 });
     };
 
@@ -244,7 +275,7 @@ function Description({desc}) {
                         <p className="text-gray-600">{product.about}</p>
                     </div>
                     {/* Free Shipping Line */}
-                    <div className="bg-green-50 border border-green-200 rounded-md px-3 py-2 text-green-700 font-medium text-sm flex items-center gap-2">
+                    <div className="bg-green-50 border border-green-200 rounded-md px-2 py-2 text-green-700 font-medium text-sm flex items-center gap-2">
                         <span>🚚</span> Free Shipping (Est. Delivery Time 2-3 Days)
                     </div>
                     {/* Count Box & Add to Cart */}
@@ -357,24 +388,50 @@ function Description({desc}) {
                     {reviews.length === 0 ? (
                         <div className="text-gray-500 text-center py-6">No reviews yet. Be the first to review!</div>
                     ) : (
-                        reviews.map((rev, idx) => (
-                            <div
-                                key={idx}
-                                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col sm:flex-row sm:items-center gap-0 lg:gap-2"
-                            >
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-semibold text-gray-800">{rev.name}</span>
-                                        <span className="text-gray-400 text-xs">{rev.date}</span>
+                        <>
+                            {reviews.slice(0, visibleReviews).map((rev, idx) => (
+                                <div
+                                    key={idx}
+                                    className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col sm:flex-row sm:items-center gap-0 lg:gap-2"
+                                >
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-semibold text-gray-800">{rev.name}</span>
+                                            <span className="text-gray-400 text-xs">{rev.date}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 mb-1">
+                                            {renderStars(rev.rating, "text-yellow-400 text-base")}
+                                            <span className="ml-2 text-gray-600 text-xs font-medium">{rev.rating.toFixed(1)}</span>
+                                        </div>
+                                        <div className="text-gray-700">{rev.comment}</div>
                                     </div>
-                                    <div className="flex items-center gap-1 mb-1">
-                                        {renderStars(rev.rating, "text-yellow-400 text-base")}
-                                        <span className="ml-2 text-gray-600 text-xs font-medium">{rev.rating.toFixed(1)}</span>
-                                    </div>
-                                    <div className="text-gray-700">{rev.comment}</div>
                                 </div>
-                            </div>
-                        ))
+                            ))}
+                            {reviews.length > visibleReviews && (
+                                <div className="flex justify-center mt-2">
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        endIcon={<ExpandMore />}
+                                        onClick={handleShowMoreReviews}
+                                        sx={{
+                                            textTransform: 'none',
+                                            borderRadius: 2,
+                                            fontWeight: 500,
+                                            fontSize: '1rem',
+                                            borderColor: '#e91e63',
+                                            color: '#e91e63',
+                                            '&:hover': {
+                                                borderColor: '#ad1457',
+                                                backgroundColor: '#fce4ec',
+                                            }
+                                        }}
+                                    >
+                                        Show More
+                                    </Button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
@@ -387,4 +444,3 @@ function Description({desc}) {
 }
 
 export default Description;
-

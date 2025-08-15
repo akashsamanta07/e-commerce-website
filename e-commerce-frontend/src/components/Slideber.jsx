@@ -1,8 +1,8 @@
-import { FaShoppingCart } from 'react-icons/fa';
 import React, { useState } from 'react';
 import logo from '../assets/logo/logo1.jpg'
 import { AiOutlinePlus, AiOutlineMinus } from 'react-icons/ai';
 import { Link } from 'react-router-dom';
+import Card from './Order/Card.jsx';
 
 export function SlideDrawer({ open, side, onClose, children }) {
   const fnlogo = () => {
@@ -26,8 +26,8 @@ export function SlideDrawer({ open, side, onClose, children }) {
       {/* Drawer */}
       <div
         className={`
-          fixed top-0 ${side === 'left' ? 'left-0' : 'right-0'}
-          h-full w-72 bg-white shadow-lg z-50
+          fixed top-0 ${side === 'left' ? 'left-0 w-72': 'right-0 w-[21rem] lg:w-[25rem]'}
+          h-full bg-white shadow-lg z-50
           transform transition-transform duration-300
           ${open
             ? 'translate-x-0'
@@ -38,8 +38,8 @@ export function SlideDrawer({ open, side, onClose, children }) {
         `}
       >
         {side === 'left' ? fnlogo() : ""}
-        <div className="flex justify-between items-center px-4 py-3 border-b">
-          <span className="font-bold text-lg">{side === 'left' ? 'Shop by Categories' : 'Cart'}</span>
+        <div className="flex justify-between items-center px-6 py-3 border-b">
+          <span className="font-bold text-lg ps-2 text-pink-600">{side === 'left' ? 'Shop by Categories' : 'Card Items'}</span>
           <button onClick={onClose} className="text-gray-500 hover:text-pink-600 text-2xl">&times;</button>
         </div>
         <div className="p-4">
@@ -113,26 +113,11 @@ export function DrawerContentMenu({ menuobj }) {
 }
 
 // DrawerContentCart component
-export function DrawerContentCart({ cartCount, onContinueShopping }) {
-  if (cartCount === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-60">
-        <FaShoppingCart className="text-gray-300" style={{ fontSize: '72px' }} />
-        <p className="text-gray-700 mt-4 mb-4 text-lg font-semibold">Your cart is empty.</p>
-        <button
-          onClick={onContinueShopping}
-          className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition"
-        >
-          Continue Shopping
-        </button>
-      </div>
-    );
-  }
+export function DrawerContentCart({ header2, onClose }) {
   // You can add cart items here for non-empty cart
   return (
     <div>
-      <p className="text-gray-700 mb-2">Your cart has {cartCount} item(s).</p>
-      {/* Render cart items here */}
+      <Card header2={header2} onClose={onClose}/>
     </div>
   );
 }

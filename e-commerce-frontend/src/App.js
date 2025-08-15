@@ -17,7 +17,7 @@ function App() {
   const [search, setSearch] = useState('');
   const [wishlistcount, setwishlistcount] = useState(0);
   const [wishlist, setWishlist] = useState([]);
-  const [cardlist, setcardlist] = useState([]);
+  const [cardlist, setcardlist] = useState([{}]);
   const [menu, setmenu] = useState("Home");
   const [subcategory, setsubcategory] = useState('');
 
@@ -29,7 +29,9 @@ function App() {
     wishlistcount,
     setwishlistcount,
     setmenu,
-    setsubcategory
+    setsubcategory,
+    cardlist,
+    setcardlist
   };
   const header3 = {
     menu,

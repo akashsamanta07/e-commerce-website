@@ -15,7 +15,47 @@ const MENU_ITEMS = [
 ];
 
 // Dummy product data for demonstration
-const PRODUCTS = [
+const products = [
+  {
+    id: 1,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Random ysw rdyrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+    rating: 4.2,
+    originalPrice: 120,
+    discountedPrice: 90,
+  },
+  {
+    id: 2,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Another",
+    rating: 4.5,
+    originalPrice: 150,
+    discountedPrice: 110,
+  },
+  {
+    id: 3,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Third" ,
+    rating: 3.8,
+    originalPrice: 100,
+    discountedPrice: 75,
+  },
+  {
+    id: 4,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Fourth",
+    rating: 4.0,
+    originalPrice: 100,
+    discountedPrice: 75,
+  },
   {
     id: 1,
     imageUrl: dumy,
@@ -47,22 +87,61 @@ const PRODUCTS = [
     discountedPrice: 75,
   },
   {
+    id: 4,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Fourth",
+    rating: 4.0,
+    originalPrice: 100,
+    discountedPrice: 75,
+  },
+  {
+    id: 1,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Random",
+    rating: 4.2,
+    originalPrice: 120,
+    discountedPrice: 90,
+  },
+  {
+    id: 2,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Another",
+    rating: 4.5,
+    originalPrice: 150,
+    discountedPrice: 110,
+  },
+  {
     id: 3,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",
-    title: "Third",
+    title: "Third" ,
     rating: 3.8,
     originalPrice: 100,
     discountedPrice: 75,
+  },
+  {
+    id: 4,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Fourth",
+    rating: 4.0,
+    originalPrice: 100,
+    discountedPrice: 75,
   }
-
 ];
 
-function Popular_products({product}) {
-    let { wishlistcount, setwishlistcount, cartCount, setCartCount,wishlist,setWishlist,cardlist,setcardlist }= product;
-    const [activeMenu, setActiveMenu] = useState(MENU_ITEMS[0]);
-    const scrollRef = useRef(null);
+function Popular_products({ product }) {
+  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cardlist, setcardlist } = product;
+  const [activeMenu, setActiveMenu] = useState(MENU_ITEMS[0]);
+  const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
 
   // Check if scroll is needed
@@ -79,7 +158,7 @@ function Popular_products({product}) {
     return () => window.removeEventListener('resize', checkScroll);
   }, []);
 
-  // --- Drag-to-scroll logic for mouse users ---
+  // --- Drag-to-scroll logic for mouse users (copied from Latest_products) ---
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -120,27 +199,35 @@ function Popular_products({product}) {
     el.addEventListener('mouseup', mouseUpHandler);
     el.addEventListener('mousemove', mouseMoveHandler);
 
-
-});
-
-    const handleToggleWishlist = (id) => {
-        if (wishlist.includes(id)) {
-            setwishlistcount(wishlistcount - 1);
-            setWishlist(wishlist.filter(item => item !== id));
-        } else {
-            setwishlistcount(wishlistcount + 1);
-            setWishlist([...wishlist, id]);
-        }
+    // Clean up
+    return () => {
+      el.removeEventListener('mousedown', mouseDownHandler);
+      el.removeEventListener('mouseleave', mouseLeaveHandler);
+      el.removeEventListener('mouseup', mouseUpHandler);
+      el.removeEventListener('mousemove', mouseMoveHandler);
     };
+  }, []);
 
-    const handleAddToCard = (id) => {
-        if (!cardlist.includes(id)) {
-            setcardlist([...cardlist, id]);
-            setCartCount(cartCount + 1);
-        }
-
+  const handleToggleWishlist = (id) => {
+    if (wishlist.includes(id)) {
+      setwishlistcount(wishlistcount - 1);
+      setWishlist(wishlist.filter(item => item !== id));
+    } else {
+      setwishlistcount(wishlistcount + 1);
+      setWishlist([...wishlist, id]);
     }
+  };
 
+  const handleAddToCard = (id) => {
+    const existing = cardlist.find(item => item.id === id);
+    if (existing) {
+      return;
+    } else {
+      // If not in cart, add with quantity 1
+      setcardlist([...cardlist, { id, quantity: 1 }]);
+      setCartCount(cartCount + 1);
+    }
+  };
 
   return (
     <div className='bg-white'>
@@ -210,24 +297,33 @@ function Popular_products({product}) {
           </div>
         </div>
       </div>
-      <div className="Container bg-white flex justify-start gap-[6px] lg:gap-[1rem] py-[1rem] flex-nowrap overflow-scroll scrollbar-none">
-        {PRODUCTS.map((product) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            imageUrl={product.imageUrl}
-            discountPercent={product.discountPercent}
-            isWishlisted={wishlist.includes(product.id)}
-            brand={product.brand}
-            title={product.title}
-            rating={product.rating}
-            originalPrice={product.originalPrice}
-            discountedPrice={product.discountedPrice}
-            onAddToCart={()=>{handleAddToCard(product.id)}}
-            onToggleWishlist={() => handleToggleWishlist(product.id)}
-            cardlist={cardlist}
-          />
-        ))}
+      <div
+        className="Container bg-white flex justify-start gap-[6px] lg:gap-[1rem] py-[1rem] flex-nowrap overflow-x-auto cursor-grab select-none scrollbar-none"
+        ref={scrollRef}
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        {products.map((prod) => {
+          // Find quantity in cartlist for this product (if any)
+          const cartItem = cardlist.find(item => item.id === prod.id);
+          return (
+            <ProductCard
+              key={prod.id}
+              id={prod.id}
+              imageUrl={prod.imageUrl}
+              discountPercent={prod.discountPercent}
+              isWishlisted={wishlist.includes(prod.id)}
+              brand={prod.brand}
+              title={prod.title}
+              rating={prod.rating}
+              originalPrice={prod.originalPrice}
+              discountedPrice={prod.discountedPrice}
+              onAddToCart={() => handleAddToCard(prod.id)}
+              onToggleWishlist={() => handleToggleWishlist(prod.id)}
+              cardlist={cardlist}
+              quantity={cartItem ? cartItem.quantity : 0}
+            />
+          );
+        })}
       </div>
     </div>
   );

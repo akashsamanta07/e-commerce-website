@@ -100,7 +100,7 @@ const products = [
 ];
 
 function Latest_products({ product }) {
-    let { wishlistcount, setwishlistcount, cartCount, setCartCount,wishlist,setWishlist,cardlist,setcardlist }= product;
+  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cardlist, setcardlist } = product;
   const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
 
@@ -178,9 +178,15 @@ function Latest_products({ product }) {
     }
   };
 
+  // cardlist is an array of objects: [{id, quantity}]
   const handleAddToCard = (id) => {
-    if (!cardlist.includes(id)) {
-      setcardlist([...cardlist, id]);
+    const existing = cardlist.find(item => item.id === id);
+    if (existing) {
+      // Already in cart, do nothing (or you could increase quantity if desired)
+      return;
+    } else {
+      // Add new item with quantity 1
+      setcardlist([...cardlist, { id, quantity: 1 }]);
       setCartCount(cartCount + 1);
     }
   };

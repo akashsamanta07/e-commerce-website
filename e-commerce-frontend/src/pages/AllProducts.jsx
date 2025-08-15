@@ -308,9 +308,15 @@ function AllProducts({ product }) {
     }
   };
 
+  // cardlist is now an array of objects: [{id, quantity}]
+  // cartCount should be the sum of all quantities in cardlist
   const handleAddToCart = (id) => {
-    if (!cardlist.includes(id)) {
-      setcardlist([...cardlist, id]);
+    const existingItem = cardlist.find(item => item.id === id);
+    if (existingItem) {
+      return;
+    } else {
+      // Add new product with quantity 1
+      setcardlist([...cardlist, { id, quantity: 1 }]);
       setCartCount(cartCount + 1);
     }
   };
@@ -423,7 +429,7 @@ function AllProducts({ product }) {
       >
         {sortedProducts.map((prod) => (
           <ProductCard
-            key={prod.id + '-' + prod.title}
+            key={prod.id}
             id={prod.id}
             imageUrl={prod.imageUrl}
             discountPercent={prod.discountPercent}
