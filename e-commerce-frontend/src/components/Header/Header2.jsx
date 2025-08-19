@@ -91,16 +91,18 @@ function Header2({ header2 }) {
             >
               Login
             </Link>
-            <div className="relative group hidden md:flex items-center">
-              <IconButton aria-label="wishlist">
-                <Badge badgeContent={wishlistcount} color="error">
-                  <FaHeart className="text-gray-600" />
-                </Badge>
-              </IconButton>
-              <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded bg-gray-800 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                Wishlist
-              </span>
-            </div>
+            <Link to='/my-list'>
+              <div className="relative group hidden md:flex items-center">
+                <IconButton aria-label="wishlist">
+                  <Badge badgeContent={wishlistcount} color="error">
+                    <FaHeart className="text-gray-600" />
+                  </Badge>
+                </IconButton>
+                <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded bg-gray-800 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                  Wishlist
+                </span>
+              </div>
+            </Link>
             <div className="relative group hidden md:flex items-center">
               <IconButton aria-label="cart" onClick={() => setOpenCart(true)}>
                 <Badge badgeContent={cartCount} color="primary">

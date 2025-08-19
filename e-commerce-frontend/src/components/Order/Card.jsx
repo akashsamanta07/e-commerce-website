@@ -1,7 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import dumy from '../../assets/dumy.jpg';
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { FaShoppingCart } from 'react-icons/fa';
+import notify from '../Notification/notify.jsx';
+import {GlobalContext} from '../UserContext/UserContext.jsx'
+import { Link } from 'react-router-dom';
+
 
 const products = [
   {
@@ -58,6 +62,8 @@ const products = [
 
 function Card({ header2, onClose }) {
   const { cartCount, setCartCount, cardlist, setcardlist } = header2;
+  const {total,setTotal}=useContext(GlobalContext);
+  
 
   // Get cart items with product details
   const cartItems = useMemo(() => {
@@ -73,7 +79,7 @@ function Card({ header2, onClose }) {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.discountedPrice * item.quantity), 0);
   const deliveryFee = cartItems.length > 0 && subtotal <= 1000 && subtotal > 0 ? 80 : 0;
   const taxes = cartItems.length > 0 ? 11.49 : 0;
-  const total = cartItems.length > 0 ? Math.round(subtotal + deliveryFee + taxes) : 0;
+  setTotal(cartItems.length > 0 ? Math.round(subtotal + deliveryFee + taxes) : 0);
 
   // Handlers
   const handleRemoveOne = (id) => {
@@ -93,6 +99,7 @@ function Card({ header2, onClose }) {
     // Update cart count
     const removedItem = cardlist.find(item => item.id === id);
     if (removedItem && removedItem.quantity === 1) {
+      notify("warning","Item Removed from Card");
       setCartCount(cartCount > 0 ? cartCount - 1 : 0);
     }
   };
@@ -106,18 +113,20 @@ function Card({ header2, onClose }) {
     });
     setcardlist(newList);
   };
+  
 
   const handleDeleteAll = (id) => {
     setcardlist(cardlist.filter(item => item.id !== id));
     setCartCount(cartCount > 0 ? cartCount - 1 : 0);
+    notify("warning","Item Removed from Card");
   };
 
-  const handlePlaceOrder = () => {
-    if (cartItems.length > 0) {
-      setcardlist([]);
-      setCartCount(0);
-    }
-  };
+  // const handlePlaceOrder = () => {
+  //   if (cartItems.length > 0) {
+  //     setcardlist([]);
+  //     setCartCount(0);
+  //   }
+  // };
 
   return (
     <div className="max-w-xl mx-auto bg-white rounded-lg shadow px-4 pb-4">
@@ -128,22 +137,24 @@ function Card({ header2, onClose }) {
             <p className="text-gray-700 mt-4 mb-4 text-lg font-semibold">Your cart is empty.</p>
             <button
               onClick={onClose}
-              className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition"
+              className="bg-pink-600 hover:bg-black text-white font-bold py-2 px-6 rounded transition"
             >
               Continue Shopping
             </button>
           </div>
         ) : (
-          <div className="w-full h-[30vh] flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden">
+          <div className={`w-full ${cardlist.length > 3 ? "h-[50vh]":""} flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden`}>
             {cartItems.map((item) => (
               <div key={item.id} className="w-full flex flex-row items-center justify-center border-b py-3 gap-3 lg:gap-4">
-                <div className="w-[5rem] h-[5rem] lg:w-[6rem] lg:h-[6rem] flex-shrink-0 flex items-center justify-center overflow-hidden rounded">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="h-[5rem] w-full flex rounded-lg"
-                  />
-                </div>
+                <Link to={`/product/${item.id}`}>
+                  <div className="h-[5rem]  lg:h-[6rem] flex-shrink-0 flex items-center justify-center overflow-hidden rounded">
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="h-[5rem] lg:h-[6rem] w-full flex rounded-lg"
+                    />
+                  </div>
+                </Link>
                 <div className="w-[7rem] lg:w-[8rem] flex flex-col items-center justify-center">
                   <div
                     className="w-[7rem] lg:w-[8rem] font-semibold leading-tight overflow-hidden text-ellipsis whitespace-nowrap"
@@ -205,17 +216,19 @@ function Card({ header2, onClose }) {
             <span>Totals</span>
             <span className="text-pink-700">₹{total}/-</span>
           </div>
-          <button
-            className={`w-full py-3 rounded-lg font-bold text-white transition ${
-              cartItems.length > 0
-                ? "bg-pink-600 hover:bg-pink-700"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
-            onClick={handlePlaceOrder}
-            disabled={cartItems.length === 0}
-          >
-            Checkout
-          </button>
+          <Link to ='/checkout'>
+            <button
+              className={`w-full py-3 rounded-lg font-bold text-white transition ${
+                cartItems.length > 0
+                  ? "bg-pink-600 hover:bg-black"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
+              onClick={onClose}
+              disabled={cartItems.length === 0}
+            >
+              Checkout
+            </button>
+          </Link>
         </>
       )}
     </div>

@@ -201,7 +201,7 @@ function Latest_products({ product }) {
         {/* View All Button (shows only if scroll is needed) */}
         {showViewAll && (
           <div className="flex items-center ml-auto">
-            <Link to="latest">
+            <Link to="/menu/latest">
               <Button
                 variant="text"
                 className="!capitalize !font-bold !text-pink-600 flex items-center gap-1 !bg-gray-100"

@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
-import logo from '../assets/logo/logo1.jpg'
+import logo from '../assets/logo/logo1.jpg';
 import { AiOutlinePlus, AiOutlineMinus } from 'react-icons/ai';
 import { Link } from 'react-router-dom';
 import Card from './Order/Card.jsx';
+import { Button } from "@mui/material";
+import LoginIcon from '@mui/icons-material/Login';
 
 export function SlideDrawer({ open, side, onClose, children }) {
-  const fnlogo = () => {
-    return (
-      <div className="flex justify-center py-4 border-b">
-        <img
-          src={logo}
-          alt="Logo"
-          className="h-8 w-auto object-contain md:h-10"
-        />
-      </div>
-    )
-  }
+  const fnlogo = () => (
+    <div className="flex justify-center py-4 border-b">
+      <img
+        src={logo}
+        alt="Logo"
+        className="h-8 w-auto object-contain md:h-10"
+      />
+    </div>
+  );
   return (
     <>
       {/* Overlay */}
@@ -26,7 +26,7 @@ export function SlideDrawer({ open, side, onClose, children }) {
       {/* Drawer */}
       <div
         className={`
-          fixed top-0 ${side === 'left' ? 'left-0 w-72': 'right-0 w-[21rem] lg:w-[25rem]'}
+          fixed top-0 ${side === 'left' ? 'left-0 w-72' : 'right-0 w-[21rem] lg:w-[25rem]'}
           h-full bg-white shadow-lg z-50
           transform transition-transform duration-300
           ${open
@@ -67,8 +67,8 @@ export function DrawerContentMenu({ menuobj }) {
 
   const toggleExpand = (index, item) => {
     setExpanded(expanded === index ? null : index);
-    setmenu(item)
-    setsubcategory('')
+    setmenu(item);
+    setsubcategory('');
   };
 
   return (
@@ -77,29 +77,36 @@ export function DrawerContentMenu({ menuobj }) {
       <ul className="space-y-2 px-4">
         {categories.map((cat, index) => (
           <li key={index}>
-            <Link to={`/${cat.name.toLowerCase()}`}>
-            <button
-              className="flex justify-between items-center w-full text-gray-700 hover:text-pink-600 font-medium"
-              onClick={() => toggleExpand(index, cat.name)}
-            >
-              {cat.name}
-              <span
-                className={`border border-gray-400 rounded-full p-1 flex items-center justify-center 
-                  ${expanded === index ? 'text-pink-600 border-pink-600' : 'text-gray-500'} 
-                  hover:border-pink-600 hover:text-pink-600 transition-colors duration-200`}
+            <Link to={`/menu/${cat.name.toLowerCase()}`}>
+              <button
+                className="flex justify-between items-center w-full text-gray-700 hover:text-pink-600 font-medium"
+                onClick={() => toggleExpand(index, cat.name)}
               >
-                {expanded === index ? (
-                  <AiOutlineMinus className="font-bold text-lg" />
-                ) : (
-                  <AiOutlinePlus className="font-bold text-lg" />
-                )}
-              </span>
-            </button>
+                {cat.name}
+                <span
+                  className={`border border-gray-400 rounded-full p-1 flex items-center justify-center 
+                    ${expanded === index ? 'text-pink-600 border-pink-600' : 'text-gray-500'} 
+                    hover:border-pink-600 hover:text-pink-600 transition-colors duration-200`}
+                >
+                  {expanded === index ? (
+                    <AiOutlineMinus className="font-bold text-lg" />
+                  ) : (
+                    <AiOutlinePlus className="font-bold text-lg" />
+                  )}
+                </span>
+              </button>
             </Link>
             {expanded === index && (
               <ul className="pl-4 mt-2 space-y-1 text-sm text-gray-600">
                 {cat.sub.map((subItem, subIndex) => (
-                  <li key={subIndex} className="hover:text-pink-500 cursor-pointer" onClick={() => { setmenu(cat.name);setsubcategory(subItem) }}>
+                  <li
+                    key={subIndex}
+                    className="hover:text-pink-500 cursor-pointer"
+                    onClick={() => {
+                      setmenu(cat.name);
+                      setsubcategory(subItem);
+                    }}
+                  >
                     {subItem}
                   </li>
                 ))}
@@ -108,6 +115,30 @@ export function DrawerContentMenu({ menuobj }) {
           </li>
         ))}
       </ul>
+      {/* Add a MI (Material UI) Button for Login */}
+      <div className="px-4 pt-4">
+        <Link to="/login" style={{ textDecoration: 'none' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<LoginIcon />}
+            sx={{
+              backgroundColor: "#ec4899",
+              color: "#fff",
+              "&:hover": { backgroundColor: "black" },
+              borderRadius: "8px",
+              fontWeight: "bold",
+              fontSize: "1rem",
+              width: "100%",
+              boxShadow: 1,
+              textTransform: "none"
+            }}
+            fullWidth
+          >
+            Login
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

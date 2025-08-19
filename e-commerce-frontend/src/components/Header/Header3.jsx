@@ -31,7 +31,7 @@ function Header3({ header3 }) {
   // Helper to get the link path for each category
   const getCategoryLink = (item) => {
     if (item === 'Home') return '/';
-    return `/${item.toLowerCase()}`;
+    return `/menu/${item.toLowerCase()}`;
   };
 
   return (

@@ -6,17 +6,31 @@ import Header1 from './components/Header/Header1.jsx';
 import Header2 from './components/Header/Header2.jsx';
 import Header3 from './components/Header/Header3.jsx';
 import Footer from "./components/footer/Footer.jsx";
-import Login from './components/auth/Login.jsx';
-import Register from './components/auth/Register.jsx';
+import Login from './auth/Login.jsx';
+import Register from './auth/Register.jsx';
 import Description from './pages/Description.jsx';
 import AllProducts from './pages/AllProducts.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
+import ForgetPassword from './auth/ForgetPassword.jsx'
+import Checkout from './pages/user/Checkout.jsx';
+import Account from './pages/user/Account.jsx';
+
+
+
+import PageNotFound from './pages/PageNotFound.jsx';
+import ChangeProfile from './pages/user/ChangeProfile.jsx';
+import Address from './pages/user/Address.jsx';
+import ChangePassword from './auth/ChangePassword.jsx';
+import MyList from './pages/user/MyList.jsx';
+import MyOrder from './pages/user/MyOrder.jsx';
+
+
 
 function App() {
   const [cartCount, setCartCount] = useState(0);
   const [search, setSearch] = useState('');
-  const [wishlistcount, setwishlistcount] = useState(0);
-  const [wishlist, setWishlist] = useState([]);
+  const [wishlistcount, setwishlistcount] = useState(3);
+  const [wishlist, setWishlist] = useState([1,2,3]);
   const [cardlist, setcardlist] = useState([{}]);
   const [menu, setmenu] = useState("Home");
   const [subcategory, setsubcategory] = useState('');
@@ -60,6 +74,13 @@ function App() {
     setcardlist
   };
 
+  const mylist={
+    wishlistcount,
+    setwishlistcount,
+    wishlist,
+    setWishlist
+  }
+
   return (
     <div className="App">
       <ToastContainer />
@@ -75,7 +96,17 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/product/:id" element={<Description desc={desc} />} />
-          <Route path="/:category" element={<AllProducts product={product} />} />
+          <Route path="/menu/:category" element={<AllProducts product={product} />} />
+          <Route path="/forgot-password" element={<ForgetPassword />} />
+          <Route path="/checkout" element={<Checkout/>} />
+          <Route path="/my-account" element={<Account/>} />
+          <Route path="/change-profile" element={<ChangeProfile/>} />
+          <Route path="/address" element={<Address/>} />
+          <Route path="/change-password" element={<ChangePassword/>} />
+          <Route path="/my-list" element={<MyList mylist={mylist}/>} />
+          <Route path="/my-order" element={<MyOrder/>} />
+
+          <Route path="*" element={<PageNotFound/>} />
         </Routes>
         <div className="w-full">
           <Footer />

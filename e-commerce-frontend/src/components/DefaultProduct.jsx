@@ -201,7 +201,7 @@ function DefaultProduct({ product, name, category }) {
         {/* View All Button (shows only if scroll is needed) */}
         {showViewAll && (
           <div className="flex items-center ml-auto">
-            <Link to={`/${name === "Related Products" ? category.trim().toLowerCase() : name.trim().toLowerCase()}`}>
+            <Link to={`/menu/${name === "Related Products" ? category.trim().toLowerCase() : name.trim().toLowerCase()}`}>
               <Button
                 variant="text"
                 className="!capitalize !font-bold !text-pink-600 flex items-center gap-1 !bg-gray-100"

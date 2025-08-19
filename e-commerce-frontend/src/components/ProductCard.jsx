@@ -65,7 +65,7 @@ const ProductCard = ({
           <img
             src={imageUrl}
             alt={title}
-            className="w-full h-[12rem] flex rounded-xl overflow-hidden"
+            className="w-full h-[12rem] lg:h-[14rem] flex rounded-xl overflow-hidden"
           />
         </Link>
         {/* Discount badge */}
