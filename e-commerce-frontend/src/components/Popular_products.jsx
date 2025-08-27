@@ -57,7 +57,7 @@ const products = [
     discountedPrice: 75,
   },
   {
-    id: 1,
+    id: 5,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",
@@ -67,7 +67,7 @@ const products = [
     discountedPrice: 90,
   },
   {
-    id: 2,
+    id: 6,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",
@@ -77,7 +77,7 @@ const products = [
     discountedPrice: 110,
   },
   {
-    id: 3,
+    id: 7,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",
@@ -87,7 +87,7 @@ const products = [
     discountedPrice: 75,
   },
   {
-    id: 4,
+    id: 8,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",
@@ -97,7 +97,7 @@ const products = [
     discountedPrice: 75,
   },
   {
-    id: 1,
+    id: 9,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",
@@ -107,7 +107,7 @@ const products = [
     discountedPrice: 90,
   },
   {
-    id: 2,
+    id: 10,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",
@@ -117,7 +117,7 @@ const products = [
     discountedPrice: 110,
   },
   {
-    id: 3,
+    id: 11,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",
@@ -127,7 +127,7 @@ const products = [
     discountedPrice: 75,
   },
   {
-    id: 4,
+    id: 12,
     imageUrl: dumy,
     discountPercent: 25,
     brand: "DemoBrand",

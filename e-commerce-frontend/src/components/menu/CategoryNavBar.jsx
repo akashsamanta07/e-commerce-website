@@ -44,7 +44,7 @@ const CategoryNavBar = () => {
         >
           {categories.map((category, idx) => (
             <Link
-              to={`/${category.name.toLowerCase()}`}
+              to={`/menu/${category.name.toLowerCase()}`}
               key={idx}
               className={`
                 flex flex-col items-center justify-center

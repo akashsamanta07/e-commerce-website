@@ -9,7 +9,7 @@ import { DrawerContentCart } from '../Slideber.jsx';
 import { Link } from "react-router-dom";
 
 function Header2({ header2 }) {
-  let { cartCount, search, setSearch, wishlistcount, setmenu, setsubcategory } = header2;
+  let { cartCount, search, setSearch, wishlistcount, setmenu, setsubcategory,setis } = header2;
   const [openMenu, setOpenMenu] = useState(false);
   const [openCart, setOpenCart] = useState(false);
   let menuobj = {
@@ -20,7 +20,7 @@ function Header2({ header2 }) {
   const onsubmit = (event) => {
     event.preventDefault();
     setSearch(event.target.value);
-    setmenu("Home");
+    setmenu("Search");
     setsubcategory("");
     // You can add search logic here
   };
@@ -38,7 +38,7 @@ function Header2({ header2 }) {
         <div className="w-full flex items-center justify-between gap-[10px]">
           {/* Menu icon (HiMenuAlt2) always visible on left, no search button on mobile */}
           {/* Desktop: Search box in exact center, Logo left on desktop, center on mobile */}
-          <div className="flex items-center flex-shrink-0 md:hidden">
+          <div className="flex items-center flex-shrink-0 md:hidden" onClick={()=>{setis(0)}}>
             <IconButton aria-label="menu" onClick={() => setOpenMenu(true)}>
               <HiMenuAlt2 className="text-gray-600" />
             </IconButton>
@@ -103,7 +103,7 @@ function Header2({ header2 }) {
                 </span>
               </div>
             </Link>
-            <div className="relative group hidden md:flex items-center">
+            <div className="relative group hidden md:flex items-center" onClick={()=>{setis(0)}}>
               <IconButton aria-label="cart" onClick={() => setOpenCart(true)}>
                 <Badge badgeContent={cartCount} color="primary">
                   <FaShoppingCart className="text-gray-600" />
@@ -114,7 +114,7 @@ function Header2({ header2 }) {
               </span>
             </div>
             {/* Mobile: Cart icon on right */}
-            <div className="md:hidden flex items-center">
+            <div className="md:hidden flex items-center" onClick={()=>{setis(0)}}>
               <IconButton aria-label="cart" onClick={() => setOpenCart(true)}>
                 <Badge badgeContent={cartCount} color="primary">
                   <FaShoppingCart className="text-gray-600" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useEffect,useState } from 'react';
 import { HiMenuAlt2 } from 'react-icons/hi';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import { FaPlane } from 'react-icons/fa';
@@ -6,6 +6,8 @@ import { Button } from '@mui/material';
 import { SlideDrawer } from '../Slideber.jsx';
 import { DrawerContentMenu } from '../Slideber.jsx';
 import { Link } from 'react-router-dom';
+import { FaSearch} from 'react-icons/fa';
+import { IconButton} from '@mui/material';
 
 // Create an array of category items
 const categoryItems = [
@@ -21,7 +23,7 @@ const categoryItems = [
 ];
 
 function Header3({ header3 }) {
-  let { setmenu, setsubcategory } = header3;
+  let { setmenu, setsubcategory ,search,setSearch,is} = header3;
   const [openMenu, setOpenMenu] = useState(false);
   let menuobj = {
     setmenu,
@@ -32,6 +34,25 @@ function Header3({ header3 }) {
   const getCategoryLink = (item) => {
     if (item === 'Home') return '/';
     return `/menu/${item.toLowerCase()}`;
+  };
+
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (is !== 0 && inputRef.current) {
+      // Small timeout helps on mobile to ensure keyboard opens
+      setTimeout(() => {
+        inputRef.current.focus();
+      }, 50);
+    }
+  }, [is]);
+
+  const onsubmit = (event) => {
+    event.preventDefault();
+    setSearch(event.target.value);
+    setmenu("search");
+    setsubcategory("");
+    // You can add search logic here
   };
 
   return (
@@ -51,8 +72,7 @@ function Header3({ header3 }) {
 
         {/* Middle: Category Buttons - all in one line, scrollable on small/tab screens */}
         <div
-          className="
-            flex
+          className={`${is === 1 ? "hidden" : "block"} flex
             flex-nowrap
             overflow-x-auto
             scrollbar-none
@@ -65,8 +85,7 @@ function Header3({ header3 }) {
             no-underline
             px-1
             items-center
-            whitespace-nowrap
-          "
+            whitespace-nowrap`}
           style={{
             gap: window.innerWidth < 640 ? '0' : '0.75rem',
           }}
@@ -96,6 +115,25 @@ function Header3({ header3 }) {
             </Link>
           ))}
         </div>
+        <div className={`${is === 0 ? "hidden" : "block"} w-full max-w-md`}>
+        <form
+          className="flex items-center bg-gray-100 rounded-md px-2 py-1"
+          onSubmit={onsubmit}
+        >
+          <input
+            ref={inputRef} // <-- Add ref here
+            type="text"
+            placeholder="Search for products..."
+            aria-label="search"
+            className="flex-1 px-2 bg-transparent outline-none"
+            value={search}
+            onChange={onsubmit}
+          />
+          <IconButton type="submit" aria-label="search" className="p-2">
+            <FaSearch className="text-gray-500 text-[16px]" />
+          </IconButton>
+        </form>
+      </div>
 
         {/* Right: Free International Delivery (hidden on small/tab screens) */}
         <div className="hidden xl:flex items-center gap-2 whitespace-nowrap">

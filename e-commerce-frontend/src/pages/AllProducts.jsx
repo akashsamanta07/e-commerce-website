@@ -2,10 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import dumy from '../assets/dumy.jpg';
 import ProductCard from '../components/ProductCard.jsx';
-import { MdCategory, MdSort, MdArrowDownward, MdArrowUpward } from 'react-icons/md';
+import { MdCategory, MdSort, MdArrowDownward, MdArrowUpward, MdSearchOff } from 'react-icons/md';
 import { FormControl, Select, MenuItem } from '@mui/material';
 
-const products = [
+let products = [
   {
     id: 1,
     imageUrl: dumy,
@@ -427,23 +427,30 @@ function AllProducts({ product }) {
          gap-[6px] lg:gap-[1rem]
         "
       >
-        {sortedProducts.map((prod) => (
-          <ProductCard
-            key={prod.id}
-            id={prod.id}
-            imageUrl={prod.imageUrl}
-            discountPercent={prod.discountPercent}
-            isWishlisted={wishlist.includes(prod.id)}
-            brand={prod.brand}
-            title={prod.title}
-            rating={prod.rating}
-            originalPrice={prod.originalPrice}
-            discountedPrice={prod.discountedPrice}
-            onAddToCart={() => handleAddToCart(prod.id)}
-            onToggleWishlist={() => handleToggleWishlist(prod.id)}
-            cardlist={cardlist}
-          />
-        ))}
+        {sortedProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center w-full py-16">
+            <MdSearchOff className="text-gray-400 mb-2" size={64} />
+            <span className="text-lg font-semibold text-gray-500">No products found</span>
+          </div>
+        ) : (
+          sortedProducts.map((prod) => (
+            <ProductCard
+              key={prod.id}
+              id={prod.id}
+              imageUrl={prod.imageUrl}
+              discountPercent={prod.discountPercent}
+              isWishlisted={wishlist.includes(prod.id)}
+              brand={prod.brand}
+              title={prod.title}
+              rating={prod.rating}
+              originalPrice={prod.originalPrice}
+              discountedPrice={prod.discountedPrice}
+              onAddToCart={() => handleAddToCart(prod.id)}
+              onToggleWishlist={() => handleToggleWishlist(prod.id)}
+              cardlist={cardlist}
+            />
+          ))
+        )}
       </div>
     </div>
   );

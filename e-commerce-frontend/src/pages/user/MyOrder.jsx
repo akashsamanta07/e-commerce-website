@@ -120,7 +120,7 @@ function MyOrder() {
                       border: '1px solid #d1d5db',
                     }}
                   >
-                    Total (₹)
+                    Total(₹)
                   </TableCell>
                   <TableCell
                     className="font-bold"
