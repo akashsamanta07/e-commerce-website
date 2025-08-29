@@ -37,6 +37,36 @@ const allProducts = [
     originalPrice: 100,
     discountedPrice: 75,
   },
+  {
+    id: 4,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Random Product Name dsf frdys trwyr",
+    rating: 4.2,
+    originalPrice: 120,
+    discountedPrice: 90,
+  },
+  {
+    id: 5,
+    imageUrl: dumy,
+    discountPercent: 25,
+    brand: "DemoBrand",
+    title: "Another Productggggggggggggggggggggggggggggggggggggggh Name",
+    rating: 4.5,
+    originalPrice: 150,
+    discountedPrice: 110,
+  },
+  {
+    id: 6,
+    imageUrl: dumy,
+    discountPercent: 10,
+    brand: "DemoBrand",
+    title: "Third Product Example",
+    rating: 3.8,
+    originalPrice: 100,
+    discountedPrice: 75,
+  },
 ];
 
 function getProductById(id) {
@@ -72,6 +102,13 @@ function MyList({ mylist }) {
     setwishlistcount(wishlistcount > 0 ? wishlistcount - 1 : 0);
     notify("warning","Item Removed from Wishlist")
   };
+  const tableContainerStyle = {
+    border: '1px solid #e5e7eb', // Tailwind gray-200
+    backgroundColor: '#f3f4f6', // Tailwind gray-100
+    ...(allProducts.length > 4
+      ? { maxHeight: '50vh', overflowY: 'auto', display: 'block' }
+      : {})
+  };
 
   return (
     <div className='mx-5 my-8 #f5f0f0'>
@@ -80,7 +117,7 @@ function MyList({ mylist }) {
         {wishlistedProducts.length === 0 ? (
           <div className="text-gray-500 text-center py-8">No products in your wishlist.</div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3" style={tableContainerStyle}>
             {wishlistedProducts.map((product) => (
               <div
                 key={product.id}

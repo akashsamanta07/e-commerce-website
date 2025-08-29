@@ -58,7 +58,7 @@ function Header3({ header3 }) {
   return (
     <div className="shadow-b shadow-md bg-white border-b-[1px]">
       <SlideDrawer open={openMenu} side="left" onClose={() => setOpenMenu(false)}>
-        <DrawerContentMenu menuobj={menuobj} />
+        <DrawerContentMenu menuobj={menuobj} setOpenMenu={setOpenMenu} />
       </SlideDrawer>
       <div className=" flex items-center justify-between py-2 px-1 Container">
         {/* Left: Shop by Categories (hidden on small/tab screens) */}

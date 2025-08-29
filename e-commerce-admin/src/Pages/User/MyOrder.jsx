@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, TextField, InputAdornment } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, MenuItem, Select, TextField, InputAdornment } from '@mui/material';
 import { MdReceipt, MdLocalShipping, MdCheckCircle, MdCancel, MdSearch } from "react-icons/md";
 
 // Dummy order data for demonstration
@@ -75,14 +75,28 @@ function getStatusChip(status) {
   }
 }
 
+const statusOptions = [
+  { value: 'Delivered', label: 'Delivered', icon: <MdCheckCircle style={{ color: "#16a34a" }} /> },
+  { value: 'Shipped', label: 'Shipped', icon: <MdLocalShipping style={{ color: "#f59e42" }} /> },
+  { value: 'Cancelled', label: 'Cancelled', icon: <MdCancel style={{ color: "#ef4444" }} /> },
+];
+
 function MyOrder() {
-  const [orders] = useState(initialOrders);
+  const [orders, setOrders] = useState(initialOrders);
   const [search, setSearch] = useState('');
+
+  const handleStatusChange = (orderId, newStatus) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+  };
 
   // Filter orders by order id only
   const filteredOrders = orders.filter(order => {
     const searchLower = search.trim().toLowerCase();
-    if (searchLower === '') return true;
+    if (searchLower==='') return true;
     return order.id.toLowerCase().includes(searchLower);
   });
 
@@ -177,6 +191,15 @@ function MyOrder() {
                   >
                     Status
                   </TableCell>
+                  <TableCell
+                    className="font-bold"
+                    style={{
+                      fontWeight: 'bold',
+                      border: '1px solid #d1d5db',
+                    }}
+                  >
+                    Action
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -209,11 +232,29 @@ function MyOrder() {
                       ₹{order.total}
                     </TableCell>
                     <TableCell style={{ border: '1px solid #e5e7eb' }}>{getStatusChip(order.status)}</TableCell>
+                    <TableCell style={{ border: '1px solid #e5e7eb' }}>
+                      <Select
+                        value={order.status}
+                        onChange={e => handleStatusChange(order.id, e.target.value)}
+                        size="small"
+                        variant="outlined"
+                        style={{ minWidth: 120, marginRight: 8 }}
+                      >
+                        {statusOptions.map(opt => (
+                          <MenuItem key={opt.value} value={opt.value}>
+                            <span className="flex items-center gap-2">
+                              {opt.icon}
+                              {opt.label}
+                            </span>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {filteredOrders.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} align="center" className="py-8 text-gray-500" style={{ border: '1px solid #e5e7eb' }}>
+                    <TableCell colSpan={6} align="center" className="py-8 text-gray-500" style={{ border: '1px solid #e5e7eb' }}>
                       No orders found.
                     </TableCell>
                   </TableRow>

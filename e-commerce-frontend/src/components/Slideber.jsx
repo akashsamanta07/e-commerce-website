@@ -50,7 +50,7 @@ export function SlideDrawer({ open, side, onClose, children }) {
   );
 }
 
-export function DrawerContentMenu({ menuobj }) {
+export function DrawerContentMenu({ menuobj, setOpenMenu }) {
   let { setmenu, setsubcategory } = menuobj;
   const categories = [
     { name: 'Fashion', sub: ['Men', 'Women', 'Kids'] },
@@ -105,6 +105,7 @@ export function DrawerContentMenu({ menuobj }) {
                     onClick={() => {
                       setmenu(cat.name);
                       setsubcategory(subItem);
+                      setOpenMenu(false);
                     }}
                   >
                     {subItem}
@@ -134,6 +135,7 @@ export function DrawerContentMenu({ menuobj }) {
               textTransform: "none"
             }}
             fullWidth
+            onClick={()=>{setOpenMenu(false)}}
           >
             Login
           </Button>

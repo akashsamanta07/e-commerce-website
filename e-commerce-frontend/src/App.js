@@ -28,7 +28,7 @@ function App() {
   const [cartCount, setCartCount] = useState(0);
   const [search, setSearch] = useState('');
   const [wishlistcount, setwishlistcount] = useState(3);
-  const [wishlist, setWishlist] = useState([1,2,3]);
+  const [wishlist, setWishlist] = useState([1,2,3,4,5,6]);
   const [cardlist, setcardlist] = useState([{}]);
   const [menu, setmenu] = useState("Home");
   const [subcategory, setsubcategory] = useState('');

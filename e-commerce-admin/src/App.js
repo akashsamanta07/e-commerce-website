@@ -1,23 +1,50 @@
-import logo from './logo.svg';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
+import Header1 from "./components/Header/Header1.jsx";
+import Header2 from "./components/Header/Header2.jsx";
+import Footer from "./components/footer/Footer.jsx";
+import Login from './auth/Login.jsx';
+import Home from "./Pages/Home.jsx";
+import ChangeProfile from "./auth/ChangeProfile.jsx";
+import { ToastContainer } from 'react-toastify';
+import MyOrder from "./Pages/User/MyOrder.jsx";
+import ManageLogo from "./Pages/User/ManageLogo.jsx";
+import Banner from "./Pages/User/Banner.jsx";
+import Category from "./Pages/User/Category.jsx";
+import HomeSlider from "./Pages/HomeSlider.jsx";
+import Products from "./Pages/Products.jsx";
+import Dashbroad from "./Pages/Dashbroad.jsx";
+
+
+function NotFound() {
+  // "ang error" - show error message
+  return <div className="text-red-500 text-center mt-10 text-xl font-bold">Error: 404 - Page Not Found</div>;
+}
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <ToastContainer/>
+      <Router>
+      <Header2/>
+        <Routes>
+          <Route path="/" element={<MyOrder />} />
+          <Route path="/admin/login" element={<Login />} />
+          <Route path="/admin/dashboard" element={<Home><Dashbroad/></Home>} />
+          <Route path="/admin/slider" element={<Home><HomeSlider/></Home>} />
+          <Route path="/admin/category" element={<Home><Category/></Home>} />
+          <Route path="/admin/products" element={<Home><Products/></Home>} />
+          <Route path="/admin/orders" element={<Home><MyOrder/></Home>} />
+          <Route path="/admin/banner" element={<Home><Banner/></Home>} />
+          <Route path="/admin/logo" element={<Home><ManageLogo/></Home>} />
+          <Route path="/admin/profile" element={<Home><ChangeProfile/></Home>} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <div className="w-full">
+          <Footer />
+        </div>
+      </Router>
     </div>
   );
 }

@@ -2,16 +2,14 @@ import React, { useState } from "react";
 import { Avatar, Button, TextField, InputAdornment } from "@mui/material";
 import { FaUserCircle } from "react-icons/fa";
 import { MdPerson, MdEmail, MdPhone } from "react-icons/md";
-import notify from "../../components/Notification/notify";
 import { useNavigate } from "react-router-dom";
+import notify from "../components/Notification/notify.jsx";
 
 const defaultProfilePic = (
   <FaUserCircle className="text-gray-400" style={{ fontSize: 90 }} />
 );
 
-
 function ChangeProfile() {
-  const navigate=useNavigate();
   const [user, setUser] = useState({
     name: "John Doe",
     email: "john.doe@example.com",
@@ -19,6 +17,7 @@ function ChangeProfile() {
     profilePic: "", // If empty, show default
   });
   const [profilePic, setProfilePic] = useState(user.profilePic);
+  const navigate = useNavigate();
 
   // Handle input changes
   const handleChange = (e) => {
@@ -50,8 +49,8 @@ function ChangeProfile() {
   const handleSave = (e) => {
     e.preventDefault();
     // Here you would send updated data to backend
-    notify("success","Profile updated!");
-    navigate("/my-account");
+    notify("success","Profile updated!")
+    navigate("/admin/dashboard");
   };
 
   return (
