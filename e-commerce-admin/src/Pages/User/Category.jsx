@@ -19,7 +19,6 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -43,23 +42,17 @@ const initialCategories = [
 function Category() {
   const [categories, setCategories] = useState(initialCategories);
 
-  // Add Category Dialog State
   const [addOpen, setAddOpen] = useState(false);
   const [addName, setAddName] = useState('');
-  const [addImage, setAddImage] = useState(null);
   const [addPreview, setAddPreview] = useState('');
 
-  // Edit Category Dialog State
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState('');
-  const [editImage, setEditImage] = useState(null);
   const [editPreview, setEditPreview] = useState('');
 
-  // Handle Add Category
   const handleAddCategory = () => {
     setAddName('');
-    setAddImage(null);
     setAddPreview('');
     setAddOpen(true);
   };
@@ -67,7 +60,6 @@ function Category() {
   const handleAddImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setAddImage(file);
       setAddPreview(URL.createObjectURL(file));
     }
   };
@@ -83,18 +75,15 @@ function Category() {
       setCategories([...categories, newCategory]);
       setAddOpen(false);
       setAddName('');
-      setAddImage(null);
       setAddPreview('');
       notify("success","Category Upload Successfully");
     }
   };
 
-  // Handle Edit Category
   const handleEdit = (id) => {
     const category = categories.find(c => c.id === id);
     setEditId(id);
     setEditName(category.name);
-    setEditImage(null);
     setEditPreview(category.image);
     setEditOpen(true);
   };
@@ -102,7 +91,6 @@ function Category() {
   const handleEditImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setEditImage(file);
       setEditPreview(URL.createObjectURL(file));
     }
   };
@@ -117,18 +105,15 @@ function Category() {
     setEditOpen(false);
     setEditId(null);
     setEditName('');
-    setEditImage(null);
     setEditPreview('');
     notify("success","Category Update Successfully");
   };
 
-  // Handle Delete
   const handleDelete = (id) => {
     setCategories(categories.filter(c => c.id !== id));
     notify("warning","Category Remove Successfully");
   };
 
-  // TableContainer style: if more than 4 categories, set maxHeight and overflowY
   const tableContainerSx = {
     borderRadius: 2,
     border: '1px solid #e5e7eb',
@@ -139,8 +124,7 @@ function Category() {
   };
 
   return (
-    <Box sx={{ m: 2,p:1, bgcolor: '#fff' }}>
-      {/* Top Section: Category List title and Add Category button, centered and justified between */}
+    <Box sx={{ m: 2, p: 1, bgcolor: '#fff' }}>
       <Box
         display="flex"
         alignItems="center"
@@ -152,7 +136,6 @@ function Category() {
         <Typography
           variant="h5"
           fontWeight="bold"
-          color="secondary"
           sx={{ color: '#ec4899', mb: { xs: 1, md: 0 }, textAlign: { xs: 'center', md: 'left' } }}
         >
           Category List
@@ -173,7 +156,6 @@ function Category() {
         </Button>
       </Box>
 
-      {/* Table Section: Show image and name in table */}
       <TableContainer component={Paper} sx={tableContainerSx}>
         <Table>
           <TableHead>
@@ -217,7 +199,6 @@ function Category() {
         </Table>
       </TableContainer>
 
-      {/* Add Category Dialog */}
       <Dialog open={addOpen} onClose={() => setAddOpen(false)}>
         <DialogTitle>Add Category</DialogTitle>
         <form onSubmit={handleAddSubmit}>
@@ -271,7 +252,6 @@ function Category() {
         </form>
       </Dialog>
 
-      {/* Edit Category Dialog */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
         <DialogTitle>Edit Category</DialogTitle>
         <form onSubmit={handleEditSubmit}>

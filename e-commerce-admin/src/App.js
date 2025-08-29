@@ -27,9 +27,10 @@ function App() {
     <div className="App">
       <ToastContainer/>
       <Router>
+      <Header1/>
       <Header2/>
         <Routes>
-          <Route path="/" element={<MyOrder />} />
+          <Route path="/" element={<Login />} />
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin/dashboard" element={<Home><Dashbroad/></Home>} />
           <Route path="/admin/slider" element={<Home><HomeSlider/></Home>} />

@@ -15,12 +15,10 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
 } from '@mui/material';
 import { MdEdit, MdDelete, MdAddPhotoAlternate } from 'react-icons/md';
 import notify from '../../components/Notification/notify';
@@ -39,18 +37,14 @@ const initialBanners = [
 function Banner() {
   const [banners, setBanners] = useState(initialBanners);
 
-  // Add Banner Dialog State
   const [addOpen, setAddOpen] = useState(false);
   const [addImage, setAddImage] = useState(null);
   const [addPreview, setAddPreview] = useState('');
 
-  // Edit Banner Dialog State
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [editImage, setEditImage] = useState(null);
   const [editPreview, setEditPreview] = useState('');
 
-  // Handle Add Banner
   const handleAddBanner = () => {
     setAddImage(null);
     setAddPreview('');
@@ -76,15 +70,13 @@ function Banner() {
       setAddOpen(false);
       setAddImage(null);
       setAddPreview('');
+      notify("success", "Banner Upload Successfully");
     }
-    notify("success","Banner Upload Successfully");
   };
 
-  // Handle Edit Banner
   const handleEdit = (id) => {
     const banner = banners.find(b => b.id === id);
     setEditId(id);
-    setEditImage(null);
     setEditPreview(banner.image);
     setEditOpen(true);
   };
@@ -92,7 +84,6 @@ function Banner() {
   const handleEditImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setEditImage(file);
       setEditPreview(URL.createObjectURL(file));
     }
   };
@@ -106,18 +97,15 @@ function Banner() {
     ));
     setEditOpen(false);
     setEditId(null);
-    setEditImage(null);
     setEditPreview('');
-    notify("success","Banner Update Successfully");
+    notify("success", "Banner Update Successfully");
   };
 
-  // Handle Delete
   const handleDelete = (id) => {
     setBanners(banners.filter(b => b.id !== id));
-    notify("warning","Banner Remove Successfully");
+    notify("warning", "Banner Remove Successfully");
   };
 
-  // TableContainer style: if more than 4 banners, set maxHeight and overflowY
   const tableContainerSx = {
     borderRadius: 2,
     border: '1px solid #e5e7eb',
@@ -128,8 +116,7 @@ function Banner() {
   };
 
   return (
-    <Box sx={{ m: 2,p:1, bgcolor: '#fff' }}>
-      {/* Top Section: Banner List title and Add Banner button, centered and justified between */}
+    <Box sx={{ m: 2, p: 1, bgcolor: '#fff' }}>
       <Box
         display="flex"
         alignItems="center"
@@ -141,7 +128,6 @@ function Banner() {
         <Typography
           variant="h5"
           fontWeight="bold"
-          color="secondary"
           sx={{ color: '#ec4899', mb: { xs: 1, md: 0 }, textAlign: { xs: 'center', md: 'left' } }}
         >
           Banner List
@@ -162,7 +148,6 @@ function Banner() {
         </Button>
       </Box>
 
-      {/* Table Section: Only show images in table */}
       <TableContainer component={Paper} sx={tableContainerSx}>
         <Table>
           <TableHead>
@@ -202,7 +187,6 @@ function Banner() {
         </Table>
       </TableContainer>
 
-      {/* Add Banner Dialog */}
       <Dialog open={addOpen} onClose={() => setAddOpen(false)}>
         <DialogTitle>Add Banner</DialogTitle>
         <form onSubmit={handleAddSubmit}>
@@ -248,7 +232,6 @@ function Banner() {
         </form>
       </Dialog>
 
-      {/* Edit Banner Dialog */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
         <DialogTitle>Edit Banner</DialogTitle>
         <form onSubmit={handleEditSubmit}>
