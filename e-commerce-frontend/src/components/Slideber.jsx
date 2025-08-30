@@ -24,6 +24,7 @@ export function SlideDrawer({ open, side, onClose, children }) {
         onClick={onClose}
       />
       {/* Drawer */}
+      
       <div
         className={`
           fixed top-0 ${side === 'left' ? 'left-0 w-72' : 'right-0 w-[21rem] lg:w-[25rem]'}

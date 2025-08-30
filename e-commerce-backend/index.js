@@ -40,6 +40,7 @@ app.use(
   })
 );
 
+
 // Routers
 app.use("/host", hostRouter);
 app.use("/user", userRouter);
