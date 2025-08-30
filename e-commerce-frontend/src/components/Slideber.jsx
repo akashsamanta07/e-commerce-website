@@ -39,7 +39,7 @@ export function SlideDrawer({ open, side, onClose, children }) {
       >
         {side === 'left' ? fnlogo() : ""}
         <div className="flex justify-between items-center px-6 py-3 border-b">
-          <span className="font-bold text-lg ps-2 text-pink-600">{side === 'left' ? 'Shop by Categories' : 'Card Items'}</span>
+          <span className="font-bold text-lg ps-2 text-pink-600">{side === 'left' ? 'Shop by Categories' : 'Cart Items'}</span>
           <button onClick={onClose} className="text-gray-500 hover:text-pink-600 text-2xl">&times;</button>
         </div>
         <div className="p-4">
