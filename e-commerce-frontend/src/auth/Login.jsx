@@ -1,13 +1,21 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { IconButton, Button, InputAdornment } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import { IconButton, Button, InputAdornment, CircularProgress } from "@mui/material";
 import LoginIcon from "@mui/icons-material/Login";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
-import { FcGoogle } from "react-icons/fc"; // Google icon from react-icons
+import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
+import notify from "../components/Notification/notify";
+
+const API_BASE = "http://localhost:3005";
+
+// Helper to always show small notification
+const notifySmall = (type, message) => {
+  notify(type, message, { fontSize: "0.85rem" });
+};
 
 function Login({ onLogin }) {
   const [form, setForm] = useState({
@@ -15,39 +23,59 @@ function Login({ onLogin }) {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  // Remove error state
-  // const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
-    // setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simple validation
-    // if (!form.email || !form.password) {
-    //   setError("Please enter both email and password.");
-    //   return;
-    // }
-    // Dummy login logic (replace with real API call)
-    if (form.email === "user@example.com" && form.password === "password") {
-      // setError("");
-      if (onLogin) onLogin(form);
-      // You can redirect or set auth state here
-    } else {
-      // setError("Invalid email or password.");
+    if (!form.email || !form.password) {
+      notifySmall("warning", "Fill all fields");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/user/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        notifySmall("error", data.message || "Login failed");
+        setLoading(false);
+        return;
+      }
+
+      notifySmall("success", "Login success");
+      setLoading(false);
+      if (onLogin) onLogin(data.user || form);
+      navigate("/");
+    } catch (err) {
+      notifySmall("error", "Network error");
+      setLoading(false);
     }
   };
 
   // Dummy Google login handler
   const handleGoogleLogin = (e) => {
     e.preventDefault();
-    // Replace with real Google OAuth logic
-    alert("Google login not implemented.");
+    notifySmall("warning", "Not ready");
   };
 
   return (
@@ -60,7 +88,6 @@ function Login({ onLogin }) {
           <LoginIcon sx={{ color: "#db2777", fontSize: 32 }} />
           Login
         </h2>
-        {/* Error display removed */}
         <div className="mb-4">
           <label
             htmlFor="email"
@@ -158,7 +185,7 @@ function Login({ onLogin }) {
           </Link>
         </div>
         <div className="flex justify-center mb-2">
-          <IconButton
+          <Button
             type="submit"
             color="primary"
             size="large"
@@ -173,15 +200,20 @@ function Login({ onLogin }) {
               fontSize: "1rem",
               boxShadow: 1,
               transition: "background 0.2s",
-              width: "100%", // Make button full width
+              width: "100%",
               justifyContent: "center",
               display: "flex"
             }}
             className="w-full"
+            disabled={loading}
           >
-            <LoginIcon sx={{ mr: 1 }} />
+            {loading ? (
+              <CircularProgress size={24} sx={{ color: "#fff", mr: 2 }} />
+            ) : (
+              <LoginIcon sx={{ mr: 1 }} />
+            )}
             Login
-          </IconButton>
+          </Button>
         </div>
         <div className="flex items-center my-4">
           <div className="flex-grow border-t border-gray-200" />

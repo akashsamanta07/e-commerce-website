@@ -10,13 +10,20 @@ const notify = (type,massage) => {
         ? { minWidth: "150px", maxWidth: "60vw", fontSize: "0.85rem", borderRadius: "10px", margin: "0.5rem" }
         : {},
     };
-    if(type==="warning"){
+    if (type === "warning") {
         toast.warning(massage, toastOptions);
-    }else{
+    } else if (type === "error") {
+        toast.error(massage, toastOptions);
+    } else {
         toast.success(massage, toastOptions);
     }
-    
 
   };
 
   export default notify;
+
+
+  //remove all display massage add toastify massage as notify("warning/success/error","massage")
+  // make all notify massage size small 3 to 4 word
+  // const API_BASE = "http://localhost:3005";
+  //use import{ CircularProgress } from "@mui/material";
