@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { IconButton, Button, InputAdornment } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import { IconButton, Button, InputAdornment, CircularProgress } from "@mui/material";
 import LoginIcon from "@mui/icons-material/Login";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
@@ -8,6 +8,9 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
+import notify from "../components/Notification/notify.jsx";
+
+const API_BASE = "http://localhost:3005";
 
 function Login({ onLogin }) {
   const [form, setForm] = useState({
@@ -15,6 +18,9 @@ function Login({ onLogin }) {
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({
@@ -23,24 +29,48 @@ function Login({ onLogin }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Only allow admin login
-    if (
-      form.email === "admin@admin.com" &&
-      form.password === "admin"
-    ) {
-      if (onLogin) onLogin(form);
-      // You can redirect or set auth state here
-    } else {
-      alert("Invalid admin credentials.");
+    if (!form.email || !form.password) {
+      notify("warning", "Fill all fields");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        notify("error", data.message || "Login failed");
+        setLoading(false);
+        return;
+      }
+
+      notify("success", "Login success");
+      setLoading(false);
+      if (onLogin) onLogin(data.user || form);
+      navigate("/admin/dashboard");
+    } catch (err) {
+      notify("error", "Network error");
+      setLoading(false);
     }
   };
 
   // Dummy Google login handler
   const handleGoogleLogin = (e) => {
     e.preventDefault();
-    alert("Google login not implemented.");
+    notify("warning", "No Google yet");
   };
 
   return (
@@ -57,7 +87,7 @@ function Login({ onLogin }) {
         <div className="mb-4">
           <label
             htmlFor="email"
-            className="block text-gray-700 font-medium mb-1 text-left ps-1"
+            className="block text-gray-700 font-medium mb-1 ps-2 text-left"
           >
             Email
           </label>
@@ -93,7 +123,7 @@ function Login({ onLogin }) {
         <div className="mb-2">
           <label
             htmlFor="password"
-            className="block text-gray-700 font-medium mb-1 text-left ps-1"
+            className="block text-gray-700 font-medium mb-1 ps-2 text-left"
           >
             Password
           </label>
@@ -172,9 +202,14 @@ function Login({ onLogin }) {
               display: "flex"
             }}
             className="w-full"
+            disabled={loading}
           >
-            <LoginIcon sx={{ mr: 1 }} />
-            Login
+            {loading ? (
+              <CircularProgress size={24} sx={{ color: "#fff", mr: 1 }} />
+            ) : (
+              <LoginIcon sx={{ mr: 1 }} />
+            )}
+            {loading ? "Logging in..." : "Login"}
           </IconButton>
         </div>
         <div className="flex items-center my-4">
@@ -203,6 +238,7 @@ function Login({ onLogin }) {
               backgroundColor: "#fdf2f8",
             },
           }}
+          disabled={loading}
         >
           Login with Google
         </Button>

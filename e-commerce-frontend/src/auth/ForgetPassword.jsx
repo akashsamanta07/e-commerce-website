@@ -44,7 +44,7 @@ function ForgetPassword() {
     setLoading(true);
     try {
       // Use correct backend endpoint: /user/forgot-password/send-otp
-      const res = await fetch(`${API_BASE}/user/forgot-password/send-otp`, {
+      const res = await fetch(`${API_BASE}/auth/forgot-password/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -73,7 +73,7 @@ function ForgetPassword() {
     setLoading(true);
     try {
       // Use correct backend endpoint: /user/forgot-password/verify-otp
-      const res = await fetch(`${API_BASE}/user/forgot-password/verify-otp`, {
+      const res = await fetch(`${API_BASE}/auth/forgot-password/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
@@ -110,7 +110,7 @@ function ForgetPassword() {
     setLoading(true);
     try {
       // Use correct backend endpoint: /user/forgot-password/set-new
-      const res = await fetch(`${API_BASE}/user/forgot-password/set-new`, {
+      const res = await fetch(`${API_BASE}/auth/forgot-password/set-new`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp, password,confirmPassword }),

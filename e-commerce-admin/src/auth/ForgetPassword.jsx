@@ -7,7 +7,8 @@ import {
   Button,
   Alert,
   IconButton,
-  InputAdornment
+  InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
@@ -16,6 +17,9 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { MdOutlineMarkEmailRead } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
+import notify from "../components/Notification/notify.jsx";
+
+const API_BASE = "http://localhost:3005";
 
 function ForgetPassword() {
   const [step, setStep] = useState(1); // 1: enter email, 2: enter OTP, 3: reset password
@@ -27,63 +31,122 @@ function ForgetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Dummy handler for sending OTP
-  const handleSendOtp = (e) => {
+  // Handler for sending OTP via API (now uses userRouter endpoint)
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
     if (!email) {
-      setError("Please enter your email address.");
+      setError("Enter email address.");
+      notify("error", "Email required");
       return;
     }
-    // Simulate sending OTP
-    setSuccessMsg("OTP sent to your email address.");
-    setStep(2);
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/forgot-password/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSuccessMsg("OTP sent to email.");
+        notify("success", "OTP sent");
+        setStep(2);
+      } else {
+        setError(data.message || "Failed to send OTP.");
+        notify("error", data.message || "OTP failed");
+      }
+    } catch (err) {
+      setError("Network error. Try again.");
+      notify("error", "Network error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Dummy handler for verifying OTP
-  const handleVerifyOtp = (e) => {
+  // Handler for verifying OTP via API (now uses userRouter endpoint)
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
     if (!otp) {
-      setError("Please enter the OTP sent to your email.");
+      setError("Enter OTP sent to email.");
+      notify("error", "OTP required");
       return;
     }
-    // Simulate OTP verification
-    if (otp === "123456") {
-      setSuccessMsg("OTP verified! Please reset your password.");
-      setStep(3);
-    } else {
-      setError("Invalid OTP. Please try again.");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/forgot-password/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSuccessMsg("OTP verified. Reset password.");
+        notify("success", "OTP verified");
+        setStep(3);
+      } else {
+        setError(data.message || "Invalid OTP.");
+        notify("error", data.message || "OTP invalid");
+      }
+    } catch (err) {
+      setError("Network error. Try again.");
+      notify("error", "Network error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Dummy handler for resetting password
-  const handleResetPassword = (e) => {
+  // Handler for resetting password via API (now uses userRouter endpoint)
+  const handleResetPassword = async (e) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
     if (!password || !confirmPassword) {
-      setError("Please fill in both password fields.");
+      setError("Fill both password fields.");
+      notify("error", "Password required");
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError("Password at least 6 chars.");
+      notify("error", "Password short");
       return;
     }
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+      notify("error", "No match");
       return;
     }
-    // Simulate password reset
-    setSuccessMsg("Password reset successful! You can now log in.");
-    setStep(1);
-    setEmail("");
-    setOtp("");
-    setPassword("");
-    setConfirmPassword("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/forgot-password/set-new`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp, password }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSuccessMsg("Password reset! Login now.");
+        notify("success", "Reset done");
+        setStep(1);
+        setEmail("");
+        setOtp("");
+        setPassword("");
+        setConfirmPassword("");
+      } else {
+        setError(data.message || "Reset failed.");
+        notify("error", data.message || "Reset fail");
+      }
+    } catch (err) {
+      setError("Network error. Try again.");
+      notify("error", "Network error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -162,8 +225,9 @@ function ForgetPassword() {
                   fontSize: "1rem",
                 }}
                 startIcon={<MdOutlineMarkEmailRead size={22} />}
+                disabled={loading}
               >
-                Send OTP
+                {loading ? <CircularProgress size={22} sx={{ color: "#fff" }} /> : "Send OTP"}
               </Button>
             </form>
           )}
@@ -203,8 +267,9 @@ function ForgetPassword() {
                   fontSize: "1rem",
                 }}
                 startIcon={<LockOpenOutlinedIcon />}
+                disabled={loading}
               >
-                Verify OTP
+                {loading ? <CircularProgress size={22} sx={{ color: "#fff" }} /> : "Verify OTP"}
               </Button>
               <Button
                 type="button"
@@ -226,6 +291,7 @@ function ForgetPassword() {
                   setSuccessMsg("");
                   setError("");
                 }}
+                disabled={loading}
               >
                 Change Email
               </Button>
@@ -311,8 +377,9 @@ function ForgetPassword() {
                   fontSize: "1rem",
                 }}
                 startIcon={<RiLockPasswordLine size={22} />}
+                disabled={loading}
               >
-                Reset Password
+                {loading ? <CircularProgress size={22} sx={{ color: "#fff" }} /> : "Reset Password"}
               </Button>
               <Button
                 type="button"
@@ -335,6 +402,7 @@ function ForgetPassword() {
                   setSuccessMsg("");
                   setError("");
                 }}
+                disabled={loading}
               >
                 Back to OTP
               </Button>
@@ -342,7 +410,7 @@ function ForgetPassword() {
           )}
         </Paper>
       </Box>
-      </div>
+    </div>
   );
 }
 

@@ -1,7 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { PORT, DB_PATH } = require("./config");
-const userRouter = require("./routes/userRouter");
+const authRouter = require("./routes/authRouter");
+const userRouter = require("./routes/authRouter");
 const hostRouter = require("./routes/hostRouter");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -14,7 +15,7 @@ const app = express();
 app.use(cors({
     origin: [
         "http://localhost:3001",
-        "*"
+        "http://localhost:3000",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
@@ -42,8 +43,9 @@ app.use(
 
 
 // Routers
-app.use("/host", hostRouter);
+app.use("/auth", authRouter);
 app.use("/user", userRouter);
+app.use("/host", hostRouter);
 
 // Root route
 app.get("/", (req, res) => {

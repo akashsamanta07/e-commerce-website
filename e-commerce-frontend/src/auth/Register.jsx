@@ -70,7 +70,7 @@ function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/user/register`, {
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,7 +115,7 @@ function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/user/verify-email`, {
+      const res = await fetch(`${API_BASE}/auth/verify-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -154,7 +154,7 @@ function Register() {
     setLoading(true);
     try {
       // Re-trigger registration to resend code (or you can create a dedicated endpoint)
-      const res = await fetch(`${API_BASE}/user/register`, {
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
