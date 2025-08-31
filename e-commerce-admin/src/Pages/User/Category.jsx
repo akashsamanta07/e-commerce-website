@@ -1,12 +1,4 @@
-import React, { useState } from 'react';
-import s1 from '../../assets/menu/fashion.png';
-import s2 from '../../assets/menu/electronics.png';
-import s3 from '../../assets/menu/bags.png';
-import s4 from '../../assets/menu/footwear.png';
-import s5 from '../../assets/menu/groceries.png';
-import s6 from '../../assets/menu/beauty.png';
-import s7 from '../../assets/menu/wellness.png';
-import s8 from '../../assets/menu/jewellery.png';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -23,36 +15,58 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  CircularProgress
 } from '@mui/material';
 import { MdEdit, MdDelete, MdAdd } from 'react-icons/md';
 import notify from '../../components/Notification/notify';
+import getImageUrl from '../../components/getImageUrl.js';
 
-const initialCategories = [
-  { id: 1, name: 'Fashion', image: s1 },
-  { id: 2, name: 'Electronics', image: s2 },
-  { id: 3, name: 'Bags', image: s3 },
-  { id: 4, name: 'Footwear', image: s4 },
-  { id: 5, name: 'Groceries', image: s5 },
-  { id: 6, name: 'Beauty', image: s6 },
-  { id: 7, name: 'Wellness', image: s7 },
-  { id: 8, name: 'Jewellery', image: s8 },
-];
+import API_BASE from '../../utils/API_BASE';
 
 function Category() {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  // Add Category Dialog State
   const [addOpen, setAddOpen] = useState(false);
   const [addName, setAddName] = useState('');
+  const [addImage, setAddImage] = useState(null);
   const [addPreview, setAddPreview] = useState('');
 
+  // Edit Category Dialog State
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState('');
+  const [editImage, setEditImage] = useState(null);
   const [editPreview, setEditPreview] = useState('');
 
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/get-categories`);
+      const data = await res.json();
+      if (data.success) {
+        setCategories(data.data);
+      } else {
+        setCategories([]);
+        notify("warning", "No data");
+      }
+    } catch (err) {
+      notify("error", "Fetch fail");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Handle Add Category
   const handleAddCategory = () => {
     setAddName('');
+    setAddImage(null);
     setAddPreview('');
     setAddOpen(true);
   };
@@ -60,58 +74,109 @@ function Category() {
   const handleAddImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setAddImage(file);
       setAddPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (addName && addPreview) {
-      const newCategory = {
-        id: Date.now(),
-        name: addName,
-        image: addPreview
-      };
-      setCategories([...categories, newCategory]);
-      setAddOpen(false);
-      setAddName('');
-      setAddPreview('');
-      notify("success","Category Upload Successfully");
+    if (!addName || !addImage) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', addName);
+      formData.append('photo', addImage);
+
+      const res = await fetch(`${API_BASE}/admin/add-category`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Category Upload Successfully");
+        setAddOpen(false);
+        setAddName('');
+        setAddImage(null);
+        setAddPreview('');
+        fetchCategories();
+      } else {
+        notify("error", "Add fail");
+      }
+    } catch (err) {
+      notify("error", "Add fail");
     }
+    setLoading(false);
   };
 
+  // Handle Edit Category
   const handleEdit = (id) => {
-    const category = categories.find(c => c.id === id);
+    const category = categories.find(c => c._id === id);
     setEditId(id);
-    setEditName(category.name);
-    setEditPreview(category.image);
+    setEditName(category?.name || '');
+    setEditImage(null);
+    setEditPreview(category ? getImageUrl(category.image) : '');
     setEditOpen(true);
   };
 
   const handleEditImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setEditImage(file);
       setEditPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setCategories(categories.map(c =>
-      c.id === editId
-        ? { ...c, name: editName, image: editPreview }
-        : c
-    ));
-    setEditOpen(false);
-    setEditId(null);
-    setEditName('');
-    setEditPreview('');
-    notify("success","Category Update Successfully");
+    if (!editId) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('name', editName);
+      if (editImage) {
+        formData.append('photo', editImage);
+      }
+      const res = await fetch(`${API_BASE}/admin/edit-category/${editId}`, {
+        method: 'PUT',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Category Update Successfully");
+        setEditOpen(false);
+        setEditId(null);
+        setEditName('');
+        setEditImage(null);
+        setEditPreview('');
+        fetchCategories();
+      } else {
+        notify("error", "Edit fail");
+      }
+    } catch (err) {
+      notify("error", "Edit fail");
+    }
+    setLoading(false);
   };
 
-  const handleDelete = (id) => {
-    setCategories(categories.filter(c => c.id !== id));
-    notify("warning","Category Remove Successfully");
+  // Handle Delete
+  const handleDelete = async (id) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/delete-category/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Category Remove Successfully");
+        fetchCategories();
+      } else {
+        notify("error", "Delete failed");
+      }
+    } catch (err) {
+      notify("error", "Delete fail");
+    }
+    setLoading(false);
   };
 
   const tableContainerSx = {
@@ -157,51 +222,81 @@ function Category() {
       </Box>
 
       <TableContainer component={Paper} sx={tableContainerSx}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#e5e7eb' }}>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Image</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {categories.map(category => (
-              <TableRow key={category.id}>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
-                  />
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db', fontWeight: 500 }}>
-                  {category.name}
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <IconButton color="primary" onClick={() => handleEdit(category.id)}>
-                    <MdEdit />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDelete(category.id)}>
-                    <MdDelete />
-                  </IconButton>
-                </TableCell>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight={120}>
+            <CircularProgress size={32} />
+          </Box>
+        ) : (
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#e5e7eb' }}>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Image</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Name</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Action</TableCell>
               </TableRow>
-            ))}
-            {categories.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={3} align="center">
-                  No categories found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {categories.map(category => (
+                <TableRow key={category._id}>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    {category.image ? (
+                      <img
+                        src={getImageUrl(category.image)}
+                        alt={category.name}
+                        style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
+                        onError={e => {
+                          e.target.onerror = null;
+                          e.target.src = "https://via.placeholder.com/60x60?text=No+Image";
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: 2,
+                          background: '#f3f4f6',
+                          border: '1px solid #e5e7eb',
+                          color: '#aaa',
+                          fontSize: 14
+                        }}
+                      >
+                        No Image
+                      </Box>
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db', fontWeight: 500 }}>
+                    {category.name}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    <IconButton color="primary" onClick={() => handleEdit(category._id)}>
+                      <MdEdit />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDelete(category._id)}>
+                      <MdDelete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {categories.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell colSpan={3} align="center">
+                    No categories found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </TableContainer>
 
+      {/* Add Category Dialog */}
       <Dialog open={addOpen} onClose={() => setAddOpen(false)}>
         <DialogTitle>Add Category</DialogTitle>
-        <form onSubmit={handleAddSubmit}>
+        <form onSubmit={handleAddSubmit} encType="multipart/form-data">
           <DialogContent>
             <TextField
               label="Category Name"
@@ -239,22 +334,27 @@ function Category() {
                   src={addPreview}
                   alt="Preview"
                   style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                  onError={e => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/100x100?text=No+Image";
+                  }}
                 />
               </Box>
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setAddOpen(false)} color="inherit">Cancel</Button>
-            <Button type="submit" variant="contained" color="success" disabled={!addName || !addPreview}>
-              Add
+            <Button type="submit" variant="contained" color="success" disabled={!addName || !addPreview || loading}>
+              {loading ? <CircularProgress size={20} color="inherit" /> : "Add"}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
+      {/* Edit Category Dialog */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
         <DialogTitle>Edit Category</DialogTitle>
-        <form onSubmit={handleEditSubmit}>
+        <form onSubmit={handleEditSubmit} encType="multipart/form-data">
           <DialogContent>
             <TextField
               label="Category Name"
@@ -291,14 +391,18 @@ function Category() {
                   src={editPreview}
                   alt="Preview"
                   style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                  onError={e => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/100x100?text=No+Image";
+                  }}
                 />
               </Box>
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditOpen(false)} color="inherit">Cancel</Button>
-            <Button type="submit" variant="contained" color="success" disabled={!editName || !editPreview}>
-              Save
+            <Button type="submit" variant="contained" color="success" disabled={!editName || !editPreview || loading}>
+              {loading ? <CircularProgress size={20} color="inherit" /> : "Save"}
             </Button>
           </DialogActions>
         </form>

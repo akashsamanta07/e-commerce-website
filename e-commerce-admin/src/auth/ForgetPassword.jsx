@@ -5,7 +5,6 @@ import {
   Typography,
   TextField,
   Button,
-  Alert,
   IconButton,
   InputAdornment,
   CircularProgress,
@@ -18,135 +17,115 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { MdOutlineMarkEmailRead } from "react-icons/md";
 import { RiLockPasswordLine } from "react-icons/ri";
 import notify from "../components/Notification/notify.jsx";
+import API_BASE from "../utils/API_BASE";
+import { useNavigate } from "react-router-dom";
 
-const API_BASE = "http://localhost:3005";
 
 function ForgetPassword() {
   const [step, setStep] = useState(1); // 1: enter email, 2: enter OTP, 3: reset password
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Handler for sending OTP via API (now uses userRouter endpoint)
+  const navigate=useNavigate();
+  // Handler for sending OTP
   const handleSendOtp = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccessMsg("");
     if (!email) {
-      setError("Enter email address.");
-      notify("error", "Email required");
+      notify("warning", "Email?");
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/forgot-password/send-otp`, {
+      const res = await fetch(`${API_BASE}/auth/forgot-password/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccessMsg("OTP sent to email.");
-        notify("success", "OTP sent");
-        setStep(2);
-      } else {
-        setError(data.message || "Failed to send OTP.");
-        notify("error", data.message || "OTP failed");
+      if (!res.ok) {
+        notify("error", data.message || "Failed");
+        setLoading(false);
+        return;
       }
+      notify("success", "OTP sent");
+      setStep(2);
     } catch (err) {
-      setError("Network error. Try again.");
-      notify("error", "Network error");
-    } finally {
-      setLoading(false);
+      notify("error", "Network");
     }
+    setLoading(false);
   };
 
-  // Handler for verifying OTP via API (now uses userRouter endpoint)
+  // Handler for verifying OTP
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccessMsg("");
     if (!otp) {
-      setError("Enter OTP sent to email.");
-      notify("error", "OTP required");
+      notify("warning", "OTP?");
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/forgot-password/verify-otp`, {
+      const res = await fetch(`${API_BASE}/auth/forgot-password/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccessMsg("OTP verified. Reset password.");
-        notify("success", "OTP verified");
-        setStep(3);
-      } else {
-        setError(data.message || "Invalid OTP.");
-        notify("error", data.message || "OTP invalid");
+      if (!res.ok) {
+        notify("error", data.message || "OTP wrong");
+        setLoading(false);
+        return;
       }
+      notify("success", "OTP Verified");
+      setStep(3);
     } catch (err) {
-      setError("Network error. Try again.");
-      notify("error", "Network error");
-    } finally {
-      setLoading(false);
+      notify("error", "Network");
     }
+    setLoading(false);
   };
 
-  // Handler for resetting password via API (now uses userRouter endpoint)
+  // Handler for resetting password
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccessMsg("");
     if (!password || !confirmPassword) {
-      setError("Fill both password fields.");
-      notify("error", "Password required");
+      notify("warning", "Password?");
       return;
     }
     if (password.length < 6) {
-      setError("Password at least 6 chars.");
-      notify("error", "Password short");
+      notify("warning", "Password at least 6 chars");
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      notify("error", "No match");
+      notify("warning", "Passwords do not match");
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/forgot-password/set-new`, {
+      const res = await fetch(`${API_BASE}/auth/forgot-password/set-new`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp, password }),
+        body: JSON.stringify({ email, otp, password,confirmPassword }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccessMsg("Password reset! Login now.");
-        notify("success", "Reset done");
-        setStep(1);
-        setEmail("");
-        setOtp("");
-        setPassword("");
-        setConfirmPassword("");
-      } else {
-        setError(data.message || "Reset failed.");
-        notify("error", data.message || "Reset fail");
+      if (!res.ok) {
+        notify("error", data.message || "Reset failed");
+        setLoading(false);
+        return;
       }
+      notify("success", "Password reset! Login now.");
+      setStep(1);
+      setEmail("");
+      setOtp("");
+      setPassword("");
+      setConfirmPassword("");
+      navigate("/admin/login");
     } catch (err) {
-      setError("Network error. Try again.");
-      notify("error", "Network error");
-    } finally {
-      setLoading(false);
+      notify("error", "Network");
     }
+    setLoading(false);
   };
 
   return (
@@ -179,16 +158,6 @@ function ForgetPassword() {
               Forgot Password
             </Typography>
           </Box>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2, fontSize: "0.95rem" }}>
-              {error}
-            </Alert>
-          )}
-          {successMsg && (
-            <Alert severity="success" sx={{ mb: 2, fontSize: "0.95rem" }}>
-              {successMsg}
-            </Alert>
-          )}
           {step === 1 && (
             <form onSubmit={handleSendOtp} autoComplete="off">
               <TextField
@@ -288,8 +257,6 @@ function ForgetPassword() {
                 onClick={() => {
                   setStep(1);
                   setOtp("");
-                  setSuccessMsg("");
-                  setError("");
                 }}
                 disabled={loading}
               >
@@ -399,8 +366,6 @@ function ForgetPassword() {
                   setStep(2);
                   setPassword("");
                   setConfirmPassword("");
-                  setSuccessMsg("");
-                  setError("");
                 }}
                 disabled={loading}
               >

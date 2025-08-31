@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const addBannerSchema = new mongoose.Schema(
+const bannerSchema = new mongoose.Schema(
   {
     image: {
       type: String,
@@ -10,5 +10,5 @@ const addBannerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const AddBannerModel = mongoose.model("AddBanner", addBannerSchema);
-module.exports = AddBannerModel;
+const BannerModel = mongoose.model("Banner", bannerSchema);
+module.exports = BannerModel;

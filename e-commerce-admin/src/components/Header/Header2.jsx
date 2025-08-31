@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import logo1 from '../../assets/logo/logo1.jpg';
+import React, { useState, useEffect } from 'react';
 import { IconButton, Badge, Avatar, Menu, MenuItem, Tooltip, Divider, Typography, Box } from '@mui/material';
 import { MdNotificationsNone, MdMenu } from 'react-icons/md';
 import { FaUserCircle } from 'react-icons/fa';
 import { FiUser, FiLogOut } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import Slideber from '../Slideber';
+import API_BASE from '../../utils/API_BASE';
+import getImageUrl from '../getImageUrl';
 
 // Use the same defaultProfilePic logic as in Account.jsx
 const defaultProfilePic = (
@@ -22,9 +23,36 @@ const mockUser = {
   img: null, // set to a url string to test with image
 };
 
-function Header2() {
+function Header2({obj}) {
+  let {data}=obj;
   const [anchorEl, setAnchorEl] = useState(null);
   const [openMenu, setOpenMenu] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLogo = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/admin/get-logo`);
+        const data = await res.json();
+        if (isMounted) {
+          if (data.success && data.data && data.data.image) {
+            setLogoUrl(getImageUrl(data.data.image));
+          } else {
+            setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+        }
+      }
+    };
+    fetchLogo();
+    return () => {
+      isMounted = false;
+    };
+  }, [data.logo]);
 
   const handleProfileClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -39,20 +67,22 @@ function Header2() {
     alert("Signed out!");
     setAnchorEl(null);
   };
-{/* <SlideDrawer open={openMenu} side="left" onClose={() => setOpenMenu(false)}>
-        <DrawerContentMenu menuobj={menuobj} />
-      </SlideDrawer> */}
+
   return (
     <header className="bg-white w-full shadow">
-        <Slideber open={openMenu} side="left" onClose={() => setOpenMenu(false)} />
+      <Slideber open={openMenu} side="left" onClose={() => setOpenMenu(false)} />
       <div className="Container mx-auto flex items-center justify-between py-2">
         {/* Left: Logo on md+, Menu icon always visible */}
         <div className="flex-1 flex items-center">
           {/* Logo: hidden on small screens, show on md+ */}
           <img
-            src={logo1}
+            src={logoUrl}
             alt="Logo"
             className="h-10 object-contain hidden md:block"
+            onError={e => {
+              e.target.onerror = null;
+              e.target.src = "https://via.placeholder.com/120x60?text=No+Logo";
+            }}
           />
           {/* Menu icon: only visible on small screens */}
           <IconButton sx={{ display: { xs: 'block', md: 'none' } }} aria-label="menu" onClick={() => setOpenMenu(true)}>

@@ -1,8 +1,4 @@
-import React, { useState } from 'react';
-import s1 from '../../assets/add/s1.jpg';
-import s2 from '../../assets/add/s2.jpg';
-import s3 from '../../assets/add/s3.jpg';
-import s4 from '../../assets/add/s4.jpg';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -19,32 +15,53 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress
 } from '@mui/material';
 import { MdEdit, MdDelete, MdAddPhotoAlternate } from 'react-icons/md';
 import notify from '../../components/Notification/notify';
 
-const initialBanners = [
-  { id: 1, image: s1 },
-  { id: 2, image: s2 },
-  { id: 3, image: s3 },
-  { id: 4, image: s4 },
-  { id: 5, image: s1 },
-  { id: 6, image: s2 },
-  { id: 7, image: s3 },
-  { id: 8, image: s4 },
-];
+import API_BASE from '../../utils/API_BASE';
+import getImageUrl from '../../components/getImageUrl';
+
 
 function Banner() {
-  const [banners, setBanners] = useState(initialBanners);
+  const [banners, setBanners] = useState([]);
+  const [loading, setLoading] = useState(false);
 
+  // Add Banner Dialog State
   const [addOpen, setAddOpen] = useState(false);
   const [addImage, setAddImage] = useState(null);
   const [addPreview, setAddPreview] = useState('');
 
+  // Edit Banner Dialog State
   const [editOpen, setEditOpen] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [editImage, setEditImage] = useState(null);
   const [editPreview, setEditPreview] = useState('');
 
+  // Fetch banners from API
+  const fetchBanners = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/get-banners`);
+      const data = await res.json();
+      if (data.success) {
+        setBanners(data.data);
+      } else {
+        setBanners([]);
+        notify("warning", "No data");
+      }
+    } catch (err) {
+      notify("error", "Fetch fail");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchBanners();
+  }, []);
+
+  // Handle Add Banner
   const handleAddBanner = () => {
     setAddImage(null);
     setAddPreview('');
@@ -59,53 +76,102 @@ function Banner() {
     }
   };
 
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (addImage) {
-      const newBanner = {
-        id: Date.now(),
-        image: addPreview
-      };
-      setBanners([...banners, newBanner]);
-      setAddOpen(false);
-      setAddImage(null);
-      setAddPreview('');
-      notify("success", "Banner Upload Successfully");
+    if (!addImage) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', addImage);
+
+      const res = await fetch(`${API_BASE}/admin/add-banner`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Banner Upload Successfully");
+        setAddOpen(false);
+        setAddImage(null);
+        setAddPreview('');
+        fetchBanners();
+      } else {
+        notify("error", "Add fail");
+      }
+    } catch (err) {
+      notify("error", "Add fail");
     }
+    setLoading(false);
   };
 
+  // Handle Edit Banner (image change)
   const handleEdit = (id) => {
-    const banner = banners.find(b => b.id === id);
+    const banner = banners.find(b => b._id === id);
     setEditId(id);
-    setEditPreview(banner.image);
+    setEditImage(null);
+    setEditPreview(banner ? getImageUrl(banner.image) : '');
     setEditOpen(true);
   };
 
   const handleEditImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setEditImage(file);
       setEditPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setBanners(banners.map(b =>
-      b.id === editId
-        ? { ...b, image: editPreview }
-        : b
-    ));
-    setEditOpen(false);
-    setEditId(null);
-    setEditPreview('');
-    notify("success", "Banner Update Successfully");
+    if (!editId) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      if (editImage) {
+        formData.append('photo', editImage);
+      }
+      const res = await fetch(`${API_BASE}/admin/edit-banner/${editId}`, {
+        method: 'PUT',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Banner Update Successfully");
+        setEditOpen(false);
+        setEditId(null);
+        setEditImage(null);
+        setEditPreview('');
+        fetchBanners();
+      } else {
+        notify("error", "Edit fail");
+      }
+    } catch (err) {
+      notify("error", "Edit fail");
+    }
+    setLoading(false);
   };
 
-  const handleDelete = (id) => {
-    setBanners(banners.filter(b => b.id !== id));
-    notify("warning", "Banner Remove Successfully");
+  // Handle Delete
+  const handleDelete = async (id) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/delete-banner/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Banner Remove Successfully");
+        fetchBanners();
+      } else {
+        notify("error", "Delete failed");
+      }
+    } catch (err) {
+      notify("error", "Delete fail");
+    }
+    setLoading(false);
   };
 
+  // TableContainer style: if more than 4 banners, set maxHeight and overflowY
   const tableContainerSx = {
     borderRadius: 2,
     border: '1px solid #e5e7eb',
@@ -149,47 +215,77 @@ function Banner() {
       </Box>
 
       <TableContainer component={Paper} sx={tableContainerSx}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#e5e7eb' }}>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Image</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {banners.map(banner => (
-              <TableRow key={banner.id}>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <img
-                    src={banner.image}
-                    alt={`Banner ${banner.id}`}
-                    style={{ width: 120, height: 60, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
-                  />
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <IconButton color="primary" onClick={() => handleEdit(banner.id)}>
-                    <MdEdit />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDelete(banner.id)}>
-                    <MdDelete />
-                  </IconButton>
-                </TableCell>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight={120}>
+            <CircularProgress size={32} />
+          </Box>
+        ) : (
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#e5e7eb' }}>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Image</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Action</TableCell>
               </TableRow>
-            ))}
-            {banners.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={2} align="center">
-                  No banners found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {banners.map(banner => (
+                <TableRow key={banner._id}>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    {banner.image ? (
+                      <img
+                        src={getImageUrl(banner.image)}
+                        alt={`Banner ${banner._id}`}
+                        style={{ width: 120, height: 60, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
+                        onError={e => {
+                          e.target.onerror = null;
+                          e.target.src = "https://via.placeholder.com/120x60?text=No+Image";
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: 120,
+                          height: 60,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: 2,
+                          background: '#f3f4f6',
+                          border: '1px solid #e5e7eb',
+                          color: '#aaa',
+                          fontSize: 16
+                        }}
+                      >
+                        No Image
+                      </Box>
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    <IconButton color="primary" onClick={() => handleEdit(banner._id)}>
+                      <MdEdit />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDelete(banner._id)}>
+                      <MdDelete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {banners.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell colSpan={2} align="center">
+                    No banners found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </TableContainer>
 
+      {/* Add Banner Dialog */}
       <Dialog open={addOpen} onClose={() => setAddOpen(false)}>
         <DialogTitle>Add Banner</DialogTitle>
-        <form onSubmit={handleAddSubmit}>
+        <form onSubmit={handleAddSubmit} encType="multipart/form-data">
           <DialogContent>
             <Button
               variant="contained"
@@ -219,22 +315,27 @@ function Banner() {
                   src={addPreview}
                   alt="Preview"
                   style={{ width: 200, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                  onError={e => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/200x100?text=No+Image";
+                  }}
                 />
               </Box>
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setAddOpen(false)} color="inherit">Cancel</Button>
-            <Button type="submit" variant="contained" color="success" disabled={!addPreview}>
-              Add
+            <Button type="submit" variant="contained" color="success" disabled={!addPreview || loading}>
+              {loading ? <CircularProgress size={20} color="inherit" /> : "Add"}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
+      {/* Edit Banner Dialog */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
         <DialogTitle>Edit Banner</DialogTitle>
-        <form onSubmit={handleEditSubmit}>
+        <form onSubmit={handleEditSubmit} encType="multipart/form-data">
           <DialogContent>
             <Button
               variant="contained"
@@ -263,14 +364,18 @@ function Banner() {
                   src={editPreview}
                   alt="Preview"
                   style={{ width: 200, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                  onError={e => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/200x100?text=No+Image";
+                  }}
                 />
               </Box>
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditOpen(false)} color="inherit">Cancel</Button>
-            <Button type="submit" variant="contained" color="success" disabled={!editPreview}>
-              Save
+            <Button type="submit" variant="contained" color="success" disabled={!editPreview || loading}>
+              {loading ? <CircularProgress size={20} color="inherit" /> : "Save"}
             </Button>
           </DialogActions>
         </form>

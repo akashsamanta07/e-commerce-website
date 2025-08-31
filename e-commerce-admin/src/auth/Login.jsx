@@ -10,7 +10,7 @@ import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
 import notify from "../components/Notification/notify.jsx";
 
-const API_BASE = "http://localhost:3005";
+import API_BASE from "../utils/API_BASE";
 
 function Login({ onLogin }) {
   const [form, setForm] = useState({
@@ -174,7 +174,7 @@ function Login({ onLogin }) {
         </div>
         <div className="flex justify-end mb-4">
           <Link
-            to="/forgot-password"
+            to="/admin/forgot-password"
             className="text-pink-600 hover:underline text-sm flex items-center gap-1"
           >
             <LockOpenOutlinedIcon sx={{ fontSize: 18, color: "#db2777" }} />

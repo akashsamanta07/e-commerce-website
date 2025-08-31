@@ -1,15 +1,53 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/logo/logo1.jpg';
 import notify from '../../components/Notification/notify';
-import { Box, Button, Typography, Paper } from '@mui/material';
+// add CircularProgress import as per instruction
+import { Box, Button, Typography, Paper, CircularProgress } from '@mui/material';
 import { MdPhotoCamera, MdSave, MdImage } from 'react-icons/md';
+import API_BASE from '../../utils/API_BASE';
+import getImageUrl from '../../components/getImageUrl';
 
-function ManageLogo() {
+function ManageLogo({obj}) {
+  let {setData}=obj;
   const navigate = useNavigate();
-  const [preview, setPreview] = useState(logo);
+  const [preview, setPreview] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [logoId, setLogoId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const fileInputRef = useRef();
+
+  // Fetch current logo from API
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLogo = async () => {
+      setFetching(true);
+      try {
+        const res = await fetch(`${API_BASE}/admin/get-logo`);
+        const data = await res.json();
+        if (isMounted) {
+          // The backend returns { success, data: logo } where logo is an object or null
+          if (data.success && data.data && data.data._id) {
+            setLogoId(data.data._id);
+            setPreview(getImageUrl(data.data.image));
+          } else {
+            setPreview('');
+            setLogoId(null);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setPreview('');
+          setLogoId(null);
+        }
+      }
+      if (isMounted) setFetching(false);
+    };
+    fetchLogo();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -19,13 +57,46 @@ function ManageLogo() {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    // Here you would handle the upload to server
-    notify("success", "Update Logo Successfully");
-    // Optionally reset file input
-    // setSelectedFile(null);
-    navigate("/admin/dashboard");
+    if (!selectedFile) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', selectedFile);
+
+      // Always use PUT for update, POST for add
+      let url = '';
+      let method = '';
+      let isAdd = !logoId;
+      if (isAdd) {
+        url = `${API_BASE}/admin/add-logo`;
+        method = 'POST';
+      } else {
+        url = `${API_BASE}/admin/edit-logo/${logoId}`;
+        method = 'PUT';
+      }
+
+      const res = await fetch(url, {
+        method,
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", isAdd ? "Logo Added Successfully" : "Update Logo Successfully");
+        setSelectedFile(null);
+        if (data.data && data.data._id) {
+          setLogoId(data.data._id);
+        }
+          navigate("/admin/dashboard");
+          setData(prev => ({ ...prev, logo: !prev.logo }));
+      } else {
+        notify("error", data.message || (isAdd ? "Add Logo Failed" : "Update Logo Failed"));
+      }
+    } catch (err) {
+      notify("error", "Update Logo Failed");
+    }
+    setLoading(false);
   };
 
   return (
@@ -42,7 +113,7 @@ function ManageLogo() {
         fontWeight="bold"
         mb={4}
         color="secondary"
-        sx={{ color: '#ec4899', fontWeight: 'bold' }} // Tailwind pink-500
+        sx={{ color: '#ec4899', fontWeight: 'bold' }}
         display="flex"
         alignItems="center"
         gap={1}
@@ -64,20 +135,30 @@ function ManageLogo() {
           maxWidth: 300,
         }}
       >
-        <img
-          src={preview}
-          alt="Current Logo"
-          style={{
-            width: 120,
-            height: 60,
-            objectFit: 'contain',
-            borderRadius: 8,
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            display: 'block',
-            margin: 'auto'
-          }}
-        />
+        {fetching ? (
+          <Box display="flex" alignItems="center" justifyContent="center" minHeight={60} width="100%">
+            <CircularProgress size={32} />
+          </Box>
+        ) : (
+          <img
+            src={preview || "https://via.placeholder.com/120x60?text=No+Logo"}
+            alt="Current Logo"
+            style={{
+              width: 120,
+              height: 60,
+              objectFit: 'contain',
+              borderRadius: 8,
+              background: '#fff',
+              border: '1px solid #e5e7eb',
+              display: 'block',
+              margin: 'auto'
+            }}
+            onError={e => {
+              e.target.onerror = null;
+              e.target.src = "https://via.placeholder.com/120x60?text=No+Logo";
+            }}
+          />
+        )}
       </Paper>
       <Box
         component="form"
@@ -106,8 +187,8 @@ function ManageLogo() {
             component="span"
             fullWidth
             sx={{
-              bgcolor: '#db2777', // Tailwind pink-600
-              '&:hover': { bgcolor: 'black' }, // Tailwind pink-700
+              bgcolor: '#db2777',
+              '&:hover': { bgcolor: 'black' },
               textTransform: 'none',
               fontWeight: 500,
             }}
@@ -121,13 +202,13 @@ function ManageLogo() {
           color="success"
           startIcon={<MdSave />}
           fullWidth
-          disabled={!selectedFile}
+          disabled={!selectedFile || loading}
           sx={{
             textTransform: 'none',
             fontWeight: 500,
           }}
         >
-          Save Logo
+          {loading ? <CircularProgress size={20} color="inherit" /> : "Save Logo"}
         </Button>
       </Box>
     </Box>

@@ -24,7 +24,8 @@ const notify = (type,massage) => {
 
 
   //remove all display massage add toastify massage as notify("warning/success/error","massage")
-  // make all notify massage size small 3 to 4 word
+
   // const API_BASE = "http://localhost:3005";
   //use import{ CircularProgress } from "@mui/material";
+    // make all notify massage size small 3 to 4 word
 

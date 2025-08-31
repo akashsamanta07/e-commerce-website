@@ -1,13 +1,14 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
 const { PORT, DB_PATH } = require("./config");
 const authRouter = require("./routes/authRouter");
-const userRouter = require("./routes/authRouter");
-const hostRouter = require("./routes/hostRouter");
+const userRouter = require("./routes/userRouter");
+const adminRouter = require("./routes/adminRouter");
 const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
+const multer = require('multer');
+const rootDir = require("./utils/pathUtil");
 
 const app = express();
 
@@ -21,31 +22,83 @@ app.use(cors({
     credentials: true
 }));
 
-// NOTE: Remove problematic app.options("*", cors()) which can cause path-to-regexp error
-// app.options("*", cors());
+const randomString = (length) => {
+  const characters = 'abcdefghijklmnopqrstuvwxyz';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
 
-// Parse JSON and urlencoded request bodies
-app.use(express.json());
+// Helper to get extension from mimetype
+const getExtension = (mimetype) => {
+  switch (mimetype) {
+    case 'image/png':
+      return '.png';
+    case 'image/jpeg':
+      return '.jpg';
+    case 'image/jpg':
+      return '.jpg';
+    default:
+      return '';
+  }
+};
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let dest = "public/";
+    if (req.url.startsWith("/admin/add-home-slider") || req.url.startsWith("/admin/edit-home-slider")) {
+      dest = "public/homeSlider/";
+    }
+    if (req.url.startsWith("/admin/add-category") || req.url.startsWith("/admin/edit-category")) {
+      dest = "public/category/";
+    }
+    if (req.url.startsWith("/admin/add-banner") || req.url.startsWith("/admin/edit-banner")) {
+      dest = "public/banner/";
+    }
+    if (req.url.startsWith("/admin/add-logo") || req.url.startsWith("/admin/edit-logo")) {
+      dest = "public/logo/";
+    }
+    // Ensure the folder exists, create if not
+    const fullDest = path.join(rootDir, dest);
+    if (!fs.existsSync(fullDest)) {
+      fs.mkdirSync(fullDest, { recursive: true });
+    }
+    cb(null, dest);
+  },
+  filename: (req, file, cb) => {
+    const ext = getExtension(file.mimetype);
+    cb(null, randomString(15) + ext);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === 'image/png' ||
+    file.mimetype === 'image/jpg' ||
+    file.mimetype === 'image/jpeg'
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+const multerOptions = {
+  storage,
+  fileFilter
+};
+
 app.use(express.urlencoded({ extended: true }));
-
-// Parse cookies
-app.use(cookieParser());
-
-// HTTP request logger
-app.use(morgan("dev"));
-
-// Security headers
-app.use(
-  helmet({
-    crossOriginResourcePolicy: false // disables the policy for compatibility
-  })
-);
-
+app.use(express.json());
+app.use(multer(multerOptions).single('photo'));
+app.use(express.static(path.join(rootDir, 'public')));
 
 // Routers
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
-app.use("/host", hostRouter);
+app.use("/admin", adminRouter);
 
 // Root route
 app.get("/", (req, res) => {
@@ -60,8 +113,6 @@ mongoose.connect(DB_PATH)
     });
   })
   .catch(err => {
-    // Print error and exit if MongoDB connection fails
     console.error("Failed to connect to MongoDB:", err);
     process.exit(1);
   });
-

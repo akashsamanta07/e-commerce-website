@@ -1,7 +1,4 @@
-import React, { useState } from 'react';
-import s0 from '../assets/slider/s0.png';
-import s1 from '../assets/slider/s1.jpg';
-import s2 from '../assets/slider/s2.jpg';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -17,19 +14,18 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  CircularProgress
 } from '@mui/material';
 import { MdEdit, MdDelete, MdAddPhotoAlternate } from 'react-icons/md';
 import notify from '../components/Notification/notify';
+import getImageUrl from '../components/getImageUrl.js';
 
-const initialSliders = [
-  { id: 1, image: s0 },
-  { id: 2, image: s1 },
-  { id: 3, image: s2 }
-];
+import API_BASE from "../utils/API_BASE";
 
 function HomeSlider() {
-  const [sliders, setSliders] = useState(initialSliders);
+  const [sliders, setSliders] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Add Slider Dialog State
   const [addOpen, setAddOpen] = useState(false);
@@ -41,6 +37,28 @@ function HomeSlider() {
   const [editId, setEditId] = useState(null);
   const [editImage, setEditImage] = useState(null);
   const [editPreview, setEditPreview] = useState('');
+
+  // Fetch sliders from API
+  const fetchSliders = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/get-home-sliders`);
+      const data = await res.json();
+      if (data.success) {
+        setSliders(data.data);
+      } else {
+        setSliders([]);
+        notify("warning", "No data");
+      }
+    } catch (err) {
+      notify("error", "Fetch fail");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchSliders();
+  }, []);
 
   // Handle Add Slider
   const handleAddSlider = () => {
@@ -57,27 +75,40 @@ function HomeSlider() {
     }
   };
 
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (addImage) {
-      const newSlider = {
-        id: Date.now(),
-        image: addPreview
-      };
-      setSliders([...sliders, newSlider]);
-      setAddOpen(false);
-      setAddImage(null);
-      setAddPreview('');
-      notify("success","Image Upload Successfully");
+    if (!addImage) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', addImage);
+
+      const res = await fetch(`${API_BASE}/admin/add-home-slider`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Slider Upload Successfully");
+        setAddOpen(false);
+        setAddImage(null);
+        setAddPreview('');
+        fetchSliders();
+      } else {
+        notify("error", "Add fail");
+      }
+    } catch (err) {
+      notify("error", "Add fail");
     }
+    setLoading(false);
   };
 
-  // Handle Edit Slider
+  // Handle Edit Slider (image change)
   const handleEdit = (id) => {
-    const slider = sliders.find(s => s.id === id);
+    const slider = sliders.find(s => s._id === id);
     setEditId(id);
     setEditImage(null);
-    setEditPreview(slider.image);
+    setEditPreview(slider ? getImageUrl(slider.image) : '');
     setEditOpen(true);
   };
 
@@ -89,24 +120,54 @@ function HomeSlider() {
     }
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setSliders(sliders.map(s =>
-      s.id === editId
-        ? { ...s, image: editPreview }
-        : s
-    ));
-    setEditOpen(false);
-    setEditId(null);
-    setEditImage(null);
-    setEditPreview('');
-    notify("success","Image Update Successfully");
+    if (!editId) return;
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      if (editImage) {
+        formData.append('photo', editImage);
+      }
+      const res = await fetch(`${API_BASE}/admin/edit-home-slider/${editId}`, {
+        method: 'PUT',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Slider Update Successfully");
+        setEditOpen(false);
+        setEditId(null);
+        setEditImage(null);
+        setEditPreview('');
+        fetchSliders();
+      } else {
+        notify("error", "Edit fail");
+      }
+    } catch (err) {
+      notify("error", "Edit fail");
+    }
+    setLoading(false);
   };
 
   // Handle Delete
-  const handleDelete = (id) => {
-    setSliders(sliders.filter(s => s.id !== id));
-    notify("warning","Image Remove Successfully")
+  const handleDelete = async (id) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/delete-home-slider/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify("success", "Slider Remove Successfully");
+        fetchSliders();
+      } else {
+        notify("error", "Delete failed");
+      }
+    } catch (err) {
+      notify("error", "Delete fail");
+    }
+    setLoading(false);
   };
 
   // TableContainer style: if more than 4 sliders, set maxHeight and overflowY
@@ -120,7 +181,7 @@ function HomeSlider() {
   };
 
   return (
-    <Box sx={{ m: 2,p:1, bgcolor: '#fff' }}>
+    <Box sx={{ m: 2, p: 1, bgcolor: '#fff' }}>
       {/* Top Section: Slider List title and Add Slider button */}
       <Box
         display="flex"
@@ -156,48 +217,77 @@ function HomeSlider() {
 
       {/* Table Section: Only show images in table */}
       <TableContainer component={Paper} sx={tableContainerSx}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#e5e7eb' }}>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Image</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {sliders.map(slider => (
-              <TableRow key={slider.id}>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <img
-                    src={slider.image}
-                    alt={`Slider ${slider.id}`}
-                    style={{ width: 200, height: 80, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
-                  />
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <IconButton color="primary" onClick={() => handleEdit(slider.id)}>
-                    <MdEdit />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDelete(slider.id)}>
-                    <MdDelete />
-                  </IconButton>
-                </TableCell>
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight={120}>
+            <CircularProgress size={32} />
+          </Box>
+        ) : (
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#e5e7eb' }}>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Image</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Action</TableCell>
               </TableRow>
-            ))}
-            {sliders.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={2} align="center">
-                  No sliders found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {sliders.map(slider => (
+                <TableRow key={slider._id}>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    {slider.image ? (
+                      <img
+                        src={getImageUrl(slider.image)}
+                        alt={`Slider ${slider._id}`}
+                        style={{ width: 200, height: 80, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
+                        onError={e => {
+                          e.target.onerror = null;
+                          e.target.src = "https://via.placeholder.com/200x80?text=No+Image";
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: 200,
+                          height: 80,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: 2,
+                          background: '#f3f4f6',
+                          border: '1px solid #e5e7eb',
+                          color: '#aaa',
+                          fontSize: 16
+                        }}
+                      >
+                        No Image
+                      </Box>
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    <IconButton color="primary" onClick={() => handleEdit(slider._id)}>
+                      <MdEdit />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDelete(slider._id)}>
+                      <MdDelete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {sliders.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell colSpan={2} align="center">
+                    No sliders found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </TableContainer>
 
       {/* Add Slider Dialog */}
       <Dialog open={addOpen} onClose={() => setAddOpen(false)}>
         <DialogTitle>Add Slider</DialogTitle>
-        <form onSubmit={handleAddSubmit}>
+        <form onSubmit={handleAddSubmit} encType="multipart/form-data">
           <DialogContent>
             <Button
               variant="contained"
@@ -227,14 +317,18 @@ function HomeSlider() {
                   src={addPreview}
                   alt="Preview"
                   style={{ width: 300, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                  onError={e => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/300x120?text=No+Image";
+                  }}
                 />
               </Box>
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setAddOpen(false)} color="inherit">Cancel</Button>
-            <Button type="submit" variant="contained" color="success" disabled={!addPreview}>
-              Add
+            <Button type="submit" variant="contained" color="success" disabled={!addPreview || loading}>
+              {loading ? <CircularProgress size={20} color="inherit" /> : "Add"}
             </Button>
           </DialogActions>
         </form>
@@ -243,7 +337,7 @@ function HomeSlider() {
       {/* Edit Slider Dialog */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
         <DialogTitle>Edit Slider</DialogTitle>
-        <form onSubmit={handleEditSubmit}>
+        <form onSubmit={handleEditSubmit} encType="multipart/form-data">
           <DialogContent>
             <Button
               variant="contained"
@@ -272,14 +366,18 @@ function HomeSlider() {
                   src={editPreview}
                   alt="Preview"
                   style={{ width: 300, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
+                  onError={e => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/300x120?text=No+Image";
+                  }}
                 />
               </Box>
             )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditOpen(false)} color="inherit">Cancel</Button>
-            <Button type="submit" variant="contained" color="success" disabled={!editPreview}>
-              Save
+            <Button type="submit" variant="contained" color="success" disabled={!editPreview || loading}>
+              {loading ? <CircularProgress size={20} color="inherit" /> : "Save"}
             </Button>
           </DialogActions>
         </form>
