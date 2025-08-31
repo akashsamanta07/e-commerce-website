@@ -2,6 +2,7 @@ const HomeSliderModel = require("../models/homeSlider");
 const CategoryModel = require("../models/Category");
 const BannerModel = require("../models/Banner");
 const LogoModel = require("../models/Logo");
+const ProductModel = require("../models/productModel");
 const fs = require("fs");
 const path = require("path");
 
@@ -386,5 +387,156 @@ exports.getLogo = async (req, res) => {
     res.status(404).json({ success: false, message: "Logo not found" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Fetch logo fail", error: error.message });
+  }
+};
+
+// --- Product Functions ---
+
+// Add Product (with multer, multiple images)
+exports.addProduct = async (req, res) => {
+  try {
+    // Multer stores files in req.files (array)
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: "At least one product image is required" });
+    }
+
+    const {
+      title,
+      brand,
+      description,
+      category,
+      subcategory,
+      originalPrice,
+      discountPrice,
+      inStock,
+      rating
+    } = req.body;
+
+    if (!title || !category || !originalPrice) {
+      return res.status(400).json({ success: false, message: "Title, category, and original price are required" });
+    }
+
+
+    const images = req.files.map(file => file.path);
+    let reviewlist=[];
+    let sales=0;
+
+    const newProduct = new ProductModel({
+      title,
+      brand,
+      description,
+      category,
+      subcategory,
+      originalPrice,
+      discountPrice,
+      inStock,
+      rating,
+      images,
+      sales,
+      reviewlist
+    });
+
+    await newProduct.save();
+
+
+    res.status(201).json({
+      success: true,
+      message: "Product added",
+      data: newProduct
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Add product fail", error: error.message });
+  }
+};
+
+// Edit Product (update fields and images)
+exports.editProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await ProductModel.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    // Update fields if provided
+    const updatableFields = [
+      "title",
+      "description",
+      "category",
+      "subcategory",
+      "originalPrice",
+      "discountPrice",
+      "inStock",
+      "sales",
+      "rating"
+    ];
+    updatableFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
+      }
+    });
+
+    // If new images uploaded, replace old images
+    if (req.files && req.files.length > 0) {
+      // Remove old images from filesystem
+      if (product.images && Array.isArray(product.images)) {
+        product.images.forEach(imgPath => {
+          if (fs.existsSync(imgPath)) {
+            fs.unlinkSync(imgPath);
+          }
+        });
+      }
+      product.images = req.files.map(file => file.path);
+    }
+
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Product edited",
+      data: product
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Edit product fail", error: error.message });
+  }
+};
+
+// Delete Product
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await ProductModel.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+    // Remove images from filesystem
+    if (product.images && Array.isArray(product.images)) {
+      product.images.forEach(imgPath => {
+        if (fs.existsSync(imgPath)) {
+          fs.unlinkSync(imgPath);
+        }
+      });
+    }
+    await ProductModel.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Product deleted"
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Delete product fail", error: error.message });
+  }
+};
+
+// Get All Products
+exports.getProducts = async (req, res) => {
+  try {
+    const products = await ProductModel.find().sort({ createdAt: -1 });
+    res.status(200).json({
+      success: true,
+      data: products
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Fetch products fail", error: err?.message || "any error" });
   }
 };

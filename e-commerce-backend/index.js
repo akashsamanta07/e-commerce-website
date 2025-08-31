@@ -60,6 +60,10 @@ const storage = multer.diskStorage({
     if (req.url.startsWith("/admin/add-logo") || req.url.startsWith("/admin/edit-logo")) {
       dest = "public/logo/";
     }
+    // Add destination for product images
+    if (req.url.startsWith("/admin/add-product") || req.url.startsWith("/admin/edit-product")) {
+      dest = "public/product/";
+    }
     // Ensure the folder exists, create if not
     const fullDest = path.join(rootDir, dest);
     if (!fs.existsSync(fullDest)) {
@@ -92,7 +96,27 @@ const multerOptions = {
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(multer(multerOptions).single('photo'));
+
+app.use((req, res, next) => {
+  if (
+    (req.method === 'POST' || req.method === 'PUT') &&
+    req.headers['content-type'] &&
+    req.headers['content-type'].includes('multipart/form-data')
+  ) {
+    const multerInstance = multer(multerOptions);
+    if (
+      req.url.startsWith('/admin/add-product') ||
+      req.url.startsWith('/admin/edit-product')
+    ) {
+      multerInstance.array('images', 10)(req, res, next); 
+    } else {
+      multerInstance.single('photo')(req, res, next);
+    }
+  } else {
+    next();
+  }
+});
+
 app.use(express.static(path.join(rootDir, 'public')));
 
 // Routers

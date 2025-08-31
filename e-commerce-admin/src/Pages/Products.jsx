@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -21,14 +21,13 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  CircularProgress,
 } from '@mui/material';
 import { MdEdit, MdDelete, MdAdd } from 'react-icons/md';
 import { FaEllipsisH, FaStar, FaRegStar, FaStarHalfAlt, FaRupeeSign } from 'react-icons/fa';
-import dumy1 from '../assets/dumy.jpg';
-import dumy2 from '../assets/dumy.jpg';
-import dumy3 from '../assets/dumy.jpg';
-import dumy4 from '../assets/dumy.jpg';
 import notify from '../components/Notification/notify';
+import getImageUrl from '../components/getImageUrl.js';
+import API_BASE from "../utils/API_BASE";
 
 // Use this array for all category and subcategory
 const categoryArr = [
@@ -42,93 +41,6 @@ const categoryArr = [
   { id: 8, name: 'Jewellery', subcategories: ['Necklaces', 'Rings', 'Bracelets'] },
 ];
 
-const initialProducts = [
-  {
-    id: 1,
-    title: 'T-Shirt',
-    description: 'Comfortable cotton t-shirt',
-    category: 'Fashion',
-    subcategory: 'Men',
-    brand: 'Nike',
-    originalPrice: 30,
-    discountPrice: 20,
-    inStock: 100,
-    rating: 4.5,
-    image: dumy1,
-    sales: 50,
-  },
-  {
-    id: 8,
-    title: 'T-Shirt',
-    description: 'Comfortable cotton t-shirt',
-    category: 'Fashion',
-    subcategory: 'Men',
-    brand: 'Nike',
-    originalPrice: 30,
-    discountPrice: 20,
-    inStock: 100,
-    rating: 4.5,
-    image: dumy1,
-    sales: 50,
-  },
-  {
-    id: 9,
-    title: 'T-Shirt',
-    description: 'Comfortable cotton t-shirt',
-    category: 'Fashion',
-    subcategory: 'Men',
-    brand: 'Nike',
-    originalPrice: 30,
-    discountPrice: 20,
-    inStock: 100,
-    rating: 4.5,
-    image: dumy1,
-    sales: 50,
-  },
-  {
-    id: 2,
-    title: 'iPhone 14 Pro Max Ultra Long Name That Should Overflow',
-    description: 'Latest Apple iPhone',
-    category: 'Electronics',
-    subcategory: 'Mobiles',
-    brand: 'Apple',
-    originalPrice: 1200,
-    discountPrice: 1100,
-    inStock: 20,
-    rating: 4.8,
-    image: dumy2,
-    sales: 10,
-  },
-  {
-    id: 3,
-    title: 'Running Shoes',
-    description: 'Lightweight running shoes',
-    category: 'Fashion',
-    subcategory: 'Women',
-    brand: 'Adidas',
-    originalPrice: 80,
-    discountPrice: 60,
-    inStock: 40,
-    rating: 4.2,
-    image: dumy3,
-    sales: 25,
-  },
-  {
-    id: 4,
-    title: 'Bananas',
-    description: 'Fresh organic bananas',
-    category: 'Groceries',
-    subcategory: 'Fruits',
-    brand: 'Generic',
-    originalPrice: 2,
-    discountPrice: 1.5,
-    inStock: 200,
-    rating: 4.0,
-    image: dumy4,
-    sales: 100,
-  },
-];
-
 const defaultFormState = {
   title: '',
   brand: '',
@@ -139,12 +51,13 @@ const defaultFormState = {
   discountPrice: '',
   inStock: '',
   rating: '',
-  image: '',
+  images: [],
 };
 
 function Products() {
   // Product list state
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Search State
   const [searchCategory, setSearchCategory] = useState('');
@@ -155,7 +68,27 @@ function Products() {
   const [dialogMode, setDialogMode] = useState('add'); // 'add' or 'edit'
   const [formState, setFormState] = useState(defaultFormState);
   const [editId, setEditId] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Fetch products from API
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/get-products`);
+      if (!res.ok) throw new Error('Failed to fetch products');
+      const data = await res.json();
+      setProducts(Array.isArray(data.data) ? data.data : []);
+    } catch (err) {
+      notify("error", err.message || "Failed to fetch products");
+    }
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // Filtered products for table
   const filteredProducts = products.filter(p => {
@@ -166,9 +99,18 @@ function Products() {
   });
 
   // Handle Delete Product
-  const handleDelete = (id) => {
-    setProducts(products.filter(p => p.id !== id));
-    notify("warning","Product Delete Successfully");
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE}/admin/delete-product/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete product");
+      notify("success", "Product Deleted Successfully");
+      setProducts(products.filter(p => p._id !== id && p.id !== id));
+    } catch (err) {
+      notify("error", err.message || "Failed to delete product");
+    }
   };
 
   // TableContainer style
@@ -293,7 +235,7 @@ function Products() {
   const handleOpenAdd = () => {
     setDialogMode('add');
     setFormState(defaultFormState);
-    setImagePreview('');
+    setImagePreviews([]);
     setOpenDialog(true);
     setEditId(null);
   };
@@ -310,35 +252,56 @@ function Products() {
       discountPrice: product.discountPrice,
       inStock: product.inStock,
       rating: product.rating,
-      image: '', // for file input, keep empty
+      images: [], // for file input, keep empty
     });
-    setImagePreview(product.image);
+    // If product.images is array of URLs, show as previews
+    setImagePreviews(
+      Array.isArray(product.images)
+        ? product.images.filter(Boolean).map(img => typeof img === 'string' ? getImageUrl(img) : '')
+        : typeof product.images === 'string' && product.images
+        ? [getImageUrl(product.images)]
+        : []
+    );
     setOpenDialog(true);
-    setEditId(product.id);
+    setEditId(product._id || product.id);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setFormState(defaultFormState);
-    setImagePreview('');
+    setImagePreviews([]);
     setEditId(null);
   };
 
   // Handle form input change
   const handleFormChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, files } = e.target;
     if (type === 'file') {
-      const file = e.target.files[0];
+      // Multiple file upload
+      const fileList = Array.from(files);
       setFormState((prev) => ({
         ...prev,
-        image: file,
+        images: fileList,
       }));
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => setImagePreview(ev.target.result);
-        reader.readAsDataURL(file);
+      if (fileList.length > 0) {
+        // Generate previews for all images
+        const readers = [];
+        let loaded = 0;
+        const previews = [];
+        fileList.forEach((file, idx) => {
+          const reader = new FileReader();
+          readers.push(reader);
+          reader.onload = (ev) => {
+            previews[idx] = ev.target.result;
+            loaded++;
+            if (loaded === fileList.length) {
+              setImagePreviews(previews);
+            }
+          };
+          reader.readAsDataURL(file);
+        });
       } else {
-        setImagePreview('');
+        setImagePreviews([]);
       }
     } else {
       setFormState((prev) => ({
@@ -356,69 +319,72 @@ function Products() {
   };
 
   // Handle form submit
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     // Validate required fields
     const {
       title, brand, description, category, subcategory,
-      originalPrice, discountPrice, inStock, rating
+      originalPrice, discountPrice, inStock, rating, images
     } = formState;
     if (
       !title || !brand || !description || !category || !subcategory ||
       !originalPrice || !discountPrice || !inStock || !rating
     ) {
       alert('Please fill all fields.');
+      setSubmitting(false);
       return;
     }
 
-    let imageToUse = imagePreview;
-    // If new image uploaded, use preview, else fallback to dummy
-    if (!imageToUse) {
-      // fallback to a dummy image
-      imageToUse = dumy1;
+    // Prepare form data for API
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('brand', brand);
+    formData.append('description', description);
+    formData.append('category', category);
+    formData.append('subcategory', subcategory);
+    formData.append('originalPrice', originalPrice);
+    formData.append('discountPrice', discountPrice);
+    formData.append('inStock', inStock);
+    formData.append('rating', rating);
+
+    // Only append images if user uploaded new ones
+    if (images && images.length > 0) {
+      for (let i = 0; i < images.length; i++) {
+        formData.append('images', images[i]);
+      }
     }
 
-    if (dialogMode === 'add') {
-      const newProduct = {
-        id: Date.now(),
-        title: formState.title,
-        brand: formState.brand,
-        description: formState.description,
-        category: formState.category,
-        subcategory: formState.subcategory,
-        originalPrice: Number(formState.originalPrice),
-        discountPrice: Number(formState.discountPrice),
-        inStock: Number(formState.inStock),
-        rating: Number(formState.rating),
-        image: imageToUse,
-        sales: 0,
-      };
-      setProducts([newProduct, ...products]);
-    } else if (dialogMode === 'edit' && editId !== null) {
-      setProducts(products.map((p) =>
-        p.id === editId
-          ? {
-              ...p,
-              title: formState.title,
-              brand: formState.brand,
-              description: formState.description,
-              category: formState.category,
-              subcategory: formState.subcategory,
-              originalPrice: Number(formState.originalPrice),
-              discountPrice: Number(formState.discountPrice),
-              inStock: Number(formState.inStock),
-              rating: Number(formState.rating),
-              image: imagePreview || p.image,
-            }
-          : p
-      ));
+    try {
+      let url = '';
+      let method = '';
+      if (dialogMode === 'add') {
+        url = `${API_BASE}/admin/add-product`;
+        method = 'POST';
+      } else if (dialogMode === 'edit' && editId) {
+        url = `${API_BASE}/admin/edit-product/${editId}`;
+        method = 'PUT';
+      }
+      const res = await fetch(url, {
+        method,
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Failed to save product");
+      }
+      handleCloseDialog();
+      notify("success", dialogMode === 'add' ? "Product Added Successfully" : "Product Updated Successfully");
+      fetchProducts();
+    } catch (err) {
+      notify("error", err.message || "Failed to save product");
     }
-    handleCloseDialog();
-    notify("success","Product Upload/Update Successfully");
+    setSubmitting(false);
   };
 
   return (
-    <Box sx={{ m: 2,p:1, bgcolor: '#fff' }}>
+    <Box sx={{ m: 2, p: 1, bgcolor: '#fff' }}>
       {/* Section 1: Add Product */}
       <Box
         display="flex"
@@ -457,7 +423,7 @@ function Products() {
         <DialogTitle>
           {dialogMode === 'add' ? 'Add Product' : 'Edit Product'}
         </DialogTitle>
-        <form onSubmit={handleFormSubmit} autoComplete="off">
+        <form onSubmit={handleFormSubmit} autoComplete="off" encType="multipart/form-data">
           <DialogContent dividers>
             <Box display="flex" flexDirection="column" gap={2}>
               <TextField
@@ -559,31 +525,37 @@ function Products() {
                   component="label"
                   sx={{ mr: 2 }}
                 >
-                  Upload Image
+                  Upload Images
                   <input
                     type="file"
                     accept="image/*"
                     hidden
-                    name="image"
+                    name="images"
+                    multiple
                     onChange={handleFormChange}
                   />
                 </Button>
-                {imagePreview && (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    style={{ height: 60, borderRadius: 8, marginTop: 8, background: '#fff' }}
-                  />
+                {imagePreviews && imagePreviews.length > 0 && (
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                    {imagePreviews.map((src, idx) => (
+                      <img
+                        key={idx}
+                        src={src}
+                        alt={`Preview ${idx + 1}`}
+                        style={{ height: 60, borderRadius: 8, background: '#fff', objectFit: 'cover' }}
+                      />
+                    ))}
+                  </Box>
                 )}
               </Box>
             </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog} color="secondary">
+            <Button onClick={handleCloseDialog} color="secondary" disabled={submitting}>
               Cancel
             </Button>
-            <Button type="submit" variant="contained" color="primary">
-              {dialogMode === 'add' ? 'Add' : 'Update'}
+            <Button type="submit" variant="contained" color="primary" disabled={submitting}>
+              {submitting ? <CircularProgress size={22} color="inherit" /> : (dialogMode === 'add' ? 'Add' : 'Update')}
             </Button>
           </DialogActions>
         </form>
@@ -632,97 +604,107 @@ function Products() {
 
       {/* Section 3: Product Table */}
       <TableContainer component={Paper} sx={tableContainerSx}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: '#e5e7eb' }}>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Image</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db', maxWidth: 180 }}>Title</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Category</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Subcategory</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Price</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Sales</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Stock</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Rating</TableCell>
-              <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredProducts.map(product => (
-              <TableRow key={product.id}>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    style={{ height: 60, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
-                  />
-                </TableCell>
-                <TableCell sx={{
-                  border: '1px solid #d1d5db',
-                  maxWidth: 180,
-                  minWidth: 100,
-                  p: 1,
-                  verticalAlign: 'middle'
-                }}>
-                  {renderTitleCell(product.title)}
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  {product.category}
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  {product.subcategory}
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db', minWidth: 90 }}>
-                  {renderPriceCell(product.originalPrice, product.discountPrice)}
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: '#2563eb', // blue-600
-                      fontWeight: 600,
-                      fontSize: 16,
-                    }}
-                  >
-                    {product.sales}
-                  </Typography>
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      color: '#16a34a', // green-600
-                      fontWeight: 600,
-                      fontSize: 16,
-                    }}
-                  >
-                    {product.inStock}
-                  </Typography>
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db', minWidth: 120 }}>
-                  {renderRatingStars(product.rating)}
-                </TableCell>
-                <TableCell sx={{ border: '1px solid #d1d5db' }}>
-                  <IconButton
-                    color="primary"
-                    onClick={() => handleOpenEdit(product)}
-                  >
-                    <MdEdit />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDelete(product.id)}>
-                    <MdDelete />
-                  </IconButton>
-                </TableCell>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#e5e7eb' }}>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Image</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db', maxWidth: 180 }}>Title</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Category</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Subcategory</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Price</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Sales</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Stock</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Rating</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: '1px solid #d1d5db' }}>Action</TableCell>
               </TableRow>
-            ))}
-            {filteredProducts.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={9} align="center">
-                  No products found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {filteredProducts.map(product => (
+                <TableRow key={product._id || product.id}>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    <img
+                      src={
+                        product.images && product.images.length > 0
+                          ? getImageUrl(product.images[0])
+                          : "https://via.placeholder.com/200x80?text=No+Image"
+                      }
+                      alt={product.title}
+                      style={{ height: 80, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{
+                    border: '1px solid #d1d5db',
+                    maxWidth: 180,
+                    minWidth: 100,
+                    p: 1,
+                    verticalAlign: 'middle'
+                  }}>
+                    {renderTitleCell(product.title)}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    {product.category}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    {product.subcategory}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db', minWidth: 90 }}>
+                    {renderPriceCell(product.originalPrice, product.discountPrice)}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: '#2563eb', // blue-600
+                        fontWeight: 600,
+                        fontSize: 16,
+                      }}
+                    >
+                      {product.sales || 0}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: '#16a34a', // green-600
+                        fontWeight: 600,
+                        fontSize: 16,
+                      }}
+                    >
+                      {product.inStock}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db', minWidth: 120 }}>
+                    {renderRatingStars(product.rating)}
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #d1d5db' }}>
+                    <IconButton
+                      color="primary"
+                      onClick={() => handleOpenEdit(product)}
+                    >
+                      <MdEdit />
+                    </IconButton>
+                    <IconButton color="error" onClick={() => handleDelete(product._id || product.id)}>
+                      <MdDelete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredProducts.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9} align="center">
+                    No products found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </TableContainer>
     </Box>
   );
