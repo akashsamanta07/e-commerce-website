@@ -1,18 +1,23 @@
 import React, { useState } from "react";
-import { Button, TextField, InputAdornment, Paper } from "@mui/material";
+import { Button, TextField, InputAdornment, Paper, CircularProgress } from "@mui/material";
 import { MdLock, MdVisibility, MdVisibilityOff } from "react-icons/md";
+import notify from "../components/Notification/notify";
+import API_BASE from "../utils/API_BASE";
+import { useNavigate } from "react-router-dom";
 
 function ChangePassword() {
   const [form, setForm] = useState({
-    currentPassword: "",
+    oldPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState({
-    current: false,
+    old: false,
     new: false,
     confirm: false,
   });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({
@@ -28,19 +33,57 @@ function ChangePassword() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would handle password change logic (API call, etc.)
-    if (form.newPassword !== form.confirmPassword) {
-      alert("New password and confirm password do not match!");
+
+    if (!form.oldPassword || !form.newPassword || !form.confirmPassword) {
+      notify("warning", "Fill all fields");
       return;
     }
-    alert("Password changed successfully!");
-    setForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+
+    if (form.newPassword !== form.confirmPassword) {
+      notify("warning", "Passwords do not match");
+      return;
+    }
+
+    if (form.newPassword.length < 6) {
+      notify("warning", "New password must be 6 digits");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/change-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          oldPassword: form.oldPassword,
+          newPassword: form.newPassword,
+          confirmPassword: form.confirmPassword,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        notify("success", "Password changed");
+        setForm({
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        setTimeout(() => {
+          navigate("/admin/dashboard");
+        }, 1000);
+      } else {
+        notify("error", data.message || "Change failed");
+      }
+    } catch (err) {
+      notify("error", "Server error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,9 +96,9 @@ function ChangePassword() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <TextField
             label="Current Password"
-            name="currentPassword"
-            type={showPassword.current ? "text" : "password"}
-            value={form.currentPassword}
+            name="oldPassword"
+            type={showPassword.old ? "text" : "password"}
+            value={form.oldPassword}
             onChange={handleChange}
             required
             fullWidth
@@ -69,9 +112,9 @@ function ChangePassword() {
                 <InputAdornment position="end">
                   <span
                     className="cursor-pointer"
-                    onClick={() => handleClickShowPassword("current")}
+                    onClick={() => handleClickShowPassword("old")}
                   >
-                    {showPassword.current ? (
+                    {showPassword.old ? (
                       <MdVisibilityOff className="text-gray-500" />
                     ) : (
                       <MdVisibility className="text-gray-500" />
@@ -146,8 +189,10 @@ function ChangePassword() {
             variant="contained"
             className="!bg-pink-600 hover:!bg-black !text-white !font-semibold !rounded-md"
             fullWidth
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
           >
-            Change Password
+            {loading ? "Changing..." : "Change Password"}
           </Button>
         </form>
       </Paper>
@@ -156,4 +201,3 @@ function ChangePassword() {
 }
 
 export default ChangePassword;
-

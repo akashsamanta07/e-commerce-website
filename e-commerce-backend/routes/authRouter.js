@@ -13,6 +13,12 @@ authRouter.post("/verify-email", authController.verifyEmail);
 // Login
 authRouter.post("/login", authController.loginUser);
 
+// Logout
+authRouter.post("/logout", authController.logoutUser);
+
+// Refresh token
+authRouter.post("/refresh", authController.refreshToken);
+
 // Forgot password: send OTP
 authRouter.post("/forgot-password/send-otp", authController.forgotPasswordSendOtp);
 
@@ -21,5 +27,10 @@ authRouter.post("/forgot-password/verify-otp", authController.forgotPasswordVeri
 
 // Forgot password: set new password
 authRouter.post("/forgot-password/set-new", authController.forgotPasswordSetNew);
+
+// Change password
+authRouter.post("/change-password", authController.changePassword);
+
+authRouter.put("/update-profile", authController.updateProfile);
 
 module.exports = authRouter;

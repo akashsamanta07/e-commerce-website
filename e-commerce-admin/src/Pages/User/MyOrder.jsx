@@ -1,67 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, MenuItem, Select, TextField, InputAdornment } from '@mui/material';
 import { MdReceipt, MdLocalShipping, MdCheckCircle, MdCancel, MdSearch } from "react-icons/md";
+import notify from '../../components/Notification/notify';
+import API_BASE from '../../utils/API_BASE';
 
-// Dummy order data for demonstration
-const initialOrders = [
-  {
-    id: 'ORD123456',
-    date: '2024-06-01',
-    status: 'Delivered',
-    total: 1299,
-    items: [
-      { title: 'Wireless Headphones rwtwtwtwtwtwtwtwtwtwtwtre', qty: 1, price: 999 },
-      { title: 'USB-C Cable', qty: 2, price: 150 }
-    ]
-  },
-  {
-    id: 'ORD123457',
-    date: '2024-05-28',
-    status: 'Shipped',
-    total: 499,
-    items: [
-      { title: 'Bluetooth Mouse drswyre ersy tryesysw', qty: 1, price: 499 }
-    ]
-  },
-  {
-    id: 'ORD123458',
-    date: '2024-05-20',
-    status: 'Cancelled',
-    total: 799,
-    items: [
-      { title: 'Smart Watch', qty: 1, price: 799 }
-    ]
-  },
-  {
-    id: 'ORD123459',
-    date: '2024-06-01',
-    status: 'Delivered',
-    total: 1299,
-    items: [
-      { title: 'Wireless Headphones rwtwtwtwtwtwtwtwtwtwtwtre', qty: 1, price: 999 },
-      { title: 'USB-C Cable', qty: 2, price: 150 }
-    ]
-  },
-  {
-    id: 'ORD123451',
-    date: '2024-05-28',
-    status: 'Shipped',
-    total: 499,
-    items: [
-      { title: 'Bluetooth Mouse drswyre ersy tryesysw', qty: 1, price: 499 }
-    ]
-  },
-  {
-    id: 'ORD123452',
-    date: '2024-05-20',
-    status: 'Cancelled',
-    total: 799,
-    items: [
-      { title: 'Smart Watch', qty: 1, price: 799 }
-    ]
-  }
-];
-
+// Helper to render status chip
 function getStatusChip(status) {
   switch (status) {
     case 'Delivered':
@@ -82,22 +25,76 @@ const statusOptions = [
 ];
 
 function MyOrder() {
-  const [orders, setOrders] = useState(initialOrders);
+  const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleStatusChange = (orderId, newStatus) => {
+  // Fetch all orders from backend
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_BASE}/admin/get-orders`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders)) {
+          // Normalize order fields for UI
+          setOrders(
+            data.orders.map(order => ({
+              id: order._id || order.id,
+              date: order.createdAt ? order.createdAt.slice(0, 10) : '',
+              status: order.status,
+              total: order.total,
+              items: order.items || [],
+            }))
+          );
+        } else {
+          setOrders([]);
+          notify("error", "Fetch failed");
+        }
+      } catch (err) {
+        setOrders([]);
+        notify("error", "Network Error");
+      }
+      setLoading(false);
+    };
+    fetchOrders();
+  }, []);
+
+  // Change order status API
+  const handleStatusChange = async (orderId, newStatus) => {
+    const prevOrders = [...orders];
     setOrders(prevOrders =>
       prevOrders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
       )
     );
+    try {
+      const res = await fetch(`${API_BASE}/admin/change-order-status/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setOrders(prevOrders); // revert
+        notify("error", data.message);
+      } else {
+        notify("success", "Status updated");
+      }
+    } catch (err) {
+      setOrders(prevOrders); // revert
+      notify("error", "Network Error");
+    }
   };
 
   // Filter orders by order id only
   const filteredOrders = orders.filter(order => {
     const searchLower = search.trim().toLowerCase();
-    if (searchLower==='') return true;
-    return order.id.toLowerCase().includes(searchLower);
+    if (searchLower === '') return true;
+    return (order.id || '').toLowerCase().includes(searchLower);
   });
 
   // Determine if we need to set a max height and scroll for the table container
@@ -203,61 +200,68 @@ function MyOrder() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredOrders.map(order => (
-                  <TableRow key={order.id}>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>{order.id}</TableCell>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>{order.date}</TableCell>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>
-                      <ul className="list-disc pl-4">
-                        {order.items.map((item, idx) => (
-                          <li key={idx}>
-                            <span
-                              className="font-medium inline-block max-w-[160px] align-middle"
-                              style={{
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                verticalAlign: 'middle'
-                              }}
-                              title={item.title}
-                            >
-                              {item.title}
-                            </span>
-                            {' '}( x{item.qty}, <span className="text-gray-500">₹{item.price} )</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </TableCell>
-                    <TableCell className="font-semibold text-pink-600" style={{ border: '1px solid #e5e7eb' }}>
-                      ₹{order.total}
-                    </TableCell>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>{getStatusChip(order.status)}</TableCell>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>
-                      <Select
-                        value={order.status}
-                        onChange={e => handleStatusChange(order.id, e.target.value)}
-                        size="small"
-                        variant="outlined"
-                        style={{ minWidth: 120, marginRight: 8 }}
-                      >
-                        {statusOptions.map(opt => (
-                          <MenuItem key={opt.value} value={opt.value}>
-                            <span className="flex items-center gap-2">
-                              {opt.icon}
-                              {opt.label}
-                            </span>
-                          </MenuItem>
-                        ))}
-                      </Select>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" className="py-8 text-gray-500" style={{ border: '1px solid #e5e7eb' }}>
+                      Loading...
                     </TableCell>
                   </TableRow>
-                ))}
-                {filteredOrders.length === 0 && (
+                ) : filteredOrders.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} align="center" className="py-8 text-gray-500" style={{ border: '1px solid #e5e7eb' }}>
                       No orders found.
                     </TableCell>
                   </TableRow>
+                ) : (
+                  filteredOrders.map(order => (
+                    <TableRow key={order.id}>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>{order.id}</TableCell>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>{order.date}</TableCell>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>
+                        <ul className="list-disc pl-4">
+                          {(order.items || []).map((item, idx) => (
+                            <li key={idx}>
+                              <span
+                                className="font-medium inline-block max-w-[160px] align-middle"
+                                style={{
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  verticalAlign: 'middle'
+                                }}
+                                title={item.title}
+                              >
+                                {item.title}
+                              </span>
+                              {' '}( x{item.qty}, <span className="text-gray-500">₹{item.price} )</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </TableCell>
+                      <TableCell className="font-semibold text-pink-600" style={{ border: '1px solid #e5e7eb' }}>
+                        ₹{order.total}
+                      </TableCell>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>{getStatusChip(order.status)}</TableCell>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>
+                        <Select
+                          value={order.status}
+                          onChange={e => handleStatusChange(order.id, e.target.value)}
+                          size="small"
+                          variant="outlined"
+                          style={{ minWidth: 120, marginRight: 8 }}
+                        >
+                          {statusOptions.map(opt => (
+                            <MenuItem key={opt.value} value={opt.value}>
+                              <span className="flex items-center gap-2">
+                                {opt.icon}
+                                {opt.label}
+                              </span>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>

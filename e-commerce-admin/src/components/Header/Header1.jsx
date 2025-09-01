@@ -6,7 +6,7 @@ import API_BASE from '../../utils/API_BASE';
 import getImageUrl from '../getImageUrl';
 
 function Header1({obj}) {
-  const [logoUrl, setLogoUrl] = useState('');
+  const [logoUrl, setLogoUrl] = useState("https://via.placeholder.com/120x60?text=No+Logo");
   let {data}=obj;
 
   useEffect(() => {

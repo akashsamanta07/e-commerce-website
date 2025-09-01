@@ -46,9 +46,7 @@ function Home({ children }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Add logout logic here
-    // e.g., clear tokens, redirect, etc.
-    navigate('/admin/login');
+    navigate('/logout');
   };
 
   // The main fix: set the right part to be a flex column with min-h-0 and the content to flex-1 and overflow-y-auto.
@@ -56,7 +54,7 @@ function Home({ children }) {
   return (
     <div className="lg:flex lg:h-[96vh]">
       {/* Left part: only show on large screens */}
-      <div className="hidden lg:flex flex-col w-72 bg-white h-full border-r">
+      <div className="hidden xl:flex flex-col w-72 bg-white h-full border-r">
         {/* Sidebar Navigation */}
         <nav className="flex-1 flex flex-col gap-1 px-3 py-4">
           {sidebarItems.map((item) => (

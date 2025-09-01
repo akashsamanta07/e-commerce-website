@@ -23,7 +23,9 @@ function ManageLogo({obj}) {
     const fetchLogo = async () => {
       setFetching(true);
       try {
-        const res = await fetch(`${API_BASE}/admin/get-logo`);
+        const res = await fetch(`${API_BASE}/admin/get-logo`, {
+          credentials: 'include',
+        });
         const data = await res.json();
         if (isMounted) {
           // The backend returns { success, data: logo } where logo is an object or null
@@ -80,6 +82,7 @@ function ManageLogo({obj}) {
       const res = await fetch(url, {
         method,
         body: formData,
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -91,10 +94,10 @@ function ManageLogo({obj}) {
           navigate("/admin/dashboard");
           setData(prev => ({ ...prev, logo: !prev.logo }));
       } else {
-        notify("error", data.message || (isAdd ? "Add Logo Failed" : "Update Logo Failed"));
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Update Logo Failed");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };

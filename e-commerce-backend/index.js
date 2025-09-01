@@ -9,8 +9,13 @@ const adminRouter = require("./routes/adminRouter");
 const cors = require("cors");
 const multer = require('multer');
 const rootDir = require("./utils/pathUtil");
+const cookieParser = require("cookie-parser");
+
+
 
 const app = express();
+
+app.use(cookieParser());
 
 // Middleware
 app.use(cors({
@@ -63,6 +68,9 @@ const storage = multer.diskStorage({
     // Add destination for product images
     if (req.url.startsWith("/admin/add-product") || req.url.startsWith("/admin/edit-product")) {
       dest = "public/product/";
+    }
+    if (req.url.startsWith("/auth/update-profile")) {
+      dest = "public/profilePic/";
     }
     // Ensure the folder exists, create if not
     const fullDest = path.join(rootDir, dest);

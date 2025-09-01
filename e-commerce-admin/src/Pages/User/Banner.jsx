@@ -43,16 +43,18 @@ function Banner() {
   const fetchBanners = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/get-banners`);
+      const res = await fetch(`${API_BASE}/admin/get-banners`, {
+        credentials: 'include',
+      });
       const data = await res.json();
       if (data.success) {
         setBanners(data.data);
       } else {
         setBanners([]);
-        notify("warning", "No data");
+        notify("warning", "No Data");
       }
     } catch (err) {
-      notify("error", "Fetch fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };
@@ -87,6 +89,7 @@ function Banner() {
       const res = await fetch(`${API_BASE}/admin/add-banner`, {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -96,10 +99,10 @@ function Banner() {
         setAddPreview('');
         fetchBanners();
       } else {
-        notify("error", "Add fail");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Add fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };
@@ -133,6 +136,7 @@ function Banner() {
       const res = await fetch(`${API_BASE}/admin/edit-banner/${editId}`, {
         method: 'PUT',
         body: formData,
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -143,10 +147,10 @@ function Banner() {
         setEditPreview('');
         fetchBanners();
       } else {
-        notify("error", "Edit fail");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Edit fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };
@@ -157,16 +161,17 @@ function Banner() {
     try {
       const res = await fetch(`${API_BASE}/admin/delete-banner/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
         notify("success", "Banner Remove Successfully");
         fetchBanners();
       } else {
-        notify("error", "Delete failed");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Delete fail");
+      notify("error", "Network error");
     }
     setLoading(false);
   };

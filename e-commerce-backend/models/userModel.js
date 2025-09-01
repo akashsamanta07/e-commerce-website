@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
     },
     mobile: {
       type: Number,
-      default: null,
+      default: 9876543210,
     },
     refresh_token: {
       type: String,

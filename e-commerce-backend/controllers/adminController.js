@@ -3,482 +3,603 @@ const CategoryModel = require("../models/Category");
 const BannerModel = require("../models/Banner");
 const LogoModel = require("../models/Logo");
 const ProductModel = require("../models/productModel");
+const OrderModel = require("../models/orderModel"); // Add Order model
 const fs = require("fs");
-const path = require("path");
+const authenticateToken = require("./authenticateToken");
 
 // --- Home Slider Functions ---
 
 // Add Home Slider (with multer)
-exports.addHomeSlider = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Image is required" });
+exports.addHomeSlider = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Image is required" });
+      }
 
-    const imagePath = req.file.path;
+      const imagePath = req.file.path;
 
-    const newSlider = new HomeSliderModel({
-      image: imagePath,
-    });
+      const newSlider = new HomeSliderModel({
+        image: imagePath,
+      });
 
-    await newSlider.save();
+      await newSlider.save();
 
-    res.status(201).json({
-      success: true,
-      message: "Added",
-      data: newSlider,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Add fail", error: error.message });
+      res.status(201).json({
+        success: true,
+        message: "Added",
+        data: newSlider,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Add fail", error: error.message });
+    }
   }
-};
+];
 
 // Edit Home Slider (update image)
-exports.editHomeSlider = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const slider = await HomeSliderModel.findById(id);
-    if (!slider) {
-      return res.status(404).json({ success: false, message: "Not found" });
+exports.editHomeSlider = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
-
-    // If new image uploaded, replace old image file
-    if (req.file) {
-      const oldImagePath = slider.image;
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+    try {
+      const { id } = req.params;
+      const slider = await HomeSliderModel.findById(id);
+      if (!slider) {
+        return res.status(404).json({ success: false, message: "Not found" });
       }
-      slider.image = req.file.path;
+
+      // If new image uploaded, replace old image file
+      if (req.file) {
+        const oldImagePath = slider.image;
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+        slider.image = req.file.path;
+      }
+
+      await slider.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Edited",
+        data: slider,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Edit fail", error: error.message });
     }
-
-    await slider.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Edited",
-      data: slider,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Edit fail", error: error.message });
   }
-};
+];
 
 // Delete Home Slider
-exports.deleteHomeSlider = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const slider = await HomeSliderModel.findById(id);
-    if (!slider) {
-      return res.status(404).json({ success: false, message: "Not found" });
+exports.deleteHomeSlider = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
-    // Remove image file from filesystem
-    const imagePath = slider.image;
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
-    }
-    await HomeSliderModel.findByIdAndDelete(id);
+    try {
+      const { id } = req.params;
+      const slider = await HomeSliderModel.findById(id);
+      if (!slider) {
+        return res.status(404).json({ success: false, message: "Not found" });
+      }
+      // Remove image file from filesystem
+      const imagePath = slider.image;
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+      await HomeSliderModel.findByIdAndDelete(id);
 
-    res.status(200).json({
-      success: true,
-      message: "Deleted",
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Delete fail", error: error.message });
+      res.status(200).json({
+        success: true,
+        message: "Deleted",
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Delete fail", error: error.message });
+    }
   }
-};
+];
 
 // Get All Home Sliders
-exports.getHomeSliders = async (req, res) => {
-  try {
-    const sliders = await HomeSliderModel.find().sort({ createdAt: -1 });
-    res.status(200).json({
-      success: true,
-      data: sliders,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Fetch fail", error: error.message });
+exports.getHomeSliders = [
+  async (req, res) => {
+    try {
+      const sliders = await HomeSliderModel.find().sort({ createdAt: -1 });
+      res.status(200).json({
+        success: true,
+        data: sliders,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Fetch fail", error: error.message });
+    }
   }
-};
+];
 
 // --- Category Functions ---
 
 // Add Category (with multer)
-exports.addCategory = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Image is required" });
+exports.addCategory = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Image is required" });
+      }
 
-    const imagePath = req.file.path;
-    const { name } = req.body;
+      const imagePath = req.file.path;
+      const { name } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ success: false, message: "Name is required" });
+      if (!name) {
+        return res.status(400).json({ success: false, message: "Name is required" });
+      }
+
+      const newCategory = new CategoryModel({
+        name,
+        image: imagePath,
+      });
+
+      await newCategory.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Added",
+        data: newCategory,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Add fail", error: error.message });
     }
-
-    const newCategory = new CategoryModel({
-      name,
-      image: imagePath,
-    });
-
-    await newCategory.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Added",
-      data: newCategory,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Add fail", error: error.message });
   }
-};
+];
 
 // Edit Category (update name and/or image)
-exports.editCategory = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const category = await CategoryModel.findById(id);
-    if (!category) {
-      return res.status(404).json({ success: false, message: "Not found" });
+exports.editCategory = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
-
-    // Update name if provided
-    if (req.body.name) {
-      category.name = req.body.name;
-    }
-
-    // If new image uploaded, replace old image file
-    if (req.file) {
-      const oldImagePath = category.image;
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+    try {
+      const { id } = req.params;
+      const category = await CategoryModel.findById(id);
+      if (!category) {
+        return res.status(404).json({ success: false, message: "Not found" });
       }
-      category.image = req.file.path;
+
+      // Update name if provided
+      if (req.body.name) {
+        category.name = req.body.name;
+      }
+
+      // If new image uploaded, replace old image file
+      if (req.file) {
+        const oldImagePath = category.image;
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+        category.image = req.file.path;
+      }
+
+      await category.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Edited",
+        data: category,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Edit fail", error: error.message });
     }
-
-    await category.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Edited",
-      data: category,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Edit fail", error: error.message });
   }
-};
+];
 
 // Delete Category
-exports.deleteCategory = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const category = await CategoryModel.findById(id);
-    if (!category) {
-      return res.status(404).json({ success: false, message: "Not found" });
+exports.deleteCategory = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
-    // Remove image file from filesystem
-    const imagePath = category.image;
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
-    }
-    await CategoryModel.findByIdAndDelete(id);
+    try {
+      const { id } = req.params;
+      const category = await CategoryModel.findById(id);
+      if (!category) {
+        return res.status(404).json({ success: false, message: "Not found" });
+      }
+      // Remove image file from filesystem
+      const imagePath = category.image;
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+      await CategoryModel.findByIdAndDelete(id);
 
-    res.status(200).json({
-      success: true,
-      message: "Deleted",
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Delete fail", error: error.message });
+      res.status(200).json({
+        success: true,
+        message: "Deleted",
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Delete fail", error: error.message });
+    }
   }
-};
+];
 
 // Get All Categories
-exports.getCategories = async (req, res) => {
-  try {
-    const categories = await CategoryModel.find().sort({ createdAt: -1 });
-    res.status(200).json({
-      success: true,
-      data: categories,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Fetch fail", error: error.message });
+exports.getCategories = [
+  async (req, res) => {
+    try {
+      const categories = await CategoryModel.find().sort({ createdAt: -1 });
+      res.status(200).json({
+        success: true,
+        data: categories,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Fetch fail", error: error.message });
+    }
   }
-};
+];
 
 // --- Banner Functions ---
 
 // Add Banner (with multer)
-exports.addBanner = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Image is required" });
+exports.addBanner = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Image is required" });
+      }
 
-    const imagePath = req.file.path;
+      const imagePath = req.file.path;
 
-    const newBanner = new BannerModel({
-      image: imagePath,
-    });
+      const newBanner = new BannerModel({
+        image: imagePath,
+      });
 
-    await newBanner.save();
+      await newBanner.save();
 
-    res.status(201).json({
-      success: true,
-      message: "Added",
-      data: newBanner,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Add fail", error: error.message });
+      res.status(201).json({
+        success: true,
+        message: "Added",
+        data: newBanner,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Add fail", error: error.message });
+    }
   }
-};
+];
 
 // Edit Banner (update image)
-exports.editBanner = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const banner = await BannerModel.findById(id);
-    if (!banner) {
-      return res.status(404).json({ success: false, message: "Not found" });
+exports.editBanner = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
-
-    // If new image uploaded, replace old image file
-    if (req.file) {
-      const oldImagePath = banner.image;
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+    try {
+      const { id } = req.params;
+      const banner = await BannerModel.findById(id);
+      if (!banner) {
+        return res.status(404).json({ success: false, message: "Not found" });
       }
-      banner.image = req.file.path;
+
+      // If new image uploaded, replace old image file
+      if (req.file) {
+        const oldImagePath = banner.image;
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+        banner.image = req.file.path;
+      }
+
+      await banner.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Edited",
+        data: banner,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Edit fail", error: error.message });
     }
-
-    await banner.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Edited",
-      data: banner,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Edit fail", error: error.message });
   }
-};
+];
 
 // Delete Banner
-exports.deleteBanner = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const banner = await BannerModel.findById(id);
-    if (!banner) {
-      return res.status(404).json({ success: false, message: "Not found" });
+exports.deleteBanner = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
-    // Remove image file from filesystem
-    const imagePath = banner.image;
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
-    }
-    await BannerModel.findByIdAndDelete(id);
+    try {
+      const { id } = req.params;
+      const banner = await BannerModel.findById(id);
+      if (!banner) {
+        return res.status(404).json({ success: false, message: "Not found" });
+      }
+      // Remove image file from filesystem
+      const imagePath = banner.image;
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+      await BannerModel.findByIdAndDelete(id);
 
-    res.status(200).json({
-      success: true,
-      message: "Deleted",
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Delete fail", error: error.message });
+      res.status(200).json({
+        success: true,
+        message: "Deleted",
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Delete fail", error: error.message });
+    }
   }
-};
+];
 
 // Get All Banners
-exports.getBanners = async (req, res) => {
-  try {
-    const banners = await BannerModel.find().sort({ createdAt: -1 });
-    res.status(200).json({
-      success: true,
-      data: banners,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Fetch fail", error: error.message });
+exports.getBanners = [
+  async (req, res) => {
+    try {
+      const banners = await BannerModel.find().sort({ createdAt: -1 });
+      res.status(200).json({
+        success: true,
+        data: banners,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Fetch fail", error: error.message });
+    }
   }
-};
+];
 
 // --- Logo Functions ---
 
 // Add Logo (with multer)
-exports.addLogo = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Image is required" });
+exports.addLogo = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
-
-    const imagePath = req.file.path;
-
-    // Only one logo allowed, so remove existing logo document and file if present
-    const existingLogo = await LogoModel.findOne();
-    if (existingLogo) {
-      // Remove old logo file from filesystem
-      if (fs.existsSync(existingLogo.image)) {
-        fs.unlinkSync(existingLogo.image);
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Image is required" });
       }
-      await LogoModel.deleteMany({});
-    }
 
-    // Save new logo document
-    const newLogo = new LogoModel({
-      image: imagePath,
-    });
-    await newLogo.save();
+      const imagePath = req.file.path;
 
-    res.status(201).json({
-      success: true,
-      message: "Logo added",
-      data: { image: newLogo.image },
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Add logo fail", error: error.message });
-  }
-};
-
-// Edit Logo (replace logo image)
-exports.editLogo = async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: "Image is required" });
-    }
-
-    const imagePath = req.file.path;
-
-    // Find existing logo document
-    const existingLogo = await LogoModel.findOne();
-    if (existingLogo) {
-      // Remove old logo file from filesystem
-      if (fs.existsSync(existingLogo.image)) {
-        fs.unlinkSync(existingLogo.image);
+      // Only one logo allowed, so remove existing logo document and file if present
+      const existingLogo = await LogoModel.findOne();
+      if (existingLogo) {
+        // Remove old logo file from filesystem
+        if (fs.existsSync(existingLogo.image)) {
+          fs.unlinkSync(existingLogo.image);
+        }
+        await LogoModel.deleteMany({});
       }
-      existingLogo.image = imagePath;
-      await existingLogo.save();
-      return res.status(200).json({
-        success: true,
-        message: "Logo edited",
-        data: { image: existingLogo.image },
+
+      // Save new logo document
+      const newLogo = new LogoModel({
+        image: imagePath,
       });
-    } else {
-      // If no logo exists, create new
-      const newLogo = new LogoModel({ image: imagePath });
       await newLogo.save();
-      return res.status(201).json({
+
+      res.status(201).json({
         success: true,
         message: "Logo added",
         data: { image: newLogo.image },
       });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Add logo fail", error: error.message });
     }
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Edit logo fail", error: error.message });
   }
-};
+];
+
+// Edit Logo (replace logo image)
+exports.editLogo = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
+    }
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, message: "Image is required" });
+      }
+
+      const imagePath = req.file.path;
+
+      // Find existing logo document
+      const existingLogo = await LogoModel.findOne();
+      if (existingLogo) {
+        // Remove old logo file from filesystem
+        if (fs.existsSync(existingLogo.image)) {
+          fs.unlinkSync(existingLogo.image);
+        }
+        existingLogo.image = imagePath;
+        await existingLogo.save();
+        return res.status(200).json({
+          success: true,
+          message: "Logo edited",
+          data: { image: existingLogo.image },
+        });
+      } else {
+        // If no logo exists, create new
+        const newLogo = new LogoModel({ image: imagePath });
+        await newLogo.save();
+        return res.status(201).json({
+          success: true,
+          message: "Logo added",
+          data: { image: newLogo.image },
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Edit logo fail", error: error.message });
+    }
+  }
+];
 
 // Get Logo (returns the logo file path if exists)
-exports.getLogo = async (req, res) => {
-  try {
-    const logo = await LogoModel.findOne();
-    if (logo) {
-      return res.status(200).json({
-        success: true,
-        data: logo,
-      });
+exports.getLogo = [
+  async (req, res) => {
+    try {
+      const logo = await LogoModel.findOne();
+      if (logo) {
+        return res.status(200).json({
+          success: true,
+          data: logo,
+        });
+      }
+      res.status(404).json({ success: false, message: "Logo not found" });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Fetch logo fail", error: error.message });
     }
-    res.status(404).json({ success: false, message: "Logo not found" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Fetch logo fail", error: error.message });
   }
-};
+];
 
 // --- Product Functions ---
 
 // Add Product (with multer, multiple images)
-exports.addProduct = async (req, res) => {
-  try {
-    // Multer stores files in req.files (array)
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, message: "At least one product image is required" });
+exports.addProduct = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
+    try {
+      // Multer stores files in req.files (array)
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ success: false, message: "At least one product image is required" });
+      }
 
-    const {
-      title,
-      brand,
-      description,
-      category,
-      subcategory,
-      originalPrice,
-      discountPrice,
-      inStock,
-      rating
-    } = req.body;
+      const {
+        title,
+        brand,
+        description,
+        category,
+        subcategory,
+        originalPrice,
+        discountPrice,
+        inStock,
+        rating
+      } = req.body;
 
-    if (!title || !category || !originalPrice) {
-      return res.status(400).json({ success: false, message: "Title, category, and original price are required" });
+      if (!title || !category || !originalPrice) {
+        return res.status(400).json({ success: false, message: "Title, category, and original price are required" });
+      }
+
+      const images = req.files.map(file => file.path);
+      let reviewlist = [];
+      let sales = 0;
+
+      const newProduct = new ProductModel({
+        title,
+        brand,
+        description,
+        category,
+        subcategory,
+        originalPrice,
+        discountPrice,
+        inStock,
+        rating,
+        images,
+        sales,
+        reviewlist
+      });
+
+      await newProduct.save();
+
+      res.status(201).json({
+        success: true,
+        message: "Product added",
+        data: newProduct
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Add product fail", error: error.message });
     }
-
-
-    const images = req.files.map(file => file.path);
-    let reviewlist=[];
-    let sales=0;
-
-    const newProduct = new ProductModel({
-      title,
-      brand,
-      description,
-      category,
-      subcategory,
-      originalPrice,
-      discountPrice,
-      inStock,
-      rating,
-      images,
-      sales,
-      reviewlist
-    });
-
-    await newProduct.save();
-
-
-    res.status(201).json({
-      success: true,
-      message: "Product added",
-      data: newProduct
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Add product fail", error: error.message });
   }
-};
+];
 
 // Edit Product (update fields and images)
-exports.editProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const product = await ProductModel.findById(id);
-    if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+exports.editProduct = [
+  authenticateToken,
+  
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
     }
-
-    // Update fields if provided
-    const updatableFields = [
-      "title",
-      "description",
-      "category",
-      "subcategory",
-      "originalPrice",
-      "discountPrice",
-      "inStock",
-      "sales",
-      "rating"
-    ];
-    updatableFields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        product[field] = req.body[field];
+    try {
+      const { id } = req.params;
+      const product = await ProductModel.findById(id);
+      if (!product) {
+        return res.status(404).json({ success: false, message: "Product not found" });
       }
-    });
+      // Update fields if provided
+      const updatableFields = [
+        "title",
+        "description",
+        "category",
+        "subcategory",
+        "originalPrice",
+        "discountPrice",
+        "inStock",
+        "sales",
+        "rating"
+      ];
+      updatableFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+          product[field] = req.body[field];
+        }
+      });
 
-    // If new images uploaded, replace old images
-    if (req.files && req.files.length > 0) {
-      // Remove old images from filesystem
+      // If new images uploaded, replace old images
+      if (req.files && req.files.length > 0) {
+        // Remove old images from filesystem
+        if (product.images && Array.isArray(product.images)) {
+          product.images.forEach(imgPath => {
+            if (fs.existsSync(imgPath)) {
+              fs.unlinkSync(imgPath);
+            }
+          });
+        }
+        product.images = req.files.map(file => file.path);
+      }
+
+      await product.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Product edited",
+        data: product
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Edit product fail", error: error.message });
+    }
+  }
+];
+
+// Delete Product
+exports.deleteProduct = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
+    }
+    try {
+      const { id } = req.params;
+      const product = await ProductModel.findById(id);
+      if (!product) {
+        return res.status(404).json({ success: false, message: "Product not found" });
+      }
+      // Remove images from filesystem
       if (product.images && Array.isArray(product.images)) {
         product.images.forEach(imgPath => {
           if (fs.existsSync(imgPath)) {
@@ -486,57 +607,76 @@ exports.editProduct = async (req, res) => {
           }
         });
       }
-      product.images = req.files.map(file => file.path);
-    }
+      await ProductModel.findByIdAndDelete(id);
 
-    await product.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Product edited",
-      data: product
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Edit product fail", error: error.message });
-  }
-};
-
-// Delete Product
-exports.deleteProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const product = await ProductModel.findById(id);
-    if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
-    }
-    // Remove images from filesystem
-    if (product.images && Array.isArray(product.images)) {
-      product.images.forEach(imgPath => {
-        if (fs.existsSync(imgPath)) {
-          fs.unlinkSync(imgPath);
-        }
+      res.status(200).json({
+        success: true,
+        message: "Product deleted"
       });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Delete product fail", error: error.message });
     }
-    await ProductModel.findByIdAndDelete(id);
-
-    res.status(200).json({
-      success: true,
-      message: "Product deleted"
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Delete product fail", error: error.message });
   }
-};
+];
 
 // Get All Products
-exports.getProducts = async (req, res) => {
-  try {
-    const products = await ProductModel.find().sort({ createdAt: -1 });
-    res.status(200).json({
-      success: true,
-      data: products
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Fetch products fail", error: err?.message || "any error" });
+exports.getProducts = [
+  async (req, res) => {
+    try {
+      const products = await ProductModel.find().sort({ createdAt: -1 });
+      res.status(200).json({
+        success: true,
+        data: products
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, message: "Fetch products fail", error: err?.message || "any error" });
+    }
   }
-};
+];
+
+// --- Order Functions ---
+
+// Get All Orders
+exports.getAllOrders = [
+  async (req, res) => {
+    try {
+      const orders = await OrderModel.find().sort({ createdAt: -1 });
+      res.status(200).json({
+        success: true,
+        orders: orders
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Fetch orders fail", error: error.message });
+    }
+  }
+];
+
+// Change Order Status
+exports.changeOrderStatus = [
+  authenticateToken,
+  async (req, res) => {
+    if (req.user && req.user.role === "USER") {
+      return res.status(403).json({ success: false, message: "You are not Admin" });
+    }
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      if (!status) {
+        return res.status(400).json({ success: false, message: "Status is required" });
+      }
+      const order = await OrderModel.findById(id);
+      if (!order) {
+        return res.status(404).json({ success: false, message: "Order not found" });
+      }
+      order.status = status;
+      await order.save();
+      res.status(200).json({
+        success: true,
+        message: "Order status updated",
+        order: order
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Change order status fail", error: error.message });
+    }
+  }
+];

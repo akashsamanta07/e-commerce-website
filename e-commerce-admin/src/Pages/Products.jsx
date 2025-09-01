@@ -75,14 +75,19 @@ function Products() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/get-products`);
-      if (!res.ok) throw new Error('Failed to fetch products');
+      const res = await fetch(`${API_BASE}/admin/get-products`, {
+        credentials: 'include',
+      });
       const data = await res.json();
-      setProducts(Array.isArray(data.data) ? data.data : []);
+      if (!res.ok) {
+        notify("error", data.message || "Failed to fetch products");
+        setProducts([]);
+      } else {
+        setProducts(Array.isArray(data.data) ? data.data : []);
+      }
     } catch (err) {
-      notify("error", err.message || "Failed to fetch products");
+      notify("Failed to fetch data");
     }
-
     setLoading(false);
   };
 
@@ -105,11 +110,17 @@ function Products() {
         method: "DELETE",
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to delete product");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        notify("error", data.message);
+        return;
+      }
       notify("success", "Product Deleted Successfully");
-      setProducts(products.filter(p => p._id !== id && p.id !== id));
+      setProducts(prev =>
+        prev.filter(p => p._id !== id && p.id !== id)
+      );
     } catch (err) {
-      notify("error", err.message || "Failed to delete product");
+      notify("error", "Network Error");
     }
   };
 
@@ -322,17 +333,18 @@ function Products() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    // Validate required fields
+
     const {
       title, brand, description, category, subcategory,
       originalPrice, discountPrice, inStock, rating, images
     } = formState;
+
+    // Validate required fields
     if (
-      !title || !brand || !description || !category || !subcategory ||
-      !originalPrice || !discountPrice || !inStock || !rating
+      !title || !brand || !description || !category || !subcategory
     ) {
-      alert('Please fill all fields.');
       setSubmitting(false);
+      notify("warning", "Fill all Fields");
       return;
     }
 
@@ -372,13 +384,16 @@ function Products() {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || "Failed to save product");
+        // Show backend error message if available, else generic error
+        notify("error", errData.message);
+        setSubmitting(false);
+        return;
       }
       handleCloseDialog();
       notify("success", dialogMode === 'add' ? "Product Added Successfully" : "Product Updated Successfully");
       fetchProducts();
     } catch (err) {
-      notify("error", err.message || "Failed to save product");
+      notify("error", err?.message || "Network Error");
     }
     setSubmitting(false);
   };
@@ -579,6 +594,13 @@ function Products() {
               setSearchCategory(e.target.value);
               setSearchSubcategory('');
             }}
+            MenuProps={{
+              PaperProps: {
+                style: {
+                  maxHeight: 300,
+                },
+              },
+            }}
           >
             <MenuItem value="">All</MenuItem>
             {categoryArr.map(cat => (
@@ -593,6 +615,13 @@ function Products() {
             label="Subcategory"
             onChange={e => setSearchSubcategory(e.target.value)}
             disabled={!searchCategory}
+            MenuProps={{
+              PaperProps: {
+                style: {
+                  maxHeight: 300,
+                },
+              },
+            }}
           >
             <MenuItem value="">All</MenuItem>
             {getSubcategories(searchCategory).map((sub, idx) => (

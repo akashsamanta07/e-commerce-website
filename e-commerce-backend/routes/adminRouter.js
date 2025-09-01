@@ -32,4 +32,10 @@ adminRouter.put("/edit-product/:id", adminController.editProduct);
 adminRouter.delete("/delete-product/:id", adminController.deleteProduct);
 adminRouter.get("/get-products", adminController.getProducts);
 
+// Order routes (admin)
+adminRouter.get("/get-orders", adminController.getAllOrders); // Get all orders
+adminRouter.put("/change-order-status/:id", adminController.changeOrderStatus); // Change order status
+
+
+
 module.exports = adminRouter;

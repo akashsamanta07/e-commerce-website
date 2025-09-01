@@ -42,13 +42,15 @@ function HomeSlider() {
   const fetchSliders = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/get-home-sliders`);
+      const res = await fetch(`${API_BASE}/admin/get-home-sliders`, {
+        credentials: 'include',
+      });
       const data = await res.json();
       if (data.success) {
         setSliders(data.data);
       } else {
         setSliders([]);
-        notify("warning", "No data");
+        notify("warning", "No Data");
       }
     } catch (err) {
       notify("error", "Fetch fail");
@@ -86,6 +88,7 @@ function HomeSlider() {
       const res = await fetch(`${API_BASE}/admin/add-home-slider`, {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -95,10 +98,10 @@ function HomeSlider() {
         setAddPreview('');
         fetchSliders();
       } else {
-        notify("error", "Add fail");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Add fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };
@@ -132,6 +135,7 @@ function HomeSlider() {
       const res = await fetch(`${API_BASE}/admin/edit-home-slider/${editId}`, {
         method: 'PUT',
         body: formData,
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -142,10 +146,10 @@ function HomeSlider() {
         setEditPreview('');
         fetchSliders();
       } else {
-        notify("error", "Edit fail");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Edit fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };
@@ -156,16 +160,17 @@ function HomeSlider() {
     try {
       const res = await fetch(`${API_BASE}/admin/delete-home-slider/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
         notify("success", "Slider Remove Successfully");
         fetchSliders();
       } else {
-        notify("error", "Delete failed");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Delete fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };

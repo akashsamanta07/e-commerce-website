@@ -45,13 +45,15 @@ function Category() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/get-categories`);
+      const res = await fetch(`${API_BASE}/admin/get-categories`, {
+        credentials: 'include',
+      });
       const data = await res.json();
       if (data.success) {
         setCategories(data.data);
       } else {
         setCategories([]);
-        notify("warning", "No data");
+        notify("warning", "No Data");
       }
     } catch (err) {
       notify("error", "Fetch fail");
@@ -91,6 +93,7 @@ function Category() {
       const res = await fetch(`${API_BASE}/admin/add-category`, {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -101,10 +104,10 @@ function Category() {
         setAddPreview('');
         fetchCategories();
       } else {
-        notify("error", "Add fail");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Add fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };
@@ -140,6 +143,7 @@ function Category() {
       const res = await fetch(`${API_BASE}/admin/edit-category/${editId}`, {
         method: 'PUT',
         body: formData,
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -151,10 +155,10 @@ function Category() {
         setEditPreview('');
         fetchCategories();
       } else {
-        notify("error", "Edit fail");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Edit fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };
@@ -165,16 +169,17 @@ function Category() {
     try {
       const res = await fetch(`${API_BASE}/admin/delete-category/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
         notify("success", "Category Remove Successfully");
         fetchCategories();
       } else {
-        notify("error", "Delete failed");
+        notify("error", data.message);
       }
     } catch (err) {
-      notify("error", "Delete fail");
+      notify("error", "Network Error");
     }
     setLoading(false);
   };

@@ -1,26 +1,31 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { IconButton, Button, InputAdornment, CircularProgress } from "@mui/material";
+import { IconButton, InputAdornment, CircularProgress } from "@mui/material";
 import LoginIcon from "@mui/icons-material/Login";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
-import { FcGoogle } from "react-icons/fc";
+// import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
 import notify from "../components/Notification/notify.jsx";
 
 import API_BASE from "../utils/API_BASE";
 
-function Login({ onLogin }) {
+function Login({ auth, setAuth }) {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (auth && auth._id != null) {
+      navigate("/admin/dashboard");
+    }
+    // eslint-disable-next-line
+  }, [auth, navigate]);
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({
@@ -59,7 +64,7 @@ function Login({ onLogin }) {
 
       notify("success", "Login success");
       setLoading(false);
-      if (onLogin) onLogin(data.user || form);
+      setAuth(data.userData);
       navigate("/admin/dashboard");
     } catch (err) {
       notify("error", "Network error");
@@ -68,10 +73,10 @@ function Login({ onLogin }) {
   };
 
   // Dummy Google login handler
-  const handleGoogleLogin = (e) => {
-    e.preventDefault();
-    notify("warning", "No Google yet");
-  };
+  // const handleGoogleLogin = (e) => {
+  //   e.preventDefault();
+  //   notify("warning", "No Google yet");
+  // };
 
   return (
     <div className="my-8 mx-5 flex items-center justify-center">
@@ -217,7 +222,7 @@ function Login({ onLogin }) {
           <span className="mx-2 text-gray-400 text-xs">or</span>
           <div className="flex-grow border-t border-gray-200" />
         </div>
-        <Button
+        {/* <Button
           variant="outlined"
           startIcon={<FcGoogle size={22} />}
           onClick={handleGoogleLogin}
@@ -241,8 +246,8 @@ function Login({ onLogin }) {
           disabled={loading}
         >
           Login with Google
-        </Button>
-        
+        </Button> */}
+        <p className="text-center text-gray-500 text-xs mt-4">login as user for view only</p>
       </form>
     </div>
   );
