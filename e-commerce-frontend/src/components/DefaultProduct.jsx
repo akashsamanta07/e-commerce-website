@@ -2,105 +2,41 @@ import React, { useState, useRef, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import ProductCard from '../components/ProductCard.jsx';
 import { ArrowForward } from '@mui/icons-material';
-import dumy from '../assets/dumy.jpg';
 import { Link } from 'react-router-dom';
+import getImageUrl from './getImageUrl.js';
 
-// Dummy products
-const products = [
-  {
-    id: 1,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 2,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 3,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 4,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 5,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 6,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 7,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 8,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 9,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-];
+// This component expects product objects that match the backend product schema:
+// {
+//   _id: String,
+//   title: String,
+//   brand: String,
+//   description: String,
+//   category: String,
+//   subcategory: String,
+//   originalPrice: Number,
+//   discountPrice: Number,
+//   inStock: Number,
+//   rating: Number,
+//   images: [String],
+//   sales: Number,
+//   reviewlist: [ObjectId],
+//   ... (see backend for full details)
+// }
 
 function DefaultProduct({ product, name, category }) {
-  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cardlist, setcardlist } = product;
+  // product: { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setCartlist, selectedProduct }
+  let {
+    wishlistcount = 0,
+    setwishlistcount = () => {},
+    cartCount = 0,
+    setCartCount = () => {},
+    wishlist = [],
+    setWishlist = () => {},
+    cartlist = [],
+    setCartlist = () => {},
+    selectedProduct = [],
+  } = product || {};
+
   const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
 
@@ -116,7 +52,7 @@ function DefaultProduct({ product, name, category }) {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, []);
+  }, [selectedProduct]);
 
   // --- Drag-to-scroll logic for mouse users ---
   useEffect(() => {
@@ -168,6 +104,9 @@ function DefaultProduct({ product, name, category }) {
     };
   }, []);
 
+  // For backend products, use _id as id
+  const getProductId = (p) => p._id || p.id;
+
   const handleToggleWishlist = (id) => {
     if (wishlist.includes(id)) {
       setwishlistcount(wishlistcount - 1);
@@ -178,18 +117,21 @@ function DefaultProduct({ product, name, category }) {
     }
   };
 
-  // cardlist is an array of objects: [{id, quantity}]
-  const handleAddToCard = (id) => {
-    const existing = cardlist.find(item => item.id === id);
+  // cartlist is an array of objects: [{product, quantity}]
+  const handleAddToCart = (id) => {
+    const existing = cartlist.find(item => (item.product || item.id) === id);
     if (existing) {
       // Already in cart, do nothing (or you could increase quantity if desired)
       return;
     } else {
       // Add new item with quantity 1
-      setcardlist([...cardlist, { id, quantity: 1 }]);
+      setCartlist([...cartlist, { product: id, quantity: 1 }]);
       setCartCount(cartCount + 1);
     }
   };
+
+  // If no selectedProduct, don't render section
+  if (!Array.isArray(selectedProduct) || selectedProduct.length === 0) return null;
 
   return (
     <div className='bg-white'>
@@ -201,7 +143,7 @@ function DefaultProduct({ product, name, category }) {
         {/* View All Button (shows only if scroll is needed) */}
         {showViewAll && (
           <div className="flex items-center ml-auto">
-            <Link to={`/menu/${name === "Related Products" ? category.trim().toLowerCase() : name.trim().toLowerCase()}`}>
+            <Link to={`/menu/${name === "Related Products" ? (category || '').trim().toLowerCase() : (name || '').trim().toLowerCase()}`}>
               <Button
                 variant="text"
                 className="!capitalize !font-bold !text-pink-600 flex items-center gap-1 !bg-gray-100"
@@ -218,23 +160,39 @@ function DefaultProduct({ product, name, category }) {
         ref={scrollRef}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            imageUrl={product.imageUrl}
-            discountPercent={product.discountPercent}
-            isWishlisted={wishlist.includes(product.id)}
-            brand={product.brand}
-            title={product.title}
-            rating={product.rating}
-            originalPrice={product.originalPrice}
-            discountedPrice={product.discountedPrice}
-            onAddToCart={() => { handleAddToCard(product.id) }}
-            onToggleWishlist={() => handleToggleWishlist(product.id)}
-            cardlist={cardlist}
-          />
-        ))}
+        {selectedProduct.map((prod) => {
+          // Use backend schema fields
+          const id = prod._id;
+          let imageUrl = prod.imageUrl;
+          if (!imageUrl && Array.isArray(prod.images) && prod.images.length > 0) {
+            imageUrl = getImageUrl(prod.images[0]);
+          }
+          return (
+            <ProductCard
+              key={id}
+              id={id}
+              imageUrl={imageUrl}
+              // Calculate discount percent from originalPrice and discountPrice if not present
+              discountPercent={
+                typeof prod.discountPercent === 'number'
+                  ? prod.discountPercent
+                  : (typeof prod.originalPrice === 'number' && typeof prod.discountPrice === 'number' && prod.originalPrice > 0)
+                    ? Math.round(100 * (prod.originalPrice - prod.discountPrice) / prod.originalPrice)
+                    : 0
+              }
+              isWishlisted={wishlist.includes(id)}
+              brand={prod.brand}
+              title={prod.title}
+              rating={typeof prod.rating === 'number' ? prod.rating : 0}
+              originalPrice={prod.originalPrice}
+              discountedPrice={prod.discountPrice}
+              onAddToCart={() => { handleAddToCart(id) }}
+              onToggleWishlist={() => handleToggleWishlist(id)}
+              cartlist={cartlist}
+              inStock={typeof prod.inStock === 'number' ? prod.inStock : 0}
+            />
+          );
+        })}
       </div>
     </div>
   );

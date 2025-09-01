@@ -139,7 +139,7 @@ const products = [
 ];
 
 function Popular_products({ product }) {
-  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cardlist, setcardlist } = product;
+  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setcartlist } = product;
   const [activeMenu, setActiveMenu] = useState(MENU_ITEMS[0]);
   const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
@@ -219,12 +219,12 @@ function Popular_products({ product }) {
   };
 
   const handleAddToCard = (id) => {
-    const existing = cardlist.find(item => item.id === id);
+    const existing = cartlist.find(item => item.id === id);
     if (existing) {
       return;
     } else {
       // If not in cart, add with quantity 1
-      setcardlist([...cardlist, { id, quantity: 1 }]);
+      setcartlist([...cartlist, { id, quantity: 1 }]);
       setCartCount(cartCount + 1);
     }
   };
@@ -304,7 +304,7 @@ function Popular_products({ product }) {
       >
         {products.map((prod) => {
           // Find quantity in cartlist for this product (if any)
-          const cartItem = cardlist.find(item => item.id === prod.id);
+          const cartItem = cartlist.find(item => item.id === prod.id);
           return (
             <ProductCard
               key={prod.id}
@@ -319,7 +319,7 @@ function Popular_products({ product }) {
               discountedPrice={prod.discountedPrice}
               onAddToCart={() => handleAddToCard(prod.id)}
               onToggleWishlist={() => handleToggleWishlist(prod.id)}
-              cardlist={cardlist}
+              cartlist={cartlist}
               quantity={cartItem ? cartItem.quantity : 0}
             />
           );

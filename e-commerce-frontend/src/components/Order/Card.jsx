@@ -1,91 +1,29 @@
-import React, { useContext, useMemo } from 'react';
-import dumy from '../../assets/dumy.jpg';
+import React, { useContext } from 'react';
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { FaShoppingCart } from 'react-icons/fa';
 import notify from '../Notification/notify.jsx';
-import {GlobalContext} from '../UserContext/UserContext.jsx'
+import { GlobalContext } from '../UserContext/UserContext.jsx'
 import { Link } from 'react-router-dom';
 
-
-const products = [
-  {
-    id: 1,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Rand oiuui uil ug uttuyut ty6yr ytri",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 2,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 3,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 4,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 5,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  }
-];
-
+// Use product schema keys: title, brand, description, category, subcategory, originalPrice, discountPrice, inStock, rating, images, sales, reviewlist, _id
 function Card({ header2, onClose }) {
-  const { cartCount, setCartCount, cardlist, setcardlist } = header2;
-  const {total,setTotal}=useContext(GlobalContext);
-  
+  const { cartCount, setCartCount, setCartlist, cartlistproduct } = header2;
+  const { total, setTotal } = useContext(GlobalContext);
 
-  // Get cart items with product details
-  const cartItems = useMemo(() => {
-    return cardlist
-      .map(({ id, quantity }) => {
-        const prod = products.find(p => p.id === Number(id));
-        return prod ? { ...prod, quantity } : null;
-      })
-      .filter(Boolean);
-  }, [cardlist]);
+  // Use product schema keys
+  const cartItems = cartlistproduct || [];
 
-  // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.discountedPrice * item.quantity), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + ((item.discountPrice || 0) * (item.quantity || 1)), 0);
   const deliveryFee = cartItems.length > 0 && subtotal <= 1000 && subtotal > 0 ? 80 : 0;
   const taxes = cartItems.length > 0 ? 11.49 : 0;
   setTotal(cartItems.length > 0 ? Math.round(subtotal + deliveryFee + taxes) : 0);
 
   // Handlers
-  const handleRemoveOne = (id) => {
-    const newList = cardlist
+  const handleRemoveOne = (prodId) => {
+    const newList = cartItems
       .map(item => {
-        if (item.id === id) {
+        const itemId = item._id;
+        if (String(itemId) === String(prodId)) {
           if (item.quantity > 1) {
             return { ...item, quantity: item.quantity - 1 };
           }
@@ -95,38 +33,41 @@ function Card({ header2, onClose }) {
         return item;
       })
       .filter(Boolean);
-    setcardlist(newList);
+    setCartlist(newList.map(item => ({
+      product: item._id,
+      quantity: item.quantity
+    })));
     // Update cart count
-    const removedItem = cardlist.find(item => item.id === id);
+    const removedItem = cartItems.find(item => String(item._id) === String(prodId));
     if (removedItem && removedItem.quantity === 1) {
-      notify("warning","Item Removed from Card");
+      notify("warning", "Item Removed from Cart");
       setCartCount(cartCount > 0 ? cartCount - 1 : 0);
     }
   };
 
-  const handleAddOne = (id) => {
-    const newList = cardlist.map(item => {
-      if (item.id === id) {
+  const handleAddOne = (prodId) => {
+    const newList = cartItems.map(item => {
+      const itemId = item._id;
+      if (String(itemId) === String(prodId)) {
         return { ...item, quantity: item.quantity + 1 };
       }
       return item;
     });
-    setcardlist(newList);
+    setCartlist(newList.map(item => ({
+      product: item._id,
+      quantity: item.quantity
+    })));
   };
-  
 
-  const handleDeleteAll = (id) => {
-    setcardlist(cardlist.filter(item => item.id !== id));
+  const handleDeleteAll = (prodId) => {
+    const newList = cartItems.filter(item => String(item._id) !== String(prodId));
+    setCartlist(newList.map(item => ({
+      product: item._id,
+      quantity: item.quantity
+    })));
     setCartCount(cartCount > 0 ? cartCount - 1 : 0);
-    notify("warning","Item Removed from Card");
+    notify("warning", "Item Removed from Cart");
   };
-
-  // const handlePlaceOrder = () => {
-  //   if (cartItems.length > 0) {
-  //     setcardlist([]);
-  //     setCartCount(0);
-  //   }
-  // };
 
   return (
     <div className="max-w-xl mx-auto bg-white rounded-lg shadow px-4 pb-4">
@@ -143,13 +84,13 @@ function Card({ header2, onClose }) {
             </button>
           </div>
         ) : (
-          <div className={`w-full ${cardlist.length > 3 ? "h-[50vh]":""} flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden`}>
+          <div className={`w-full ${cartItems.length > 3 ? "h-[50vh]" : ""} flex flex-col justify-start items-center overflow-y-auto overflow-x-hidden`}>
             {cartItems.map((item) => (
-              <div key={item.id} className="w-full flex flex-row items-center justify-center border-b py-3 gap-3 lg:gap-4">
-                <Link to={`/product/${item.id}`}>
+              <div key={item._id} className="w-full flex flex-row items-center justify-center border-b py-3 gap-3 lg:gap-4">
+                <Link to={`/product/${item._id}`}>
                   <div className="h-[5rem]  lg:h-[6rem] flex-shrink-0 flex items-center justify-center overflow-hidden rounded">
                     <img
-                      src={item.imageUrl}
+                      src={item.images && item.images.length > 0 ? item.images[0] : ""}
                       alt={item.title}
                       className="h-[5rem] lg:h-[6rem] w-full flex rounded-lg"
                     />
@@ -166,23 +107,23 @@ function Card({ header2, onClose }) {
                     <button
                       type="button"
                       className=" w-[33%] py-1 text-center  bg-pink-100  transition"
-                      onClick={() => handleRemoveOne(item.id)}
+                      onClick={() => handleRemoveOne(item._id)}
                       aria-label="Decrease quantity"
                     >-</button>
                     <span className="w-[33%] text-center rounded">{item.quantity}</span>
                     <button
                       type="button"
                       className="w-[33%] py-1 text-center bg-pink-100  transition"
-                      onClick={() => handleAddOne(item.id)}
+                      onClick={() => handleAddOne(item._id)}
                       aria-label="Increase quantity"
                     >+</button>
                   </div>
                 </div>
                 <div className="flex flex-col justify-center items-center gap-2">
-                  <span className="text-pink-600 font-bold">₹{item.discountedPrice}/-</span>
+                  <span className="text-pink-600 font-bold">₹{item.discountPrice}/-</span>
                   <button
                     className="text-red-500 hover:text-red-700"
-                    onClick={() => handleDeleteAll(item.id)}
+                    onClick={() => handleDeleteAll(item._id)}
                     title="Remove item"
                     aria-label="Remove item"
                   >
@@ -216,7 +157,7 @@ function Card({ header2, onClose }) {
             <span>Totals</span>
             <span className="text-pink-700">₹{total}/-</span>
           </div>
-          <Link to ='/checkout'>
+          <Link to='/checkout'>
             <button
               className={`w-full py-3 rounded-lg font-bold text-white transition ${
                 cartItems.length > 0

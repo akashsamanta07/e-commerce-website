@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // Import Swiper React components
 import { Swiper, SwiperSlide } from 'swiper/react';
+import getImageUrl from '../getImageUrl.js';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -11,34 +12,71 @@ import './style.css';
 
 // import required modules
 import { Navigation, Autoplay } from 'swiper/modules';
-import s0 from '../../assets/slider/s0.png';
-import s1 from '../../assets/slider/s1.jpg';
-import s2 from '../../assets/slider/s2.jpg';
-import s3 from '../../assets/slider/s3.jpg';
-import s4 from '../../assets/slider/s4.jpg';
+import API_BASE from '../../utils/API_BASE';
+
 
 function Slider() {
-    return (
-        <>
-          <Swiper
-            navigation={true}
-            modules={[Navigation, Autoplay]}
-            autoplay={{
-              delay: 2000,
-              disableOnInteraction: false,
-              pauseOnMouseEnter: true,
-            }}
-            loop={true}
-            className="mySwiper"
-          >
-            <SwiperSlide><img src={s1} alt="" /></SwiperSlide>
-            <SwiperSlide><img src={s2} alt="" /></SwiperSlide>
-            <SwiperSlide><img src={s0} alt="" /></SwiperSlide>
-            <SwiperSlide><img src={s3} alt="" /></SwiperSlide>
-            <SwiperSlide><img src={s4} alt="" /></SwiperSlide>
-          </Swiper>
-        </>
-      );
+  const [slides, setSlides] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch slider images from backend
+    async function fetchSlides() {
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_BASE}/admin/get-home-sliders`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setSlides(data.data);
+        } else {
+          setSlides([]);
+        }
+      } catch (err) {
+        setSlides([]);
+      }
+      setLoading(false);
+    }
+    fetchSlides();
+  }, []);
+
+  return (
+    <>
+      <Swiper
+        navigation={true}
+        modules={[Navigation, Autoplay]}
+        autoplay={{
+          delay: 2000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        }}
+        loop={true}
+        className="mySwiper"
+      >
+        {loading ? (
+          // Optionally show a loading placeholder
+          <SwiperSlide>
+            <div style={{ minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              Loading...
+            </div>
+          </SwiperSlide>
+        ) : slides.length > 0 ? (
+          slides.map((slide) => (
+            <SwiperSlide key={slide._id}>
+              <img src={getImageUrl(slide.image)} alt="" style={{ width: '100%', objectFit: 'cover' }} />
+            </SwiperSlide>
+          ))
+        ) : (
+          <SwiperSlide>
+            <div style={{ minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              No slides found.
+            </div>
+          </SwiperSlide>
+        )}
+      </Swiper>
+    </>
+  );
 }
 
 export default Slider;

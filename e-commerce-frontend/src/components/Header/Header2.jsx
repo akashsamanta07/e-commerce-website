@@ -1,29 +1,54 @@
 import React, { useState } from 'react';
 import { FaSearch, FaHeart, FaShoppingCart } from 'react-icons/fa';
 import { HiMenuAlt2 } from 'react-icons/hi';
-import { IconButton, Badge } from '@mui/material';
+import { IconButton, Badge, Avatar, Button, Popover, Typography, Box, Divider } from '@mui/material';
 import logo from '../../assets/logo/logo1.jpg';
 import { SlideDrawer } from '../Slideber.jsx';
 import { DrawerContentMenu } from '../Slideber.jsx';
 import { DrawerContentCart } from '../Slideber.jsx';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import getImageUrl from '../getImageUrl.js';
+
+// Helper to get first letter of name, fallback to "A"
+const getInitial = (name) => {
+  if (!name || typeof name !== 'string') return 'A';
+  return name.trim().charAt(0).toUpperCase();
+};
 
 function Header2({ header2 }) {
-  let { cartCount, search, setSearch, wishlistcount, setmenu, setsubcategory,setis } = header2;
+  let { cartCount, search, setSearch, wishlistcount, setmenu, setsubcategory, setis, categories, auth } = header2;
   const [openMenu, setOpenMenu] = useState(false);
   const [openCart, setOpenCart] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   let menuobj = {
     setmenu,
-    setsubcategory
+    setsubcategory,
+    categories
   };
+  const navigate = useNavigate();
 
   const onsubmit = (event) => {
     event.preventDefault();
     setSearch(event.target.value);
-    setmenu("Search");
+    setmenu("Home");
     setsubcategory("");
     // You can add search logic here
   };
+
+  // For popover open/close
+  const handleAvatarClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+  const openPopover = Boolean(anchorEl);
+
+  // User info
+  const userName = auth && (auth.name || auth.fullName || auth.username || auth.email || "");
+  const userEmail = auth && (auth.email || "");
+  const userImg = getImageUrl(auth?.avatar) || null;
+  const userInitial = getInitial(userName);
 
   return (
     <div className='bg-white border-b border-gray-200'>
@@ -32,13 +57,12 @@ function Header2({ header2 }) {
         <DrawerContentMenu menuobj={menuobj} />
       </SlideDrawer>
       <SlideDrawer open={openCart} side="right" onClose={() => setOpenCart(false)}>
-        <DrawerContentCart header2={header2} onClose={() => setOpenCart(false)}/>
+        <DrawerContentCart header2={header2} onClose={() => setOpenCart(false)} />
       </SlideDrawer>
       <div className="Container border-b border-gray-200 py-2 md:py-3">
         <div className="w-full flex items-center justify-between gap-[10px]">
           {/* Menu icon (HiMenuAlt2) always visible on left, no search button on mobile */}
-          {/* Desktop: Search box in exact center, Logo left on desktop, center on mobile */}
-          <div className="flex items-center flex-shrink-0 md:hidden" onClick={()=>{setis(0)}}>
+          <div className="flex items-center flex-shrink-0 md:hidden" onClick={() => { setis(0) }}>
             <IconButton aria-label="menu" onClick={() => setOpenMenu(true)}>
               <HiMenuAlt2 className="text-gray-600" />
             </IconButton>
@@ -62,13 +86,12 @@ function Header2({ header2 }) {
                 className="flex-1 px-2 bg-transparent outline-none"
                 value={search}
                 onChange={onsubmit}
-                // You can add value/onChange here for state management
+                onClick={()=>{navigate("/menu/Search")}}
               />
               <IconButton
                 type="submit"
                 aria-label="search"
                 className="p-2"
-                // You can handle onClick or onSubmit at the form level
               >
                 <FaSearch className="text-gray-500 text-[16px]" />
               </IconButton>
@@ -77,20 +100,87 @@ function Header2({ header2 }) {
 
           {/* Right: Auth and user actions (desktop), Cart (mobile) */}
           <div className="flex items-center gap-2">
-            {/* Desktop: Register/Login/Wishlist/Cart */}
-            <Link
-              to="/register"
-              className="text-gray-700 hover:text-pink-600 font-medium hidden md:inline"
-            >
-              Register
-            </Link>
-            <span className="hidden md:inline text-gray-300 text-lg select-none">|</span>
-            <Link
-              to="/login"
-              className="text-gray-700 hover:text-pink-600 font-medium hidden md:inline"
-            >
-              Login
-            </Link>
+            {/* If not logged in: Register/Login */}
+            {!auth || Object.keys(auth).length === 0 ? (
+              <>
+                <Link
+                  to="/register"
+                  className="text-gray-700 hover:text-pink-600 font-medium hidden md:inline"
+                >
+                  Register
+                </Link>
+                <span className="hidden md:inline text-gray-300 text-lg select-none">|</span>
+                <Link
+                  to="/login"
+                  className="text-gray-700 hover:text-pink-600 font-medium hidden md:inline"
+                >
+                  Login
+                </Link>
+              </>
+            ) : (
+              // If logged in: Avatar (desktop only)
+              <div className="hidden md:flex items-center">
+                <IconButton onClick={handleAvatarClick} size="small" sx={{ ml: 1 }}>
+                  {userImg ? (
+                    <Avatar src={userImg} alt={userName} sx={{ width: 32, height: 32, mx: 0 }} />
+                  ) : (
+                    <Avatar sx={{ width: 32, height: 32, mx: 0, bgcolor: "#e5e7eb", color: "#6b7280", fontWeight: 600, fontSize: 18 }}>
+                      {userInitial}
+                    </Avatar>
+                  )}
+                </IconButton>
+                <Popover
+                  open={openPopover}
+                  anchorEl={anchorEl}
+                  onClose={handlePopoverClose}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  PaperProps={{
+                    sx: { minWidth: 240, borderRadius: 2, p: 1 }
+                  }}
+                >
+                  <Box display="flex" alignItems="center" py={1} px={2}>
+                    {userImg ? (
+                      <Avatar src={userImg} alt={userName} sx={{ width: 40, height: 40, mx: 0 }} />
+                    ) : (
+                      <Avatar sx={{ width: 40, height: 40, mx: 0, bgcolor: "#e5e7eb", color: "#6b7280", fontWeight: 700, fontSize: 22 }}>
+                        {userInitial}
+                      </Avatar>
+                    )}
+                    <Box ml={2}>
+                      <Typography variant="subtitle1" fontWeight={600} color="text.primary" align="right">
+                        {userName}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" align="right">
+                        {userEmail}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Divider sx={{ my: 1 }} />
+                  <Box px={2} pb={1}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      component={Link}
+                      to="/my-account"
+                      onClick={handlePopoverClose}
+                      sx={{ textTransform: 'none', fontWeight: 600 }}
+                    >
+                      My Account
+                    </Button>
+                  </Box>
+                </Popover>
+              </div>
+            )}
+
+            {/* Wishlist (desktop only) */}
             <Link to='/my-list'>
               <div className="relative group hidden md:flex items-center">
                 <IconButton aria-label="wishlist">
@@ -103,7 +193,8 @@ function Header2({ header2 }) {
                 </span>
               </div>
             </Link>
-            <div className="relative group hidden md:flex items-center" onClick={()=>{setis(0)}}>
+            {/* Cart (desktop only) */}
+            <div className="relative group hidden md:flex items-center" onClick={() => { setis(0) }}>
               <IconButton aria-label="cart" onClick={() => setOpenCart(true)}>
                 <Badge badgeContent={cartCount} color="primary">
                   <FaShoppingCart className="text-gray-600" />
@@ -114,7 +205,7 @@ function Header2({ header2 }) {
               </span>
             </div>
             {/* Mobile: Cart icon on right */}
-            <div className="md:hidden flex items-center" onClick={()=>{setis(0)}}>
+            <div className="md:hidden flex items-center" onClick={() => { setis(0) }}>
               <IconButton aria-label="cart" onClick={() => setOpenCart(true)}>
                 <Badge badgeContent={cartCount} color="primary">
                   <FaShoppingCart className="text-gray-600" />

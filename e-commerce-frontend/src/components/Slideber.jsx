@@ -6,6 +6,18 @@ import Card from './Order/Card.jsx';
 import { Button } from "@mui/material";
 import LoginIcon from '@mui/icons-material/Login';
 
+// Local categories/subcategories definition
+const localCategories = [
+  { name: 'Fashion', sub: ['Men', 'Women', 'Kids'] },
+  { name: 'Electronics', sub: ['Mobiles', 'Laptops', 'Smart Watch'] },
+  { name: 'Bags', sub: ['Men Bags', 'Women Bags'] },
+  { name: 'Footwear', sub: ['Men Footwears', 'Women Footwear', 'Kids Footwear'] },
+  { name: 'Groceries', sub: ['Vegetables', 'Fruits', 'Others'] },
+  { name: 'Beauty', sub: ['Skincare', 'Makeup', 'Fragrance'] },
+  { name: 'Wellness', sub: ['Supplements', 'Yoga Mats', 'Personal Care'] },
+  { name: 'Jewellery', sub: ['Necklaces', 'Rings', 'Bracelets'] },
+];
+
 export function SlideDrawer({ open, side, onClose, children }) {
   const fnlogo = () => (
     <div className="flex justify-center py-4 border-b">
@@ -24,7 +36,6 @@ export function SlideDrawer({ open, side, onClose, children }) {
         onClick={onClose}
       />
       {/* Drawer */}
-      
       <div
         className={`
           fixed top-0 ${side === 'left' ? 'left-0 w-72' : 'right-0 w-[21rem] lg:w-[25rem]'}
@@ -52,17 +63,20 @@ export function SlideDrawer({ open, side, onClose, children }) {
 }
 
 export function DrawerContentMenu({ menuobj, setOpenMenu }) {
-  let { setmenu, setsubcategory } = menuobj;
-  const categories = [
-    { name: 'Fashion', sub: ['Men', 'Women', 'Kids'] },
-    { name: 'Electronics', sub: ['Mobiles', 'Laptops', 'Smart Watch'] },
-    { name: 'Bags', sub: ['Men Bags', 'Women Bags'] },
-    { name: 'Footwear', sub: ['Men Footwears', 'Women Footwear', 'Kids Footwear'] },
-    { name: 'Groceries', sub: ['Vegetables', 'Fruits', 'Others'] },
-    { name: 'Beauty', sub: ['Skincare', 'Makeup', 'Fragrance'] },
-    { name: 'Wellness', sub: ['Supplements', 'Yoga Mats', 'Personal Care'] },
-    { name: 'Jewellery', sub: ['Necklaces', 'Rings', 'Bracelets'] },
-  ];
+  let { setmenu, setsubcategory, categories } = menuobj;
+  // categories is an array of objects, each with at least a 'name' property
+
+  // Build a Set of category names from the prop categories array of objects
+  const categoryNamesSet = new Set(
+    Array.isArray(categories)
+      ? categories.map(catObj => typeof catObj === 'object' && catObj.name ? catObj.name : null).filter(Boolean)
+      : []
+  );
+
+  // Only show categories that are present in the prop categories array (by name)
+  const filteredCategories = localCategories.filter(localCat =>
+    categoryNamesSet.has(localCat.name)
+  );
 
   const [expanded, setExpanded] = useState(null);
 
@@ -76,7 +90,7 @@ export function DrawerContentMenu({ menuobj, setOpenMenu }) {
     <div className="space-y-4">
       {/* Categories */}
       <ul className="space-y-2 px-4">
-        {categories.map((cat, index) => (
+        {filteredCategories.map((cat, index) => (
           <li key={index}>
             <Link to={`/menu/${cat.name.toLowerCase()}`}>
               <button

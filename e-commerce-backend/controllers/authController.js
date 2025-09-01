@@ -14,6 +14,7 @@ const authenticateToken = require("./authenticateToken");
 
 // Logout controller
 exports.logoutUser = async (req, res) => {
+    console.log(1)
     try {
         res.clearCookie("accessToken", {
             httpOnly: true,

@@ -20,7 +20,7 @@ function Account() {
   const handleLogout = () => {
     // Add logout logic here
     // e.g., clear tokens, redirect, etc.
-    navigate("/login");
+    navigate("/logout");
   };
 
   return (

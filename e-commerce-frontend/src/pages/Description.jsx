@@ -39,8 +39,8 @@ const product = {
 };
 
 function Description({desc}) {
-    // cardlist is now an array of objects: [{id, quantity}]
-    let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cardlist, setcardlist } = desc;
+    // cartlist is now an array of objects: [{id, quantity}]
+    let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setcartlist } = desc;
     let iswishlisted = wishlist.includes(product.id);
     const [count, setCount] = useState(1);
     const [showWishlistTooltip, setShowWishlistTooltip] = useState(false);
@@ -73,16 +73,16 @@ function Description({desc}) {
         }
     };
 
-    // Helper to find item in cardlist by id
-    const findCartItemIndex = (id) => cardlist.findIndex(item => item.id === id);
+    // Helper to find item in cartlist by id
+    const findCartItemIndex = (id) => cartlist.findIndex(item => item.id === id);
 
-    // Add to cart logic: cardlist is array of {id, quantity}, unique by id, min quantity 1
+    // Add to cart logic: cartlist is array of {id, quantity}, unique by id, min quantity 1
     const handleAddToCard = (id, qty) => {
         const idx = findCartItemIndex(id);
         if (idx === -1) {
             // Not in cart, add with at least 1 quantity
             const newItem = { id, quantity: Math.max(1, qty) };
-            setcardlist([...cardlist, newItem]);
+            setcartlist([...cartlist, newItem]);
             setCartCount(cartCount + 1);
         }
     };

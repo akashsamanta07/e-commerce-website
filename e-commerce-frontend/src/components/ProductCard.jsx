@@ -18,7 +18,7 @@ const ProductCard = ({
   discountedPrice,
   onAddToCart,
   onToggleWishlist,
-  cardlist
+  cartlist // changed from cardlist
 }) => {
   // Tooltip state for wishlist button
   const [showWishlistTooltip, setShowWishlistTooltip] = useState(false);
@@ -34,7 +34,7 @@ const ProductCard = ({
   };
 
   // Helper: check if product is already in cartlist (array of {id, quantity})
-  const isInCart = cardlist.find(item => item.id === id);
+  const isInCart = cartlist.find(item => item.id === id);
 
   // Modified notify to show toast in the bottom corner on mobile, smaller size
   const notify = () => {

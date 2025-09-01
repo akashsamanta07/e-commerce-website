@@ -46,8 +46,17 @@ const userSchema = new mongoose.Schema(
     },
     shopping_cart: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "CartProduct",
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          min: 1,
+          default: 1,
+        },
       },
     ],
     orderHistory: [

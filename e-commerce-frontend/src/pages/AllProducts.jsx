@@ -1,252 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import dumy from '../assets/dumy.jpg';
 import ProductCard from '../components/ProductCard.jsx';
 import { MdCategory, MdSort, MdArrowDownward, MdArrowUpward, MdSearchOff } from 'react-icons/md';
 import { FormControl, Select, MenuItem } from '@mui/material';
-
-let products = [
-  {
-    id: 1,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Rand oiuui uil ug",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 2,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 3,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 4,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 5,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 6,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 7,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 8,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 9,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 10,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Rand oiuui uil ug",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 11,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 12,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 13,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 14,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 15,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 16,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 17,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 18,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 19,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Rand oiuui uil ug",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 20,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 21,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 22,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 23,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 24,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-];
+import PageNotFound from './PageNotFound.jsx';
 
 const SORT_FIELDS = [
   { value: 'title', label: 'Name' },
@@ -260,13 +17,35 @@ const SORT_ORDERS = [
 ];
 
 function AllProducts({ product }) {
-  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cardlist, setcardlist } = product;
+  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setcartlist, categories, selectedProduct } = product;
 
   const location = useLocation();
   const pathSegments = location.pathname.split('/').filter(Boolean);
-  const category = pathSegments[pathSegments.length - 1]
-    ? pathSegments[pathSegments.length - 1].charAt(0).toUpperCase() + pathSegments[pathSegments.length - 1].slice(1)
+  const rawCategory = pathSegments[pathSegments.length - 1] || '';
+  const category = rawCategory
+    ? rawCategory.charAt(0).toUpperCase() + rawCategory.slice(1)
     : '';
+
+  // Determine which products to show based on category and categories array
+  let filteredProducts = [];
+  let isValidCategory = false;
+  if (!category || category === 'Search' || category === 'Latest') {
+    // Show all products if no category or Search
+    filteredProducts = selectedProduct || [];
+    isValidCategory = true;
+  } else if (
+    Array.isArray(categories) &&
+    categories.some(cat => cat.name && cat.name.toLowerCase() === category.toLowerCase())
+  ) {
+    // Category exists in categories array
+    isValidCategory = true;
+    filteredProducts = (selectedProduct || []).filter(
+      prod => prod.category && prod.category.toLowerCase() === category.toLowerCase()
+    );
+  } else {
+    // Invalid category
+    isValidCategory = false;
+  }
 
   // Sorting state
   const [sortField, setSortField] = useState('title');
@@ -274,13 +53,13 @@ function AllProducts({ product }) {
 
   // Sorting logic
   const sortedProducts = useMemo(() => {
-    let sorted = [...products];
+    let sorted = [...filteredProducts];
     sorted.sort((a, b) => {
       let aValue = a[sortField];
       let bValue = b[sortField];
       if (sortField === 'title') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
+        aValue = (aValue || '').toLowerCase();
+        bValue = (bValue || '').toLowerCase();
         if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
         return 0;
@@ -291,7 +70,7 @@ function AllProducts({ product }) {
       }
     });
     return sorted;
-  }, [sortField, sortOrder]);
+  }, [filteredProducts, sortField, sortOrder]);
 
   // Handlers
   const handleSortFieldChange = (e) => setSortField(e.target.value);
@@ -308,18 +87,22 @@ function AllProducts({ product }) {
     }
   };
 
-  // cardlist is now an array of objects: [{id, quantity}]
-  // cartCount should be the sum of all quantities in cardlist
+  // cartlist is now an array of objects: [{id, quantity}]
+  // cartCount should be the sum of all quantities in cartlist
   const handleAddToCart = (id) => {
-    const existingItem = cardlist.find(item => item.id === id);
+    const existingItem = cartlist.find(item => item.id === id);
     if (existingItem) {
       return;
     } else {
       // Add new product with quantity 1
-      setcardlist([...cardlist, { id, quantity: 1 }]);
+      setcartlist([...cartlist, { id, quantity: 1 }]);
       setCartCount(cartCount + 1);
     }
   };
+
+  if (!isValidCategory) {
+    return <PageNotFound />;
+  }
 
   return (
     <div className="bg-slate-50 w-full px-2 md:px-4 lg:px-8 py-4">
@@ -342,77 +125,77 @@ function AllProducts({ product }) {
           <span className="truncate">
             {category ? `${category} Products` : 'All Products'}
           </span>
-          <span className={`font-normal text-[0.85rem] lg:text-[1rem] ${products.length === 0 ? "text-red-500" : "text-green-600"}`}>
-            ({products.length} Product{products.length !== 1 ? 's' : ''} Found)
+          <span className={`font-normal text-[0.85rem] lg:text-[1rem] ${sortedProducts.length === 0 ? "text-red-500" : "text-green-600"}`}>
+            ({sortedProducts.length} Product{sortedProducts.length !== 1 ? 's' : ''} Found)
           </span>
         </div>
         {/* Sort By */}
         <div className='w-[400px] mx-auto lg:mx-0 flex justify-center xl:justify-end flex-wrap gap-2'>
-        <div className="flex flex-row items-center gap-1 bg-white/80 rounded-md px-2 py-1">
-          <MdSort className="text-yellow-700" size={18} />
-          <span className="text-sm text-yellow-900 font-semibold mr-1">Sort</span>
-          <FormControl size="small" variant="outlined" sx={{ minWidth: 80 }}>
-            <Select 
-              id="sortField"
-              value={sortField}
-              onChange={handleSortFieldChange}
-              displayEmpty
-              sx={{
-                background: '#fff',
-                borderRadius: 1,
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                height: 32,
-                '.MuiOutlinedInput-notchedOutline': { borderColor: '#ffe082' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#f8b500' },
-                padding: 0,
-              }}
-              inputProps={{ 'aria-label': 'Sort by' }}
-            >
-              {SORT_FIELDS.map(opt => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </div>
-        {/* Order */}
-        <div className="flex flex-row items-center gap-1 bg-white/80 rounded-md px-2 py-1">
-          {sortOrder === 'asc' ? (
-            <MdArrowUpward className="text-yellow-700" size={18} />
-          ) : (
-            <MdArrowDownward className="text-yellow-700" size={18} />
-          )}
-          <span className="text-sm text-yellow-900 font-semibold mr-1">Order</span>
-          <FormControl size="small" variant="outlined" sx={{ minWidth: 80 }}>
-            <Select
-              id="sortOrder"
-              value={sortOrder}
-              onChange={handleSortOrderChange}
-              displayEmpty
-              sx={{
-                background: '#fff',
-                borderRadius: 1,
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                height: 32,
-                '.MuiOutlinedInput-notchedOutline': { borderColor: '#ffe082' },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#f8b500' },
-                padding: 0,
-              }}
-              inputProps={{ 'aria-label': 'Order' }}
-            >
-              {SORT_ORDERS.map(opt => (
-                <MenuItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <div className="flex flex-row items-center gap-1 bg-white/80 rounded-md px-2 py-1">
+            <MdSort className="text-yellow-700" size={18} />
+            <span className="text-sm text-yellow-900 font-semibold mr-1">Sort</span>
+            <FormControl size="small" variant="outlined" sx={{ minWidth: 80 }}>
+              <Select 
+                id="sortField"
+                value={sortField}
+                onChange={handleSortFieldChange}
+                displayEmpty
+                sx={{
+                  background: '#fff',
+                  borderRadius: 1,
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  height: 32,
+                  '.MuiOutlinedInput-notchedOutline': { borderColor: '#ffe082' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#f8b500' },
+                  padding: 0,
+                }}
+                inputProps={{ 'aria-label': 'Sort by' }}
+              >
+                {SORT_FIELDS.map(opt => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+          {/* Order */}
+          <div className="flex flex-row items-center gap-1 bg-white/80 rounded-md px-2 py-1">
+            {sortOrder === 'asc' ? (
+              <MdArrowUpward className="text-yellow-700" size={18} />
+            ) : (
+              <MdArrowDownward className="text-yellow-700" size={18} />
+            )}
+            <span className="text-sm text-yellow-900 font-semibold mr-1">Order</span>
+            <FormControl size="small" variant="outlined" sx={{ minWidth: 80 }}>
+              <Select
+                id="sortOrder"
+                value={sortOrder}
+                onChange={handleSortOrderChange}
+                displayEmpty
+                sx={{
+                  background: '#fff',
+                  borderRadius: 1,
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  height: 32,
+                  '.MuiOutlinedInput-notchedOutline': { borderColor: '#ffe082' },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#f8b500' },
+                  padding: 0,
+                }}
+                inputProps={{ 'aria-label': 'Order' }}
+              >
+                {SORT_ORDERS.map(opt => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
         </div>
       </div>
-        </div>
       {/* Products Grid */}
       <div
         className="
@@ -447,7 +230,7 @@ function AllProducts({ product }) {
               discountedPrice={prod.discountedPrice}
               onAddToCart={() => handleAddToCart(prod.id)}
               onToggleWishlist={() => handleToggleWishlist(prod.id)}
-              cardlist={cardlist}
+              cardlist={cartlist}
             />
           ))
         )}
