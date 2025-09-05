@@ -124,6 +124,7 @@ function Header3({ header3 }) {
               onClick={() => {
                 setmenu(getCategoryName(item));
                 setsubcategory('');
+                setSearch("");
               }}
             >
               <Button

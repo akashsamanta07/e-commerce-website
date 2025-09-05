@@ -39,9 +39,15 @@ function MyOrder() {
         });
         const data = await res.json();
         if (data.success && Array.isArray(data.orders)) {
+          // Sort orders by updatedAt ascending (oldest first)
+          const sortedOrders = [...data.orders].sort((a, b) => {
+            const dateA = new Date(a.updatedAt);
+            const dateB = new Date(b.updatedAt);
+            return dateA - dateB;
+          });
           // Normalize order fields for UI
           setOrders(
-            data.orders.map(order => ({
+            sortedOrders.map(order => ({
               id: order._id || order.id,
               date: order.createdAt ? order.createdAt.slice(0, 10) : '',
               status: order.status,

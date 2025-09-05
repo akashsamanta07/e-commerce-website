@@ -50,7 +50,15 @@ function Category() {
       });
       const data = await res.json();
       if (data.success) {
-        setCategories(data.data);
+        // Sort categories by updatedAt ascending (oldest first)
+        const sortedCategories = Array.isArray(data.data)
+          ? [...data.data].sort((a, b) => {
+              const dateA = new Date(a.updatedAt);
+              const dateB = new Date(b.updatedAt);
+              return dateA - dateB;
+            })
+          : [];
+        setCategories(sortedCategories);
       } else {
         setCategories([]);
         notify("warning", "No Data");

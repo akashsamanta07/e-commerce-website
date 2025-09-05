@@ -5,21 +5,26 @@ import { FaHeart, FaRegHeart, FaShoppingCart } from 'react-icons/fa';
 import { IconButton } from '@mui/material';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
+import getImageUrl from './getImageUrl';
 
 const ProductCard = ({
   id,
-  imageUrl,
+  images,
   discountPercent,
   isWishlisted,
   brand,
   title,
   rating,
   originalPrice,
-  discountedPrice,
+  discountPrice,
   onAddToCart,
   onToggleWishlist,
   cartlist // changed from cardlist
 }) => {
+  let imageUrl="#"
+  if(images){
+    imageUrl=getImageUrl(images[0]);
+  }
   // Tooltip state for wishlist button
   const [showWishlistTooltip, setShowWishlistTooltip] = useState(false);
   const tooltipTimeout = useRef(null);
@@ -122,7 +127,7 @@ const ProductCard = ({
             ₹{originalPrice}
           </span>
           <span className="text-pink-600 font-bold text-base">
-            ₹{discountedPrice}
+            ₹{discountPrice}
           </span>
         </div>
       </div>

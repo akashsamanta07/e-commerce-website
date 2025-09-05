@@ -48,7 +48,15 @@ function Banner() {
       });
       const data = await res.json();
       if (data.success) {
-        setBanners(data.data);
+        // Sort banners by updatedAt ascending (oldest first)
+        const sortedBanners = Array.isArray(data.data)
+          ? [...data.data].sort((a, b) => {
+              const dateA = new Date(a.updatedAt);
+              const dateB = new Date(b.updatedAt);
+              return dateA - dateB;
+            })
+          : [];
+        setBanners(sortedBanners);
       } else {
         setBanners([]);
         notify("warning", "No Data");

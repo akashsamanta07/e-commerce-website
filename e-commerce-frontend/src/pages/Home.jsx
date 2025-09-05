@@ -29,16 +29,16 @@ function Home({ product }) {
             (p) =>
               p.category &&
               (
-                (typeof p.category === "string" && p.category === catName) ||
-                (typeof p.category === "object" && p.category.name === catName)
+                (p.category === catName)
               )
           );
           // Pass filtered products and category name to DefaultProduct
           return (
             <DefaultProduct
               key={catName || idx}
-              product={{ ...product, products: filteredProducts }}
+              product={{ ...product, filteredProducts: filteredProducts }}
               name={catName}
+              category={catName}
             />
           );
         })

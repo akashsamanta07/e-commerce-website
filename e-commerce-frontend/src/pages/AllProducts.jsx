@@ -5,6 +5,7 @@ import { MdCategory, MdSort, MdArrowDownward, MdArrowUpward, MdSearchOff } from 
 import { FormControl, Select, MenuItem } from '@mui/material';
 import PageNotFound from './PageNotFound.jsx';
 
+
 const SORT_FIELDS = [
   { value: 'title', label: 'Name' },
   { value: 'discountedPrice', label: 'Price' },
@@ -18,7 +19,6 @@ const SORT_ORDERS = [
 
 function AllProducts({ product }) {
   let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setcartlist, categories, selectedProduct } = product;
-
   const location = useLocation();
   const pathSegments = location.pathname.split('/').filter(Boolean);
   const rawCategory = pathSegments[pathSegments.length - 1] || '';
@@ -220,17 +220,17 @@ function AllProducts({ product }) {
             <ProductCard
               key={prod.id}
               id={prod.id}
-              imageUrl={prod.imageUrl}
+              images={prod.images}
               discountPercent={prod.discountPercent}
               isWishlisted={wishlist.includes(prod.id)}
               brand={prod.brand}
               title={prod.title}
               rating={prod.rating}
               originalPrice={prod.originalPrice}
-              discountedPrice={prod.discountedPrice}
+              discountPrice={prod.discountPrice}
               onAddToCart={() => handleAddToCart(prod.id)}
               onToggleWishlist={() => handleToggleWishlist(prod.id)}
-              cardlist={cartlist}
+              cartlist={cartlist}
             />
           ))
         )}

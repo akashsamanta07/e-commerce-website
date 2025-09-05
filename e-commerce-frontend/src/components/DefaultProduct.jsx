@@ -3,28 +3,8 @@ import Button from '@mui/material/Button';
 import ProductCard from '../components/ProductCard.jsx';
 import { ArrowForward } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import getImageUrl from './getImageUrl.js';
-
-// This component expects product objects that match the backend product schema:
-// {
-//   _id: String,
-//   title: String,
-//   brand: String,
-//   description: String,
-//   category: String,
-//   subcategory: String,
-//   originalPrice: Number,
-//   discountPrice: Number,
-//   inStock: Number,
-//   rating: Number,
-//   images: [String],
-//   sales: Number,
-//   reviewlist: [ObjectId],
-//   ... (see backend for full details)
-// }
 
 function DefaultProduct({ product, name, category }) {
-  // product: { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setCartlist, selectedProduct }
   let {
     wishlistcount = 0,
     setwishlistcount = () => {},
@@ -34,9 +14,8 @@ function DefaultProduct({ product, name, category }) {
     setWishlist = () => {},
     cartlist = [],
     setCartlist = () => {},
-    selectedProduct = [],
+    filteredProducts = [],
   } = product || {};
-
   const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
 
@@ -52,7 +31,7 @@ function DefaultProduct({ product, name, category }) {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [selectedProduct]);
+  }, [filteredProducts]);
 
   // --- Drag-to-scroll logic for mouse users ---
   useEffect(() => {
@@ -104,8 +83,6 @@ function DefaultProduct({ product, name, category }) {
     };
   }, []);
 
-  // For backend products, use _id as id
-  const getProductId = (p) => p._id || p.id;
 
   const handleToggleWishlist = (id) => {
     if (wishlist.includes(id)) {
@@ -131,11 +108,10 @@ function DefaultProduct({ product, name, category }) {
   };
 
   // If no selectedProduct, don't render section
-  if (!Array.isArray(selectedProduct) || selectedProduct.length === 0) return null;
-
+  if (!Array.isArray(filteredProducts) || filteredProducts.length === 0) return null;
   return (
     <div className='bg-white'>
-      <div className="Container px-3 py-2 lg:py-3 flex items-center justify-between">
+      <div className="Container px-3 py-2 lg:py-3 flex items-center justify-between bg-gray-200 rounded">
         {/* Left Section */}
         <div className="flex flex-col gap-1 md:w-1/3">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">{name}</h2>
@@ -160,18 +136,14 @@ function DefaultProduct({ product, name, category }) {
         ref={scrollRef}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {selectedProduct.map((prod) => {
+        {filteredProducts.map((prod) => {
           // Use backend schema fields
           const id = prod._id;
-          let imageUrl = prod.imageUrl;
-          if (!imageUrl && Array.isArray(prod.images) && prod.images.length > 0) {
-            imageUrl = getImageUrl(prod.images[0]);
-          }
           return (
             <ProductCard
               key={id}
               id={id}
-              imageUrl={imageUrl}
+              images={prod.images}
               // Calculate discount percent from originalPrice and discountPrice if not present
               discountPercent={
                 typeof prod.discountPercent === 'number'
@@ -185,7 +157,7 @@ function DefaultProduct({ product, name, category }) {
               title={prod.title}
               rating={typeof prod.rating === 'number' ? prod.rating : 0}
               originalPrice={prod.originalPrice}
-              discountedPrice={prod.discountPrice}
+              discountPrice={prod.discountPrice}
               onAddToCart={() => { handleAddToCart(id) }}
               onToggleWishlist={() => handleToggleWishlist(id)}
               cartlist={cartlist}

@@ -2,105 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import ProductCard from '../components/ProductCard.jsx';
 import { ArrowForward } from '@mui/icons-material';
-import dumy from '../assets/dumy.jpg';
 import { Link } from 'react-router-dom';
 
-// Dummy products
-const products = [
-  {
-    id: 1,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Rand oiuui uil ug",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 2,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 3,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 4,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 5,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 6,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 7,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random Product Name dsf frdys trwyr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 8,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another Product Name",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 9,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third Product Example",
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-];
 
+// Latest_products rewritten to use backend product data format
 function Latest_products({ product }) {
-  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setcartlist } = product;
+  let {
+    wishlistcount = 0,
+    setwishlistcount = () => {},
+    cartCount = 0,
+    setCartCount = () => {},
+    wishlist = [],
+    setWishlist = () => {},
+    cartlist = [],
+    setCartlist = () => {},
+    selectedProduct = [],
+  } = product || {};
+
   const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
 
@@ -116,7 +34,7 @@ function Latest_products({ product }) {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, []);
+  }, [selectedProduct]);
 
   // --- Drag-to-scroll logic for mouse users ---
   useEffect(() => {
@@ -178,22 +96,25 @@ function Latest_products({ product }) {
     }
   };
 
-  // cartlist is an array of objects: [{id, quantity}]
+  // cartlist is an array of objects: [{product, quantity}]
   const handleAddToCart = (id) => {
-    const existing = cartlist.find(item => item.id === id);
+    const existing = cartlist.find(item => (item.product || item.id) === id);
     if (existing) {
       // Already in cart, do nothing (or you could increase quantity if desired)
       return;
     } else {
       // Add new item with quantity 1
-      setcartlist([...cartlist, { id, quantity: 1 }]);
+      setCartlist([...cartlist, { product: id, quantity: 1 }]);
       setCartCount(cartCount + 1);
     }
   };
 
+  // Only show if there are products
+  if (!Array.isArray(selectedProduct) || selectedProduct.length === 0) return null;
+
   return (
     <div className='bg-white'>
-      <div className="Container px-3 py-2 lg:py-3 flex items-center justify-between">
+      <div className="Container px-3 py-2 lg:py-3 flex items-center justify-between bg-gray-200 rounded">
         {/* Left Section */}
         <div className="flex flex-col gap-1 md:w-1/3">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">Latest Products</h2>
@@ -218,23 +139,35 @@ function Latest_products({ product }) {
         ref={scrollRef}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            imageUrl={product.imageUrl}
-            discountPercent={product.discountPercent}
-            isWishlisted={wishlist.includes(product.id)}
-            brand={product.brand}
-            title={product.title}
-            rating={product.rating}
-            originalPrice={product.originalPrice}
-            discountedPrice={product.discountedPrice}
-            onAddToCart={() => { handleAddToCart(product.id) }}
-            onToggleWishlist={() => handleToggleWishlist(product.id)}
-            cartlist={cartlist}
-          />
-        ))}
+        {selectedProduct.map((prod) => {
+          // Use backend schema fields
+          const id = prod._id;
+          return (
+            <ProductCard
+              key={id}
+              id={id}
+              images={prod.images}
+              // Calculate discount percent from originalPrice and discountPrice if not present
+              discountPercent={
+                typeof prod.discountPercent === 'number'
+                  ? prod.discountPercent
+                  : (typeof prod.originalPrice === 'number' && typeof prod.discountPrice === 'number' && prod.originalPrice > 0)
+                    ? Math.round(100 * (prod.originalPrice - prod.discountPrice) / prod.originalPrice)
+                    : 0
+              }
+              isWishlisted={wishlist.includes(id)}
+              brand={prod.brand}
+              title={prod.title}
+              rating={typeof prod.rating === 'number' ? prod.rating : 0}
+              originalPrice={prod.originalPrice}
+              discountPrice={prod.discountPrice}
+              onAddToCart={() => { handleAddToCart(id) }}
+              onToggleWishlist={() => handleToggleWishlist(id)}
+              cartlist={cartlist}
+              inStock={typeof prod.inStock === 'number' ? prod.inStock : 0}
+            />
+          );
+        })}
       </div>
     </div>
   );

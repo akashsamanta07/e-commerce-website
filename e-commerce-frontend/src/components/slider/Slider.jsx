@@ -20,7 +20,7 @@ function Slider() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch slider images from backend
+    // Fetch slider images from backend and sort ascending by updatedAt (oldest first)
     async function fetchSlides() {
       setLoading(true);
       try {
@@ -29,7 +29,13 @@ function Slider() {
         });
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
-          setSlides(data.data);
+          // Sort ascending by updatedAt (oldest first)
+          const sortedSlides = [...data.data].sort((a, b) => {
+            const dateA = new Date(a.updatedAt);
+            const dateB = new Date(b.updatedAt);
+            return dateA - dateB;
+          });
+          setSlides(sortedSlides);
         } else {
           setSlides([]);
         }

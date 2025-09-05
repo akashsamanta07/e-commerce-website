@@ -47,7 +47,15 @@ function HomeSlider() {
       });
       const data = await res.json();
       if (data.success) {
-        setSliders(data.data);
+        // Sort sliders ascending by updatedAt (oldest first)
+        const sortedSliders = Array.isArray(data.data)
+          ? [...data.data].sort((a, b) => {
+              const dateA = new Date(a.updatedAt);
+              const dateB = new Date(b.updatedAt);
+              return dateA - dateB;
+            })
+          : [];
+        setSliders(sortedSliders);
       } else {
         setSliders([]);
         notify("warning", "No Data");

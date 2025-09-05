@@ -83,7 +83,15 @@ function Products() {
         notify("error", data.message || "Failed to fetch products");
         setProducts([]);
       } else {
-        setProducts(Array.isArray(data.data) ? data.data : []);
+        // Sort products by updatedAt descending (most recently updated first)
+        const sortedProducts = Array.isArray(data.data)
+          ? [...data.data].sort((a, b) => {
+              const dateA = new Date(a.updatedAt);
+              const dateB = new Date(b.updatedAt);
+              return dateB - dateA;
+            })
+          : [];
+        setProducts(sortedProducts);
       }
     } catch (err) {
       notify("Failed to fetch data");

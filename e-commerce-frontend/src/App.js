@@ -163,8 +163,14 @@ function App() {
           credentials: 'include',
         });
         const data = await res.json();
-        if (data.success) {
-          setCategories(data.data);
+        if (data.success && Array.isArray(data.data)) {
+          // Sort categories by updatedAt descending (most recently updated first)
+          const sortedCategories = [...data.data].sort((a, b) => {
+            const dateA = new Date(a.updatedAt);
+            const dateB = new Date(b.updatedAt);
+            return dateA - dateB;
+          });
+          setCategories(sortedCategories);
         } else {
           setCategories([]);
         }
@@ -184,7 +190,13 @@ function App() {
         });
         const data = await res.json();
         if (res.ok && Array.isArray(data.data)) {
-          setProducts(data.data);
+          // Sort products by updatedAt descending (most recently updated first)
+          const sortedProducts = [...data.data].sort((a, b) => {
+            const dateA = new Date(a.updatedAt);
+            const dateB = new Date(b.updatedAt);
+            return dateB - dateA;
+          });
+          setProducts(sortedProducts);
         } else {
           setProducts([]);
         }
@@ -205,8 +217,14 @@ function App() {
           });
           const data = await res.json();
           if (data.success && Array.isArray(data.wishlist)) {
-            setWishlist(data.wishlist);
-            setwishlistcount(data.wishlist.length);
+            // Sort wishlist by updatedAt ascending (oldest first)
+            const sortedWishlist = [...data.wishlist].sort((a, b) => {
+              const dateA = new Date(a.updatedAt);
+              const dateB = new Date(b.updatedAt);
+              return dateA - dateB;
+            });
+            setWishlist(sortedWishlist);
+            setwishlistcount(sortedWishlist.length);
           } else {
             setWishlist([]);
             setwishlistcount(0);
@@ -235,8 +253,14 @@ function App() {
           const data = await res.json();
           // data.cartlist should be array of { product: ObjectId, quantity: Number }
           if (data.success && Array.isArray(data.cartlist)) {
-            setCartlist(data.cartlist);
-            setCartCount(data.cartlist.reduce((sum, item) => sum + (item.quantity || 0), 0));
+            // Sort cartlist by updatedAt ascending (oldest first)
+            const sortedCartlist = [...data.cartlist].sort((a, b) => {
+              const dateA = new Date(a.updatedAt);
+              const dateB = new Date(b.updatedAt);
+              return dateA - dateB;
+            });
+            setCartlist(sortedCartlist);
+            setCartCount(sortedCartlist.reduce((sum, item) => sum + (item.quantity || 0), 0));
           } else {
             setCartlist([]);
             setCartCount(0);

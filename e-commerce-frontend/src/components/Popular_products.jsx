@@ -1,146 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import ProductCard from '../components/ProductCard.jsx';
-import dumy from '../assets/dumy.jpg';
-
-const MENU_ITEMS = [
-  'Fashion',
-  'Electronics',
-  'Bags',
-  'Footwear',
-  'Groceries',
-  'Beauty',
-  'Wellness',
-  'Jewellery',
-];
-
-// Dummy product data for demonstration
-const products = [
-  {
-    id: 1,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random ysw rdyrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 2,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 3,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third" ,
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 4,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Fourth",
-    rating: 4.0,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 5,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 6,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 7,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third" ,
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 8,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Fourth",
-    rating: 4.0,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 9,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Random",
-    rating: 4.2,
-    originalPrice: 120,
-    discountedPrice: 90,
-  },
-  {
-    id: 10,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Another",
-    rating: 4.5,
-    originalPrice: 150,
-    discountedPrice: 110,
-  },
-  {
-    id: 11,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Third" ,
-    rating: 3.8,
-    originalPrice: 100,
-    discountedPrice: 75,
-  },
-  {
-    id: 12,
-    imageUrl: dumy,
-    discountPercent: 25,
-    brand: "DemoBrand",
-    title: "Fourth",
-    rating: 4.0,
-    originalPrice: 100,
-    discountedPrice: 75,
-  }
-];
 
 function Popular_products({ product }) {
-  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setcartlist } = product;
-  const [activeMenu, setActiveMenu] = useState(MENU_ITEMS[0]);
+  // Destructure props
+  let {
+    wishlistcount,
+    setwishlistcount,
+    cartCount,
+    setCartCount,
+    wishlist,
+    setWishlist,
+    cartlist,
+    setcartlist,
+    categories,
+    selectedProduct, // This is the product list (array of product objects)
+  } = product;
+
+  // Build menu items dynamically from categories (array of objects with 'name' key)
+  const MENU_ITEMS = Array.isArray(categories)
+    ? categories.map((cat) => cat.name)
+    : [];
+  // Default to first category if available
+  const [activeMenu, setActiveMenu] = useState(MENU_ITEMS[0] || '');
   const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
 
@@ -229,6 +111,21 @@ function Popular_products({ product }) {
     }
   };
 
+  // Filter and sort products dynamically
+  // selectedProduct is the product list (array of product objects)
+  // Filter by activeMenu (category), then sort by rating descending
+  const filteredProducts = Array.isArray(selectedProduct)
+    ? selectedProduct
+        .filter(
+          (prod) =>
+            !activeMenu ||
+            (prod.category &&
+              (prod.category === activeMenu ||
+                (Array.isArray(prod.category) && prod.category.includes(activeMenu))))
+        )
+        .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    : [];
+
   return (
     <div className='bg-white'>
       <div className="Container p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -302,28 +199,29 @@ function Popular_products({ product }) {
         ref={scrollRef}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {products.map((prod) => {
-          // Find quantity in cartlist for this product (if any)
-          const cartItem = cartlist.find(item => item.id === prod.id);
-          return (
-            <ProductCard
-              key={prod.id}
-              id={prod.id}
-              imageUrl={prod.imageUrl}
-              discountPercent={prod.discountPercent}
-              isWishlisted={wishlist.includes(prod.id)}
-              brand={prod.brand}
-              title={prod.title}
-              rating={prod.rating}
-              originalPrice={prod.originalPrice}
-              discountedPrice={prod.discountedPrice}
-              onAddToCart={() => handleAddToCard(prod.id)}
-              onToggleWishlist={() => handleToggleWishlist(prod.id)}
-              cartlist={cartlist}
-              quantity={cartItem ? cartItem.quantity : 0}
-            />
-          );
-        })}
+        {filteredProducts.length === 0 ? (
+          <div className="text-gray-500 p-4">No products found in this category.</div>
+        ) : (
+          filteredProducts.map((prod) => {
+            return (
+              <ProductCard
+                key={prod._id}
+                id={prod._id}
+                images={prod.images}
+                discountPercent={prod.discountPercent}
+                isWishlisted={wishlist.includes(prod.id)}
+                brand={prod.brand}
+                title={prod.title}
+                rating={prod.rating}
+                originalPrice={prod.originalPrice}
+                discountedPrice={prod.discountedPrice}
+                onAddToCart={() => handleAddToCard(prod.id)}
+                onToggleWishlist={() => handleToggleWishlist(prod.id)}
+                cartlist={cartlist}
+              />
+            );
+          })
+        )}
       </div>
     </div>
   );
