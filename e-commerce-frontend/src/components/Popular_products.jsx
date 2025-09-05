@@ -12,7 +12,7 @@ function Popular_products({ product }) {
     wishlist,
     setWishlist,
     cartlist,
-    setcartlist,
+    setCartlist, // fix typo: setcartlist -> setCartlist
     categories,
     selectedProduct, // This is the product list (array of product objects)
   } = product;
@@ -100,13 +100,22 @@ function Popular_products({ product }) {
     }
   };
 
-  const handleAddToCard = (id) => {
-    const existing = cartlist.find(item => item.id === id);
+  const handleAddToCart = (prod) => {
+    const existing = cartlist.find(item => item._id === prod._id);
     if (existing) {
       return;
     } else {
-      // If not in cart, add with quantity 1
-      setcartlist([...cartlist, { id, quantity: 1 }]);
+      setCartlist([
+        ...cartlist,
+        {
+          _id: prod._id,
+          title: prod.title,
+          brand: prod.brand,
+          images: prod.images,
+          discountPrice: prod.discountPrice,
+          quantity: 1
+        }
+      ]);
       setCartCount(cartCount + 1);
     }
   };
@@ -120,8 +129,9 @@ function Popular_products({ product }) {
           (prod) =>
             !activeMenu ||
             (prod.category &&
-              (prod.category === activeMenu ||
-                (Array.isArray(prod.category) && prod.category.includes(activeMenu))))
+              (typeof prod.category === "string"
+                ? prod.category === activeMenu
+                : prod.category.name === activeMenu))
         )
         .sort((a, b) => (b.rating || 0) - (a.rating || 0))
     : [];
@@ -202,25 +212,16 @@ function Popular_products({ product }) {
         {filteredProducts.length === 0 ? (
           <div className="text-gray-500 p-4">No products found in this category.</div>
         ) : (
-          filteredProducts.map((prod) => {
-            return (
-              <ProductCard
-                key={prod._id}
-                id={prod._id}
-                images={prod.images}
-                discountPercent={prod.discountPercent}
-                isWishlisted={wishlist.includes(prod.id)}
-                brand={prod.brand}
-                title={prod.title}
-                rating={prod.rating}
-                originalPrice={prod.originalPrice}
-                discountedPrice={prod.discountedPrice}
-                onAddToCart={() => handleAddToCard(prod.id)}
-                onToggleWishlist={() => handleToggleWishlist(prod.id)}
-                cartlist={cartlist}
-              />
-            );
-          })
+          filteredProducts.map((prod) => (
+            <ProductCard
+              key={prod._id}
+              product={prod}
+              onAddToCart={() => handleAddToCart(prod)}
+              onToggleWishlist={() => handleToggleWishlist(prod._id)}
+              isWishlisted={wishlist.includes(prod._id)}
+              iscart={cartlist.find(item => item._id === prod._id)}
+            />
+          ))
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingCart } from 'react-icons/fa';
 import { IconButton, Button } from '@mui/material';
 import { ExpandMore } from '@mui/icons-material';
@@ -9,45 +9,27 @@ import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
 import { toast } from 'react-toastify';
 import DefaultProduct from '../components/DefaultProduct';
+import { GlobalContext } from "../components/UserContext/UserContext";
+import getImageUrl from '../components/getImageUrl';
 
-// Dummy data for demonstration
-const product = {
-    id:1,
-    category:"Beauty",
-    title: "Stylish Headphones",
-    brand: "SoundMagic",
-    rating: 4.2,
-    reviews: 128,
-    discountPercent:25,
-    actualPrice: 1999,
-    discountPrice: 1499,
-    inStock: 23,
-    images: [
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
-        "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80",
-        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"
-    ],
-    about: "Experience immersive sound with these stylish headphones. Designed for comfort and built to last, perfect for music lovers.",
-    reviewsList:[
-        {name:"Akash",date:"12-3-2023",comment:"Good product",rating:4.2},
-        {name:"Priya",date:"15-4-2023",comment:"Loved the sound quality!",rating:5},
-        {name:"Rahul",date:"20-5-2023",comment:"Comfortable and stylish.",rating:4},
-        {name:"Priya",date:"15-4-2023",comment:"Loved the sound quality!",rating:5},
-        {name:"Rahul",date:"20-5-2023",comment:"Comfortable and stylish.",rating:4},
-        
-    ]
-};
+function Description({ desc }) {
+    // Destructure product data from current (from context)
+    const { current} = useContext(GlobalContext);
 
-function Description({desc}) {
+    // If current is not available, fallback to desc.product or empty object
+    const product = current || desc.product || {};
+
     // cartlist is now an array of objects: [{id, quantity}]
-    let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setcartlist } = desc;
-    let iswishlisted = wishlist.includes(product.id);
+    let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setCartlist} = desc;
+
+    // Use product._id as unique id
+    let iswishlisted = wishlist && product._id ? wishlist.includes(product._id) : false;
     const [count, setCount] = useState(1);
     const [showWishlistTooltip, setShowWishlistTooltip] = useState(false);
     const tooltipTimeout = useRef(null);
 
     // Review state
-    const [reviews, setReviews] = useState(product.reviewsList || []);
+    const [reviews, setReviews] = useState(product.reviewlist || []);
     const [reviewForm, setReviewForm] = useState({
         name: '',
         rating: 0,
@@ -82,7 +64,7 @@ function Description({desc}) {
         if (idx === -1) {
             // Not in cart, add with at least 1 quantity
             const newItem = { id, quantity: Math.max(1, qty) };
-            setcartlist([...cartlist, newItem]);
+            setCartlist([...cartlist, newItem]);
             setCartCount(cartCount + 1);
         }
     };
@@ -97,23 +79,24 @@ function Description({desc}) {
     };
 
     const notify = () => {
-        const idx = findCartItemIndex(product.id);
+        if (!product._id) return;
+        const idx = findCartItemIndex(product._id);
         const isMobile = window.innerWidth <= 640;
         const toastOptions = {
-          autoClose: 1000,
-          position: "top-right",
-          className: isMobile ? "text-xs px-2 py-1 rounded-md" : "",
-          style: isMobile
-            ? { minWidth: "150px", maxWidth: "60vw", fontSize: "0.85rem", borderRadius: "10px", margin: "0.5rem" }
-            : {},
+            autoClose: 1000,
+            position: "top-right",
+            className: isMobile ? "text-xs px-2 py-1 rounded-md" : "",
+            style: isMobile
+                ? { minWidth: "150px", maxWidth: "60vw", fontSize: "0.85rem", borderRadius: "10px", margin: "0.5rem" }
+                : {},
         };
         if (idx !== -1) {
-          toast.warning("Item already added", toastOptions);
+            toast.warning("Item already added", toastOptions);
         } else {
-          handleAddToCard(product.id, count);
-          toast.success("Item successfully added", toastOptions);
+            handleAddToCard(product._id, count);
+            toast.success("Item successfully added", toastOptions);
         }
-      };
+    };
 
     // Helper to render stars
     const renderStars = (rating, size = "text-yellow-400", clickable = false, onClick = null) => {
@@ -191,12 +174,19 @@ function Description({desc}) {
         toast.success("Review submitted!", { autoClose: 1200 });
     };
 
+    // Calculate discount percent if not present
+    const getDiscountPercent = () => {
+        if (product.originalPrice && product.discountPrice) {
+            return Math.round(((product.originalPrice - product.discountPrice) / product.originalPrice) * 100);
+        }
+        return 0;
+    };
     // Responsive layout: flex-row for md+, column for mobile
     return (
         <div className="bg-[#f5f0f0]">
             <div className="w-full flex flex-col md:flex-row md:gap-8 gap-4 px-1 sm:px-2 md:px-8 py-4 md:py-6 max-w-6xl mx-auto">
                 {/* Left: Swiper Image Slider */}
-                <div className="w-full md:w-1/2 flex justify-center items-start">
+                <div className="w-80% md:w-1/2 flex justify-center items-start">
                     <div className="w-full max-w-[420px]">
                         <Swiper
                             pagination={{ clickable: true }}
@@ -207,24 +197,21 @@ function Description({desc}) {
                             style={{
                                 width: '100%',
                                 height: 'auto',
-                                minHeight: 0,
-                                maxHeight: 420,
                                 background: '#f5f0f0',
                             }}
                         >
-                            {product.images.map((img, idx) => (
+                            {(product.images || []).map((img, idx) => (
                                 <SwiperSlide key={idx}>
-                                    <div className="w-full flex justify-center items-center"
+                                    <div className="w-full"
                                         style={{ backgroundColor: '#f5f0f0' }}>
                                         <img
-                                            src={img}
+                                            src={getImageUrl(img)}
                                             alt={`Product ${idx + 1}`}
-                                            className="w-full h-[220px] xs:h-[260px] sm:h-[300px] md:h-[340px] object-cover rounded-xl"
+                                            className=" rounded-xl object-cover"
                                             style={{
-                                                maxHeight: '340px',
-                                                minHeight: '180px',
-                                                objectFit: 'cover',
+                                                minHeight: '200px',
                                                 borderRadius: '0.75rem',
+                                                objectPosition: 'top center', // try to avoid face
                                             }}
                                         />
                                     </div>
@@ -245,25 +232,25 @@ function Description({desc}) {
                             {renderStars(
                                 reviews.length > 0
                                     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length)
-                                    : product.rating
+                                    : (product.rating || 0)
                             )}
                             <span className="ml-2 text-gray-600 text-sm font-medium">
                                 {reviews.length > 0
                                     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
-                                    : product.rating.toFixed(1)
+                                    : (product.rating ? product.rating.toFixed(1) : "0.0")
                                 }
                             </span>
                             <span className="ml-2 text-gray-400 text-sm">
-                                ({reviews.length > 0 ? reviews.length : product.reviews} reviews)
+                                ({reviews.length > 0 ? reviews.length : 0} reviews)
                             </span>
                         </div>
                     </div>
                     {/* Price Row */}
                     <div className="flex items-center gap-4">
                         <span className="text-2xl font-bold text-pink-600">₹{product.discountPrice}</span>
-                        <span className="text-lg text-gray-400 line-through">₹{product.actualPrice}</span>
+                        <span className="text-lg text-gray-400 line-through">₹{product.originalPrice}</span>
                         <span className="text-green-600 font-semibold text-base">
-                            {product.discountPercent}% OFF
+                            {getDiscountPercent()}% OFF
                         </span>
                     </div>
                     {/* Stock */}
@@ -272,7 +259,7 @@ function Description({desc}) {
                     </div>
                     {/* About Product */}
                     <div>
-                        <p className="text-gray-600">{product.about}</p>
+                        <p className="text-gray-600">{product.description}</p>
                     </div>
                     {/* Free Shipping Line */}
                     <div className="bg-green-50 border border-green-200 rounded-md px-2 py-2 text-green-700 font-medium text-sm flex items-center gap-2">
@@ -309,7 +296,7 @@ function Description({desc}) {
                             <span className="font-medium text-gray-700 text-base">Wishlist</span>
                             <IconButton
                                 aria-label="wishlist"
-                                onClick={() => handleWishlistClick(product.id)}
+                                onClick={() => handleWishlistClick(product._id)}
                                 className="bg-white hover:bg-pink-100 z-20 shadow rounded-full p-1 transition group"
                             >
                                 {iswishlisted ? (
@@ -437,7 +424,7 @@ function Description({desc}) {
             </div>
 
             <div className="mt-8">
-                <DefaultProduct product={desc} name="Related Products" category={product.category}/>
+                <DefaultProduct product={desc} name="Related Products" category={product.category } />
             </div>
         </div>
     );

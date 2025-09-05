@@ -4,8 +4,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import { ArrowForward } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
-
-// Latest_products rewritten to use backend product data format
+// Latest_products rewritten to match AllProducts format
 function Latest_products({ product }) {
   let {
     wishlistcount = 0,
@@ -27,7 +26,7 @@ function Latest_products({ product }) {
     const checkScroll = () => {
       if (scrollRef.current) {
         setShowViewAll(
-          scrollRef.current.scrollWidth > scrollRef.current.clientWidth + 2 // +2 for rounding
+          scrollRef.current.scrollWidth > scrollRef.current.clientWidth + 2
         );
       }
     };
@@ -46,7 +45,6 @@ function Latest_products({ product }) {
     let scrollLeft;
 
     const mouseDownHandler = (e) => {
-      // Only left mouse button
       if (e.button !== 0) return;
       isDown = true;
       el.classList.add('cursor-grabbing');
@@ -68,7 +66,7 @@ function Latest_products({ product }) {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - el.offsetLeft;
-      const walk = (x - startX) * 1.2; // scroll-fast
+      const walk = (x - startX) * 1.2;
       el.scrollLeft = scrollLeft - walk;
     };
 
@@ -77,7 +75,6 @@ function Latest_products({ product }) {
     el.addEventListener('mouseup', mouseUpHandler);
     el.addEventListener('mousemove', mouseMoveHandler);
 
-    // Clean up
     return () => {
       el.removeEventListener('mousedown', mouseDownHandler);
       el.removeEventListener('mouseleave', mouseLeaveHandler);
@@ -96,30 +93,35 @@ function Latest_products({ product }) {
     }
   };
 
-  // cartlist is an array of objects: [{product, quantity}]
-  const handleAddToCart = (id) => {
-    const existing = cartlist.find(item => (item.product || item.id) === id);
-    if (existing) {
-      // Already in cart, do nothing (or you could increase quantity if desired)
+  // cartlist is now an array of objects: [{_id, ...product, quantity}]
+  const handleAddToCart = (prod) => {
+    const existingItem = cartlist.find(item => item._id === prod._id);
+    if (existingItem) {
       return;
     } else {
-      // Add new item with quantity 1
-      setCartlist([...cartlist, { product: id, quantity: 1 }]);
+      setCartlist([
+        ...cartlist,
+        {
+          _id: prod._id,
+          title: prod.title,
+          brand: prod.brand,
+          images: prod.images,
+          discountPrice: prod.discountPrice,
+          quantity: 1
+        }
+      ]);
       setCartCount(cartCount + 1);
     }
   };
 
-  // Only show if there are products
   if (!Array.isArray(selectedProduct) || selectedProduct.length === 0) return null;
 
   return (
     <div className='bg-white'>
       <div className="Container px-3 py-2 lg:py-3 flex items-center justify-between bg-gray-200 rounded">
-        {/* Left Section */}
         <div className="flex flex-col gap-1 md:w-1/3">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">Latest Products</h2>
         </div>
-        {/* View All Button (shows only if scroll is needed) */}
         {showViewAll && (
           <div className="flex items-center ml-auto">
             <Link to="/menu/latest">
@@ -139,35 +141,16 @@ function Latest_products({ product }) {
         ref={scrollRef}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {selectedProduct.map((prod) => {
-          // Use backend schema fields
-          const id = prod._id;
-          return (
-            <ProductCard
-              key={id}
-              id={id}
-              images={prod.images}
-              // Calculate discount percent from originalPrice and discountPrice if not present
-              discountPercent={
-                typeof prod.discountPercent === 'number'
-                  ? prod.discountPercent
-                  : (typeof prod.originalPrice === 'number' && typeof prod.discountPrice === 'number' && prod.originalPrice > 0)
-                    ? Math.round(100 * (prod.originalPrice - prod.discountPrice) / prod.originalPrice)
-                    : 0
-              }
-              isWishlisted={wishlist.includes(id)}
-              brand={prod.brand}
-              title={prod.title}
-              rating={typeof prod.rating === 'number' ? prod.rating : 0}
-              originalPrice={prod.originalPrice}
-              discountPrice={prod.discountPrice}
-              onAddToCart={() => { handleAddToCart(id) }}
-              onToggleWishlist={() => handleToggleWishlist(id)}
-              cartlist={cartlist}
-              inStock={typeof prod.inStock === 'number' ? prod.inStock : 0}
-            />
-          );
-        })}
+        {selectedProduct.map((prod) => (
+          <ProductCard
+            key={prod._id}
+            product={prod}
+            onAddToCart={() => handleAddToCart(prod)}
+            onToggleWishlist={() => handleToggleWishlist(prod._id)}
+            isWishlisted={wishlist.includes(prod._id)}
+            iscart={cartlist.find(item => item._id === prod._id)}
+          />
+        ))}
       </div>
     </div>
   );

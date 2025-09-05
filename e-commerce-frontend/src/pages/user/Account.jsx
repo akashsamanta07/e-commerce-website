@@ -2,7 +2,7 @@ import React from "react";
 import { Avatar, Button, Divider } from "@mui/material";
 import { MdEdit, MdLocationOn, MdFavorite, MdListAlt, MdLock, MdLogout } from "react-icons/md";
 import { FaUserCircle } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const defaultProfilePic = (
   <FaUserCircle className="text-gray-400" style={{ fontSize: 90 }} />
@@ -15,13 +15,6 @@ const user = {
 };
 
 function Account() {
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    // Add logout logic here
-    // e.g., clear tokens, redirect, etc.
-    navigate("/logout");
-  };
 
   return (
     <div className="my-8 mx-5 #f5f0f0 flex items-center justify-center">
@@ -98,13 +91,12 @@ function Account() {
             </Button>
           </Link>
           <Divider className="my-2" />
-          <Link to="/" className="w-full">
+          <Link to="/logout" className="w-full">
             <Button
               fullWidth
               startIcon={<MdLogout className="text-red-500 text-xl" />}
               className="rounded-lg hover:bg-red-50 transition"
               variant="text"
-              onClick={handleLogout}
             >
               <span className="text-red-600 font-bold">Logout</span>
             </Button>

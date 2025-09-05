@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from "./pages/Home";
 import { ToastContainer } from 'react-toastify';
@@ -23,6 +23,7 @@ import MyList from './pages/user/MyList.jsx';
 import MyOrder from './pages/user/MyOrder.jsx';
 import API_BASE from "./utils/API_BASE";
 import Logout from './auth/Logout.jsx';
+import { GlobalContext } from './components/UserContext/UserContext.jsx';
 
 function ProtectedRoute({ auth, children }) {
   const isAuthenticated = auth && Object.keys(auth).length > 0;
@@ -31,13 +32,16 @@ function ProtectedRoute({ auth, children }) {
 
 function App() {
   // State for UI
-  const [cartCount, setCartCount] = useState(0);
+
+  const { catname } = useContext(GlobalContext);
+  const [relate, setrelated] = useState([]);
+
   const [search, setSearch] = useState('');
+  const [cartCount, setCartCount] = useState(0);
   const [wishlistcount, setwishlistcount] = useState(0);
   const [wishlist, setWishlist] = useState([]);
-  // cartlist: [{ product: ObjectId, quantity: Number }]
+  const [wishlistProduct, setWishlistProduct] = useState([]);
   const [cartlist, setCartlist] = useState([]);
-  const [cartlistproduct, setCartlistproduct] = useState([]);
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [menu, setmenu] = useState("Home");
@@ -49,23 +53,25 @@ function App() {
   const [auth, setAuth] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Calculate cartlistproduct from products and cartlist
+  // Populate wishlistProduct with full product objects for each id in wishlist
   useEffect(() => {
-    if (!Array.isArray(products) || !Array.isArray(cartlist)) {
-      setCartlistproduct([]);
-      return;
+    if (Array.isArray(wishlist) && Array.isArray(products)) {
+      const matchedProducts = products.filter(prod => wishlist.includes(prod._id));
+      setWishlistProduct(matchedProducts);
+    } else {
+      setWishlistProduct([]);
     }
-    const merged = cartlist
-      .map(item => {
-        const prod = products.find(p => p._id === (item.product));
-        if (prod) {
-          return { ...prod, quantity: item.quantity };
-        }
-        return null;
-      })
-      .filter(Boolean);
-    setCartlistproduct(merged);
-  }, [products,cartCount]);
+  }, [wishlist, products]);
+
+
+ useEffect(() => {
+  if (Array.isArray(products) && catname) {
+    const relatedProducts = products.filter(prod => prod.category === catname);
+    setrelated(relatedProducts);
+  } else {
+    setrelated([]);
+  }
+}, [products, catname]);
 
   // Compose props for headers and pages
   const header2 = {
@@ -82,8 +88,7 @@ function App() {
     setis,
     categories,
     auth,
-    products,
-    cartlistproduct
+    products
   };
   const header3 = {
     menu,
@@ -104,8 +109,6 @@ function App() {
     setWishlist,
     cartlist,
     setCartlist,
-    cartlistproduct,
-    setCartlistproduct,
     categories,
     selectedProduct,
   };
@@ -118,8 +121,7 @@ function App() {
     setWishlist,
     cartlist,
     setCartlist,
-    cartlistproduct,
-    setCartlistproduct,
+    filteredProducts: relate
   };
   const mylist = {
     wishlistcount,
@@ -244,7 +246,7 @@ function App() {
 
   // Fetch cartlist when auth._id changes (same as wishlist)
   useEffect(() => {
-    const fetchCartlist = async () => {
+    const fetchCartlistAndProducts = async () => {
       if (auth && auth._id) {
         try {
           const res = await fetch(`${API_BASE}/user/${auth._id}/cart`, {
@@ -259,8 +261,29 @@ function App() {
               const dateB = new Date(b.updatedAt);
               return dateA - dateB;
             });
-            setCartlist(sortedCartlist);
-            setCartCount(sortedCartlist.reduce((sum, item) => sum + (item.quantity || 0), 0));
+            setCartCount(sortedCartlist.length);
+            // Now update cartlistProduct here, using products from state
+            if (Array.isArray(products)) {
+              const merged = sortedCartlist
+                .map(item => {
+                  const prod = products.find(p => p._id === (item.product));
+                  if (prod) {
+                    return {
+                      _id: prod._id,
+                      title: prod.title,
+                      brand: prod.brand,
+                      images: prod.images,
+                      discountPrice: prod.discountPrice,
+                      quantity: item.quantity
+                    };
+                  }
+                  return null;
+                })
+                .filter(Boolean);
+                setCartlist(merged);
+            } else {
+              setCartlist([])
+            }
           } else {
             setCartlist([]);
             setCartCount(0);
@@ -274,9 +297,9 @@ function App() {
         setCartCount(0);
       }
     };
-    fetchCartlist();
-    // Only run when auth._id changes
-  }, [auth && auth._id || cartlist.length]);
+    fetchCartlistAndProducts();
+    // Only run when auth._id or products changes
+  }, [auth && auth._id, products]);
 
   // selectedProduct: filter from products by menu, subcategory, search
   useEffect(() => {

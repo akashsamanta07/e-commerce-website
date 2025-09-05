@@ -16,6 +16,7 @@ function DefaultProduct({ product, name, category }) {
     setCartlist = () => {},
     filteredProducts = [],
   } = product || {};
+
   const scrollRef = useRef(null);
   const [showViewAll, setShowViewAll] = useState(false);
 
@@ -24,7 +25,7 @@ function DefaultProduct({ product, name, category }) {
     const checkScroll = () => {
       if (scrollRef.current) {
         setShowViewAll(
-          scrollRef.current.scrollWidth > scrollRef.current.clientWidth + 2 // +2 for rounding
+          scrollRef.current.scrollWidth > scrollRef.current.clientWidth + 2
         );
       }
     };
@@ -33,7 +34,7 @@ function DefaultProduct({ product, name, category }) {
     return () => window.removeEventListener('resize', checkScroll);
   }, [filteredProducts]);
 
-  // --- Drag-to-scroll logic for mouse users ---
+  // --- Drag-to-scroll logic for mouse users (copied from AllProducts format) ---
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -43,7 +44,6 @@ function DefaultProduct({ product, name, category }) {
     let scrollLeft;
 
     const mouseDownHandler = (e) => {
-      // Only left mouse button
       if (e.button !== 0) return;
       isDown = true;
       el.classList.add('cursor-grabbing');
@@ -65,7 +65,7 @@ function DefaultProduct({ product, name, category }) {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - el.offsetLeft;
-      const walk = (x - startX) * 1.2; // scroll-fast
+      const walk = (x - startX) * 1.2;
       el.scrollLeft = scrollLeft - walk;
     };
 
@@ -74,7 +74,6 @@ function DefaultProduct({ product, name, category }) {
     el.addEventListener('mouseup', mouseUpHandler);
     el.addEventListener('mousemove', mouseMoveHandler);
 
-    // Clean up
     return () => {
       el.removeEventListener('mousedown', mouseDownHandler);
       el.removeEventListener('mouseleave', mouseLeaveHandler);
@@ -83,7 +82,7 @@ function DefaultProduct({ product, name, category }) {
     };
   }, []);
 
-
+  // Wishlist and cart handlers (AllProducts style)
   const handleToggleWishlist = (id) => {
     if (wishlist.includes(id)) {
       setwishlistcount(wishlistcount - 1);
@@ -94,29 +93,35 @@ function DefaultProduct({ product, name, category }) {
     }
   };
 
-  // cartlist is an array of objects: [{product, quantity}]
-  const handleAddToCart = (id) => {
-    const existing = cartlist.find(item => (item.product || item.id) === id);
-    if (existing) {
-      // Already in cart, do nothing (or you could increase quantity if desired)
+  // cartlist is now an array of objects: [{_id, ...product, quantity}]
+  const handleAddToCart = (prod) => {
+    const existingItem = cartlist.find(item => item._id === prod._id);
+    if (existingItem) {
       return;
     } else {
-      // Add new item with quantity 1
-      setCartlist([...cartlist, { product: id, quantity: 1 }]);
+      setCartlist([
+        ...cartlist,
+        {
+          _id: prod._id,
+          title: prod.title,
+          brand: prod.brand,
+          images: prod.images,
+          discountPrice: prod.discountPrice,
+          quantity: 1
+        }
+      ]);
       setCartCount(cartCount + 1);
     }
   };
 
-  // If no selectedProduct, don't render section
   if (!Array.isArray(filteredProducts) || filteredProducts.length === 0) return null;
+
   return (
-    <div className='bg-white'>
+    <div className={`bg-white${name === "Related Products" ? " pt-[2rem]" : ""}`}>
       <div className="Container px-3 py-2 lg:py-3 flex items-center justify-between bg-gray-200 rounded">
-        {/* Left Section */}
         <div className="flex flex-col gap-1 md:w-1/3">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">{name}</h2>
         </div>
-        {/* View All Button (shows only if scroll is needed) */}
         {showViewAll && (
           <div className="flex items-center ml-auto">
             <Link to={`/menu/${name === "Related Products" ? (category || '').trim().toLowerCase() : (name || '').trim().toLowerCase()}`}>
@@ -132,39 +137,32 @@ function DefaultProduct({ product, name, category }) {
         )}
       </div>
       <div
-        className="Container bg-white flex justify-start gap-[6px] lg:gap-[1rem] py-[1rem] flex-nowrap overflow-x-auto cursor-grab select-none scrollbar-none"
+        className="
+          Container
+          bg-white
+          flex
+          justify-start
+          gap-[6px] lg:gap-[1rem]
+          py-[1rem]
+          flex-nowrap
+          overflow-x-auto
+          cursor-grab
+          select-none
+          scrollbar-none
+        "
         ref={scrollRef}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        {filteredProducts.map((prod) => {
-          // Use backend schema fields
-          const id = prod._id;
-          return (
-            <ProductCard
-              key={id}
-              id={id}
-              images={prod.images}
-              // Calculate discount percent from originalPrice and discountPrice if not present
-              discountPercent={
-                typeof prod.discountPercent === 'number'
-                  ? prod.discountPercent
-                  : (typeof prod.originalPrice === 'number' && typeof prod.discountPrice === 'number' && prod.originalPrice > 0)
-                    ? Math.round(100 * (prod.originalPrice - prod.discountPrice) / prod.originalPrice)
-                    : 0
-              }
-              isWishlisted={wishlist.includes(id)}
-              brand={prod.brand}
-              title={prod.title}
-              rating={typeof prod.rating === 'number' ? prod.rating : 0}
-              originalPrice={prod.originalPrice}
-              discountPrice={prod.discountPrice}
-              onAddToCart={() => { handleAddToCart(id) }}
-              onToggleWishlist={() => handleToggleWishlist(id)}
-              cartlist={cartlist}
-              inStock={typeof prod.inStock === 'number' ? prod.inStock : 0}
-            />
-          );
-        })}
+        {filteredProducts.map((prod) => (
+          <ProductCard
+            key={prod._id}
+            product={prod}
+            onAddToCart={() => handleAddToCart(prod)}
+            onToggleWishlist={() => handleToggleWishlist(prod._id)}
+            isWishlisted={wishlist.includes(prod._id)}
+            iscart={cartlist.find(item => item._id === prod._id)}
+          />
+        ))}
       </div>
     </div>
   );

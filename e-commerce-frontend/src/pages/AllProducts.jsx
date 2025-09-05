@@ -18,7 +18,7 @@ const SORT_ORDERS = [
 ];
 
 function AllProducts({ product }) {
-  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setcartlist, categories, selectedProduct } = product;
+  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setCartlist, categories, selectedProduct } = product;
   const location = useLocation();
   const pathSegments = location.pathname.split('/').filter(Boolean);
   const rawCategory = pathSegments[pathSegments.length - 1] || '';
@@ -89,13 +89,20 @@ function AllProducts({ product }) {
 
   // cartlist is now an array of objects: [{id, quantity}]
   // cartCount should be the sum of all quantities in cartlist
-  const handleAddToCart = (id) => {
-    const existingItem = cartlist.find(item => item.id === id);
+  const handleAddToCart = (prod) => {
+  
+    const existingItem = cartlist.find(item => item._id === prod._id);
     if (existingItem) {
       return;
     } else {
       // Add new product with quantity 1
-      setcartlist([...cartlist, { id, quantity: 1 }]);
+      setCartlist([...cartlist, {
+        _id: prod._id,
+        title: prod.title,
+        brand: prod.brand,
+        images: prod.images,
+        discountPrice: prod.discountPrice,
+        quantity: 1 }]);
       setCartCount(cartCount + 1);
     }
   };
@@ -218,19 +225,12 @@ function AllProducts({ product }) {
         ) : (
           sortedProducts.map((prod) => (
             <ProductCard
-              key={prod.id}
-              id={prod.id}
-              images={prod.images}
-              discountPercent={prod.discountPercent}
-              isWishlisted={wishlist.includes(prod.id)}
-              brand={prod.brand}
-              title={prod.title}
-              rating={prod.rating}
-              originalPrice={prod.originalPrice}
-              discountPrice={prod.discountPrice}
-              onAddToCart={() => handleAddToCart(prod.id)}
-              onToggleWishlist={() => handleToggleWishlist(prod.id)}
-              cartlist={cartlist}
+            key={prod._id}
+              product={prod}
+              onAddToCart={() => handleAddToCart(prod)}
+              onToggleWishlist={() => handleToggleWishlist(prod._id)}
+              isWishlisted={wishlist.includes(prod._id)}
+              iscart={cartlist.find(item => item._id === prod._id)}
             />
           ))
         )}

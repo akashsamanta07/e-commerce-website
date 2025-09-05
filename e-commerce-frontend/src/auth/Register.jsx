@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { IconButton, Button, InputAdornment, CircularProgress } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
@@ -10,15 +10,14 @@ import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined
 import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
 import notify from "../components/Notification/notify";
-
-const API_BASE = "http://localhost:3005";
+import API_BASE from "../utils/API_BASE";
 
 // Helper to always show small notification
 const notifySmall = (type, message) => {
   notify(type, message, { fontSize: "0.85rem" });
 };
 
-function Register() {
+function Register({ auth }) {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -36,6 +35,14 @@ function Register() {
   const [registeredEmail, setRegisteredEmail] = useState("");
 
   const navigate = useNavigate();
+
+  // Redirect if already authenticated (like admin login)
+  useEffect(() => {
+    if (auth && auth._id != null) {
+      navigate("/");
+    }
+    // eslint-disable-next-line
+  }, [auth, navigate]);
 
   const handleTermsChange = (e) => {
     setTermsChecked(e.target.checked);

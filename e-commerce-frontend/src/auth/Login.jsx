@@ -1,31 +1,31 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { IconButton, Button, InputAdornment, CircularProgress } from "@mui/material";
+import { IconButton, InputAdornment, CircularProgress } from "@mui/material";
 import LoginIcon from "@mui/icons-material/Login";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
-import { FcGoogle } from "react-icons/fc";
+// import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
 import notify from "../components/Notification/notify";
+import API_BASE from "../utils/API_BASE";
 
-const API_BASE = "http://localhost:3005";
 
-// Helper to always show small notification
-const notifySmall = (type, message) => {
-  notify(type, message, { fontSize: "0.85rem" });
-};
-
-function Login({ onLogin }) {
+function Login({ auth, setAuth }) {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    if (auth && auth._id != null) {
+      navigate("/");
+    }
+    // eslint-disable-next-line
+  }, [auth, navigate]);
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({
@@ -37,7 +37,7 @@ function Login({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.email || !form.password) {
-      notifySmall("warning", "Fill all fields");
+      notify("warning", "Fill all fields");
       return;
     }
     setLoading(true);
@@ -57,29 +57,29 @@ function Login({ onLogin }) {
       const data = await res.json();
 
       if (!res.ok) {
-        notifySmall("error", data.message || "Login failed");
+        notify("error", data.message || "Login failed");
         setLoading(false);
         return;
       }
 
-      notifySmall("success", "Login success");
+      notify("success", "Login success");
       setLoading(false);
-      if (onLogin) onLogin(data.user || form);
+      setAuth(data.userData);
       navigate("/");
     } catch (err) {
-      notifySmall("error", "Network error");
+      notify("error", "Network error");
       setLoading(false);
     }
   };
 
   // Dummy Google login handler
-  const handleGoogleLogin = (e) => {
-    e.preventDefault();
-    notifySmall("warning", "Not ready");
-  };
+  // const handleGoogleLogin = (e) => {
+  //   e.preventDefault();
+  //   notify("warning", "No Google yet");
+  // };
 
   return (
-    <div className="my-8 mx-5 #f5f0f0 flex items-center justify-center">
+    <div className="my-8 mx-5 flex items-center justify-center">
       <form
         className="bg-white p-5 rounded-lg shadow-md w-full max-w-sm"
         onSubmit={handleSubmit}
@@ -88,6 +88,7 @@ function Login({ onLogin }) {
           <LoginIcon sx={{ color: "#db2777", fontSize: 32 }} />
           Login
         </h2>
+        {/* Email Field */}
         <div className="mb-4">
           <label
             htmlFor="email"
@@ -123,6 +124,7 @@ function Login({ onLogin }) {
             />
           </div>
         </div>
+        {/* Password Field */}
         <div className="mb-2">
           <label
             htmlFor="password"
@@ -185,7 +187,7 @@ function Login({ onLogin }) {
           </Link>
         </div>
         <div className="flex justify-center mb-2">
-          <Button
+          <IconButton
             type="submit"
             color="primary"
             size="large"
@@ -208,19 +210,19 @@ function Login({ onLogin }) {
             disabled={loading}
           >
             {loading ? (
-              <CircularProgress size={24} sx={{ color: "#fff", mr: 2 }} />
+              <CircularProgress size={24} sx={{ color: "#fff", mr: 1 }} />
             ) : (
               <LoginIcon sx={{ mr: 1 }} />
             )}
-            Login
-          </Button>
+            {loading ? "Logging in..." : "Login"}
+          </IconButton>
         </div>
         <div className="flex items-center my-4">
           <div className="flex-grow border-t border-gray-200" />
           <span className="mx-2 text-gray-400 text-xs">or</span>
           <div className="flex-grow border-t border-gray-200" />
         </div>
-        <Button
+        {/* <Button
           variant="outlined"
           startIcon={<FcGoogle size={22} />}
           onClick={handleGoogleLogin}
@@ -241,9 +243,10 @@ function Login({ onLogin }) {
               backgroundColor: "#fdf2f8",
             },
           }}
+          disabled={loading}
         >
           Login with Google
-        </Button>
+        </Button> */}
         <div className="mt-4 text-center text-sm text-gray-600">
           Don't have an account?{" "}
           <Link to="/register" className="text-pink-600 hover:underline">

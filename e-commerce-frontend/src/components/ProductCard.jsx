@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { MdLocalOffer } from 'react-icons/md';
 import { AiFillStar, AiOutlineStar } from 'react-icons/ai';
 import { FaHeart, FaRegHeart, FaShoppingCart } from 'react-icons/fa';
@@ -6,31 +6,48 @@ import { IconButton } from '@mui/material';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import getImageUrl from './getImageUrl';
+import { GlobalContext } from "./UserContext/UserContext";
 
 const ProductCard = ({
-  id,
-  images,
-  discountPercent,
-  isWishlisted,
-  brand,
-  title,
-  rating,
-  originalPrice,
-  discountPrice,
+  product,
   onAddToCart,
   onToggleWishlist,
-  cartlist // changed from cardlist
+  isWishlisted,
+  iscart
 }) => {
-  let imageUrl="#"
-  if(images){
-    imageUrl=getImageUrl(images[0]);
+  // Destructure all needed fields from product
+  const {
+    _id,
+    title,
+    brand,
+    images,
+    originalPrice,
+    discountPrice,
+    rating,
+    discountPercent, // may not be present, so calculate if needed
+  } = product || {};
+
+  // Calculate discount percent if not present
+  const computedDiscountPercent =
+    typeof discountPercent === 'number'
+      ? discountPercent
+      : (typeof originalPrice === 'number' && typeof discountPrice === 'number' && originalPrice > 0)
+        ? Math.round(100 * (originalPrice - discountPrice) / originalPrice)
+        : 0;
+
+  // Get image url
+  let imageUrl = "#";
+  if (images && images.length > 0) {
+    imageUrl = getImageUrl(images[0]);
   }
+
   // Tooltip state for wishlist button
   const [showWishlistTooltip, setShowWishlistTooltip] = useState(false);
   const tooltipTimeout = useRef(null);
+  const { setCurrent, setCatname } = useContext(GlobalContext);
 
   const handleWishlistClick = (e) => {
-    if (onToggleWishlist) onToggleWishlist(e);
+    if (onToggleWishlist) onToggleWishlist(_id);
     setShowWishlistTooltip(true);
     if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
     tooltipTimeout.current = setTimeout(() => {
@@ -38,12 +55,13 @@ const ProductCard = ({
     }, 1000);
   };
 
-  // Helper: check if product is already in cartlist (array of {id, quantity})
-  const isInCart = cartlist.find(item => item.id === id);
+  // Use iscart as a boolean for cart status
+  const isInCart = iscart;
 
   // Modified notify to show toast in the bottom corner on mobile, smaller size
   const notify = () => {
     if (!isInCart && onAddToCart) {
+
       onAddToCart();
     }
     const isMobile = window.innerWidth <= 640;
@@ -66,18 +84,19 @@ const ProductCard = ({
     <div className="product-card bg-white rounded-xl shadow-md flex flex-col w-[10.2rem] lg:w-[14rem] border-[1px] border-gray-300 shrink-0 cursor-pointer">
       {/* Image section */}
       <div className="relative w-full">
-        <Link to={`/product/${id}`}>
+        <Link to={`/product/${_id}`}>
           <img
             src={imageUrl}
             alt={title}
             className="w-full h-[12rem] lg:h-[14rem] flex rounded-xl overflow-hidden"
+            onClick={()=>{setCurrent(product); setCatname(product.category)}}
           />
         </Link>
         {/* Discount badge */}
-        {discountPercent && (
+        {computedDiscountPercent > 0 && (
           <div className="absolute top-2 left-1 bg-pink-600 text-white px-2 py-1 rounded-md flex items-center font-semibold text-xs z-10 shadow min-h-[22px] gap-1">
             <MdLocalOffer className="mr-1 text-base" />
-            {discountPercent}%
+            {computedDiscountPercent}%
           </div>
         )}
 
@@ -97,7 +116,7 @@ const ProductCard = ({
             {/* Show tooltip on click for 1 second */}
             {showWishlistTooltip && (
               <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-[0.4rem] rounded bg-gray-800 text-white text-xs opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                {isWishlisted ? "Add to wishlist" : "Remove from wishlist"}
+                {isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
               </span>
             )}
           </div>
@@ -115,7 +134,7 @@ const ProductCard = ({
         </div>
         <div className="flex items-center mb-1">
           {Array.from({ length: 5 }).map((_, idx) =>
-            idx < Math.round(rating) ? (
+            idx < Math.round(rating || 0) ? (
               <AiFillStar key={idx} className="text-yellow-400" size={15} />
             ) : (
               <AiOutlineStar key={idx} className="text-gray-300" size={15} />

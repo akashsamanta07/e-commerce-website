@@ -2,10 +2,8 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API_BASE from "../utils/API_BASE";
 
-const Logout = ({setAuth}) => {
-  console.log(1234)
+const Logout = ({ setAuth }) => {
   const navigate = useNavigate();
-
   useEffect(() => {
     const logout = async () => {
       try {
@@ -17,11 +15,11 @@ const Logout = ({setAuth}) => {
         // Optionally handle error
       } finally {
         setAuth({});
-        navigate("/my-account", { replace: true });
+        navigate("/", { replace: true });
       }
     };
     logout();
-  }, [navigate]);
+  }, [navigate, setAuth]);
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
