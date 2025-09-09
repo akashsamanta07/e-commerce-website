@@ -2,22 +2,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import API_BASE from '../../utils/API_BASE';
 import getImageUrl from '../getImageUrl.js';
 
-// Fallback static ads in case API fails or is empty
-import s1 from '../../assets/default/add/s1.jpg';
-import s2 from '../../assets/default/add/s2.jpg';
-import s3 from '../../assets/default/add/s3.jpg';
-import s4 from '../../assets/default/add/s4.jpg';
-
-const fallbackAds = [
-  { src: s1, alt: 'Ad 1' },
-  { src: s2, alt: 'Ad 2' },
-  { src: s3, alt: 'Ad 3' },
-  { src: s4, alt: 'Ad 4' },
-];
-
 function StaticAdd() {
   const scrollRef = useRef(null);
-  const [ads, setAds] = useState(fallbackAds);
+  const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch ads from API
@@ -37,10 +24,10 @@ function StaticAdd() {
             }))
           );
         } else {
-          setAds(fallbackAds);
+          setAds([]);
         }
       } catch (err) {
-        setAds(fallbackAds);
+        setAds([]);
       }
       setLoading(false);
     }
@@ -117,6 +104,10 @@ function StaticAdd() {
         {loading ? (
           <div className="w-full flex items-center justify-center h-40 text-gray-400 text-lg">
             Loading...
+          </div>
+        ) : ads.length === 0 ? (
+          <div className="w-full flex items-center justify-center h-40 text-gray-400 text-lg">
+            No ads available.
           </div>
         ) : (
           ads.map((ad, idx) => (

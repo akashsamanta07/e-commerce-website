@@ -3,37 +3,37 @@ import { Avatar, Button, Divider } from "@mui/material";
 import { MdEdit, MdLocationOn, MdFavorite, MdListAlt, MdLock, MdLogout } from "react-icons/md";
 import { FaUserCircle } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import getImageUrl from "../../components/getImageUrl.js"; // assumes this helper exists
 
 const defaultProfilePic = (
   <FaUserCircle className="text-gray-400" style={{ fontSize: 90 }} />
 );
 
-const user = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  profilePic: "", // If empty, show default
-};
-
-function Account() {
-
+function Account({ auth }) {
+  // Use DB data from auth prop
+  // Fallbacks for missing fields
+  const name = auth?.name || "User";
+  const email = auth?.email || "";
+  const avatar = auth?.avatar || "";
+  const profilePic = avatar ? getImageUrl(avatar) : "";
   return (
     <div className="my-8 mx-5 #f5f0f0 flex items-center justify-center">
       <div className="p-4 md:p-8 pb-3 md:pb-5 bg-white rounded-lg shadow">
         {/* Profile Section */}
         <div className="flex flex-col items-center w-full">
           <div className="mb-3">
-            {user.profilePic ? (
+            {profilePic ? (
               <Avatar
-                src={user.profilePic}
-                alt={user.name}
+                src={profilePic}
+                alt={name}
                 sx={{ width: 90, height: 90 }}
               />
             ) : (
               defaultProfilePic
             )}
           </div>
-          <div className="text-xl font-semibold text-gray-800">{user.name}</div>
-          <div className="text-gray-500 text-sm mb-2">{user.email}</div>
+          <div className="text-xl font-semibold text-gray-800">{name}</div>
+          <div className="text-gray-500 text-sm mb-2">{email}</div>
         </div>
 
         <Divider className="w-full my-4" />

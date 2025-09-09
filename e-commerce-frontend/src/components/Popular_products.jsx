@@ -3,19 +3,15 @@ import Button from '@mui/material/Button';
 import ProductCard from '../components/ProductCard.jsx';
 
 function Popular_products({ product }) {
-  // Destructure props
+  // Destructure props, remove count for wishlist, cartlist
   let {
-    wishlistcount,
-    setwishlistcount,
-    cartCount,
-    setCartCount,
-    wishlist,
-    setWishlist,
-    cartlist,
-    setCartlist, // fix typo: setcartlist -> setCartlist
-    categories,
-    selectedProduct, // This is the product list (array of product objects)
-  } = product;
+    wishlist = [],
+    setWishlist = () => {},
+    cartlist = [],
+    setCartlist = () => {},
+    categories = [],
+    selectedProduct = [],
+  } = product || {};
 
   // Build menu items dynamically from categories (array of objects with 'name' key)
   const MENU_ITEMS = Array.isArray(categories)
@@ -89,36 +85,6 @@ function Popular_products({ product }) {
       el.removeEventListener('mousemove', mouseMoveHandler);
     };
   }, []);
-
-  const handleToggleWishlist = (id) => {
-    if (wishlist.includes(id)) {
-      setwishlistcount(wishlistcount - 1);
-      setWishlist(wishlist.filter(item => item !== id));
-    } else {
-      setwishlistcount(wishlistcount + 1);
-      setWishlist([...wishlist, id]);
-    }
-  };
-
-  const handleAddToCart = (prod) => {
-    const existing = cartlist.find(item => item._id === prod._id);
-    if (existing) {
-      return;
-    } else {
-      setCartlist([
-        ...cartlist,
-        {
-          _id: prod._id,
-          title: prod.title,
-          brand: prod.brand,
-          images: prod.images,
-          discountPrice: prod.discountPrice,
-          quantity: 1
-        }
-      ]);
-      setCartCount(cartCount + 1);
-    }
-  };
 
   // Filter and sort products dynamically
   // selectedProduct is the product list (array of product objects)
@@ -214,13 +180,13 @@ function Popular_products({ product }) {
         ) : (
           filteredProducts.map((prod) => (
             <ProductCard
-              key={prod._id}
-              product={prod}
-              onAddToCart={() => handleAddToCart(prod)}
-              onToggleWishlist={() => handleToggleWishlist(prod._id)}
-              isWishlisted={wishlist.includes(prod._id)}
-              iscart={cartlist.find(item => item._id === prod._id)}
-            />
+            key={prod._id}
+            product={prod}
+            cartlist={cartlist}
+            setCartlist={setCartlist}
+            wishlist={wishlist}
+            setWishlist={setWishlist}
+          />
           ))
         )}
       </div>

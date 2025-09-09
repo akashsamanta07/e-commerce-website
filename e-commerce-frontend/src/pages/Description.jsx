@@ -1,76 +1,129 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingCart } from 'react-icons/fa';
 import { IconButton, Button } from '@mui/material';
 import { ExpandMore } from '@mui/icons-material';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
-import './swiper.css'
+import './swiper.css';
 import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
-import { toast } from 'react-toastify';
 import DefaultProduct from '../components/DefaultProduct';
 import { GlobalContext } from "../components/UserContext/UserContext";
 import getImageUrl from '../components/getImageUrl';
+import API_BASE from '../utils/API_BASE';
+import notify from '../components/Notification/notify';
+import {
+    toggleWishlist,
+    addToCart
+  } from '../components/HandleWishlistandCartlist';
 
+// --- API Calls ---
+async function fetchProductReviews(productId) {
+    try {
+        const res = await fetch(`${API_BASE}/user/reviews/${productId}`, {
+            credentials: "include"
+        });
+        if (!res.ok) throw new Error('Failed to fetch reviews');
+        return await res.json();
+    } catch (err) {
+        notify("error", "Network Error");
+        return [];
+    }
+}
+
+async function submitProductReview(productId, review) {
+    try {
+        const res = await fetch(`${API_BASE}/user/review/${productId}/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(review),
+            credentials: "include"
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            notify("error", data?.message || "Failed to submit review.");
+            return;
+        }
+        return data.review;
+    } catch (err) {
+        notify("error", "Network error.");
+    }
+}
+
+// --- Helper: Format date to only date part (YYYY-MM-DD) ---
+function getDatePart(dateString) {
+    if (!dateString) return '';
+    // Try to parse as ISO or Date
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString; // fallback to original if invalid
+    return d.toISOString().slice(0, 10);
+}
+
+// --- Main Component ---
 function Description({ desc }) {
-    // Destructure product data from current (from context)
-    const { current} = useContext(GlobalContext);
+    // --- Context and Props ---
+    const { current } = useContext(GlobalContext);
+    const product = current;
+    let { wishlist, setWishlist, cartlist, setCartlist } = desc;
 
-    // If current is not available, fallback to desc.product or empty object
-    const product = current || desc.product || {};
-
-    // cartlist is now an array of objects: [{id, quantity}]
-    let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setCartlist} = desc;
-
-    // Use product._id as unique id
-    let iswishlisted = wishlist && product._id ? wishlist.includes(product._id) : false;
+    // --- State ---
     const [count, setCount] = useState(1);
     const [showWishlistTooltip, setShowWishlistTooltip] = useState(false);
     const tooltipTimeout = useRef(null);
 
-    // Review state
-    const [reviews, setReviews] = useState(product.reviewlist || []);
-    const [reviewForm, setReviewForm] = useState({
-        name: '',
-        rating: 0,
-        comment: ''
-    });
+    const [reviews, setReviews] = useState([]);
+    const [reviewForm, setReviewForm] = useState({ name: '', rating: 0, comment: '' });
     const [showReviewForm, setShowReviewForm] = useState(false);
+    const [loadingReviews, setLoadingReviews] = useState(false);
+    const [submittingReview, setSubmittingReview] = useState(false);
 
-    // For "Show More" reviews
     const REVIEWS_PER_PAGE = 3;
     const [visibleReviews, setVisibleReviews] = useState(REVIEWS_PER_PAGE);
 
+    // --- Derived ---
+    // Wishlist and cartlist now store only mentioned details: _id, title, first image, discountPrice, quantity (for cart)
+    const isWishlisted = wishlist && product._id
+        ? wishlist.some(item => item._id === product._id)
+        : false;
+
+    const isInCart = cartlist && product._id
+        ? cartlist.some(item => item._id === product._id)
+        : false;
+
+    // --- Effects ---
+    useEffect(() => {
+        let ignore = false;
+        async function loadReviews() {
+            if (!product._id) return;
+            setLoadingReviews(true);
+            const apiReviews = await fetchProductReviews(product._id);
+            if (!ignore) {
+                setReviews(Array.isArray(apiReviews.reviews) ? apiReviews.reviews : []);
+                setVisibleReviews(REVIEWS_PER_PAGE);
+            }
+            setLoadingReviews(false);
+        }
+        loadReviews();
+        return () => { ignore = true; };
+        // eslint-disable-next-line
+    }, [product._id]);
+
+    // --- Handlers ---
     const handleShowMoreReviews = () => {
         setVisibleReviews((prev) => Math.min(prev + REVIEWS_PER_PAGE, reviews.length));
     };
 
-    const handleToggleWishlist = (id) => {
-        if (wishlist.includes(id)) {
-            setwishlistcount(wishlistcount - 1);
-            setWishlist(wishlist.filter(item => item !== id));
-        } else {
-            setwishlistcount(wishlistcount + 1);
-            setWishlist([...wishlist, id]);
-        }
+    const handleToggleWishlist = () => {
+        toggleWishlist(wishlist, setWishlist, product);
+      };
+
+
+    const handleAddToCart = (quantity) => {
+        addToCart(cartlist, setCartlist, product,quantity);
     };
 
-    // Helper to find item in cartlist by id
-    const findCartItemIndex = (id) => cartlist.findIndex(item => item.id === id);
-
-    // Add to cart logic: cartlist is array of {id, quantity}, unique by id, min quantity 1
-    const handleAddToCard = (id, qty) => {
-        const idx = findCartItemIndex(id);
-        if (idx === -1) {
-            // Not in cart, add with at least 1 quantity
-            const newItem = { id, quantity: Math.max(1, qty) };
-            setCartlist([...cartlist, newItem]);
-            setCartCount(cartCount + 1);
-        }
-    };
-
-    const handleWishlistClick = (id) => {
-        handleToggleWishlist(id);
+    const handleWishlistClick = () => {
+        handleToggleWishlist();
         setShowWishlistTooltip(true);
         if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
         tooltipTimeout.current = setTimeout(() => {
@@ -78,27 +131,15 @@ function Description({ desc }) {
         }, 500);
     };
 
-    const notify = () => {
-        if (!product._id) return;
-        const idx = findCartItemIndex(product._id);
-        const isMobile = window.innerWidth <= 640;
-        const toastOptions = {
-            autoClose: 1000,
-            position: "top-right",
-            className: isMobile ? "text-xs px-2 py-1 rounded-md" : "",
-            style: isMobile
-                ? { minWidth: "150px", maxWidth: "60vw", fontSize: "0.85rem", borderRadius: "10px", margin: "0.5rem" }
-                : {},
-        };
-        if (idx !== -1) {
-            toast.warning("Item already added", toastOptions);
-        } else {
-            handleAddToCard(product._id, count);
-            toast.success("Item successfully added", toastOptions);
+    const handleAddToCartNotify = () => {
+        if (product.inStock < count) {
+            notify("error", "Not enough stock available");
+            return;
         }
+        handleAddToCart(count);
     };
 
-    // Helper to render stars
+    // --- Star Rendering ---
     const renderStars = (rating, size = "text-yellow-400", clickable = false, onClick = null) => {
         const fullStars = Math.floor(rating);
         const halfStar = rating - fullStars >= 0.5;
@@ -139,7 +180,7 @@ function Description({ desc }) {
         return stars;
     };
 
-    // Review form handlers
+    // --- Review Form Handlers ---
     const handleReviewInputChange = (e) => {
         const { name, value } = e.target;
         setReviewForm(prev => ({
@@ -155,33 +196,61 @@ function Description({ desc }) {
         }));
     };
 
-    const handleReviewSubmit = (e) => {
+    const handleReviewSubmit = async (e) => {
         e.preventDefault();
         if (!reviewForm.name.trim() || !reviewForm.comment.trim() || reviewForm.rating === 0) {
-            toast.error("Please fill all fields and select a rating.", { autoClose: 1000 });
+            notify("error", "Please fill all fields and select a rating.");
             return;
         }
-        const newReview = {
-            name: reviewForm.name,
-            date: new Date().toLocaleDateString(),
-            comment: reviewForm.comment,
-            rating: reviewForm.rating
-        };
-        setReviews([newReview, ...reviews]);
-        setReviewForm({ name: '', rating: 0, comment: '' });
-        setShowReviewForm(false);
-        setVisibleReviews((prev) => prev + 1); // Show the new review if hidden
-        toast.success("Review submitted!", { autoClose: 1200 });
+        if (!product._id) {
+            notify("error", "Product not found.");
+            return;
+        }
+        setSubmittingReview(true);
+        try {
+            const newReview = {
+                name: reviewForm.name,
+                comment: reviewForm.comment,
+                rating: reviewForm.rating
+            };
+            const savedReview = await submitProductReview(product._id, newReview);
+            if(savedReview){
+                setReviews([savedReview, ...reviews]);
+                setReviewForm({ name: '', rating: 0, comment: '' });
+                setShowReviewForm(false);
+                setVisibleReviews((prev) => prev + 1);
+                notify("success", "Review submitted");
+            }
+        } catch (err) {
+        }
+        setSubmittingReview(false);
     };
 
-    // Calculate discount percent if not present
+    // --- Discount Calculation ---
     const getDiscountPercent = () => {
         if (product.originalPrice && product.discountPrice) {
             return Math.round(((product.originalPrice - product.discountPrice) / product.originalPrice) * 100);
         }
         return 0;
     };
-    // Responsive layout: flex-row for md+, column for mobile
+
+    // --- Helpers for safe review rating calculation ---
+    // Only use reviews that have a valid numeric rating
+    const getValidReviewRatings = (reviewsArr) => {
+        if (!Array.isArray(reviewsArr)) return [];
+        return reviewsArr
+            .filter(r => r && typeof r.rating !== "undefined" && r.rating !== null && !isNaN(Number(r.rating)))
+            .map(r => Number(r.rating));
+    };
+
+    const getAverageReviewRating = (reviewsArr) => {
+        const ratings = getValidReviewRatings(reviewsArr);
+        if (ratings.length === 0) return 0;
+        const sum = ratings.reduce((acc, val) => acc + val, 0);
+        return sum / ratings.length;
+    };
+
+    // --- Render ---
     return (
         <div className="bg-[#f5f0f0]">
             <div className="w-full flex flex-col md:flex-row md:gap-8 gap-4 px-1 sm:px-2 md:px-8 py-4 md:py-6 max-w-6xl mx-auto">
@@ -202,16 +271,15 @@ function Description({ desc }) {
                         >
                             {(product.images || []).map((img, idx) => (
                                 <SwiperSlide key={idx}>
-                                    <div className="w-full"
-                                        style={{ backgroundColor: '#f5f0f0' }}>
+                                    <div className="w-full" style={{ backgroundColor: '#f5f0f0' }}>
                                         <img
                                             src={getImageUrl(img)}
                                             alt={`Product ${idx + 1}`}
-                                            className=" rounded-xl object-cover"
+                                            className="rounded-xl object-cover"
                                             style={{
                                                 minHeight: '200px',
                                                 borderRadius: '0.75rem',
-                                                objectPosition: 'top center', // try to avoid face
+                                                objectPosition: 'top center',
                                             }}
                                         />
                                     </div>
@@ -227,21 +295,23 @@ function Description({ desc }) {
                     <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{product.title}</h1>
                     {/* Brand, Rating, Reviews */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <span className="text-gray-500 text-base font-medium">Brand: <span className="text-gray-700">{product.brand}</span></span>
+                        <span className="text-gray-500 text-base font-medium">
+                            Brand: <span className="text-gray-700">{product.brand}</span>
+                        </span>
                         <div className="flex items-center gap-1 sm:ml-4">
                             {renderStars(
-                                reviews.length > 0
-                                    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length)
+                                getValidReviewRatings(reviews).length > 0
+                                    ? getAverageReviewRating(reviews)
                                     : (product.rating || 0)
                             )}
                             <span className="ml-2 text-gray-600 text-sm font-medium">
-                                {reviews.length > 0
-                                    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+                                {getValidReviewRatings(reviews).length > 0
+                                    ? getAverageReviewRating(reviews).toFixed(1)
                                     : (product.rating ? product.rating.toFixed(1) : "0.0")
                                 }
                             </span>
                             <span className="ml-2 text-gray-400 text-sm">
-                                ({reviews.length > 0 ? reviews.length : 0} reviews)
+                                ({getValidReviewRatings(reviews).length > 0 ? getValidReviewRatings(reviews).length : 0} reviews)
                             </span>
                         </div>
                     </div>
@@ -284,22 +354,22 @@ function Description({ desc }) {
                         </div>
                         {/* Add to Cart Button */}
                         <button
-                            onClick={notify}
+                            onClick={handleAddToCartNotify}
                             className="w-full flex items-center justify-center gap-2 border-[1px] lg:border-2 border-pink-500 text-pink-500 bg-[#f5f0f0] font-medium lg:font-bold rounded-lg py-2 text-base transition-all duration-200 shadow hover:bg-black hover:text-white hover:border-white min-h-[40px]"
                             style={{ minWidth: 150, maxWidth: 220 }}
                         >
                             <FaShoppingCart className="text-lg" />
-                            Add to Cart
+                            {isInCart ? "Update Cart" : "Add to Cart"}
                         </button>
                         {/* Wishlist Button */}
                         <div className="relative flex items-center gap-2">
                             <span className="font-medium text-gray-700 text-base">Wishlist</span>
                             <IconButton
                                 aria-label="wishlist"
-                                onClick={() => handleWishlistClick(product._id)}
+                                onClick={handleWishlistClick}
                                 className="bg-white hover:bg-pink-100 z-20 shadow rounded-full p-1 transition group"
                             >
-                                {iswishlisted ? (
+                                {isWishlisted ? (
                                     <FaHeart className="text-pink-600 text-lg" />
                                 ) : (
                                     <FaRegHeart className="text-gray-400 text-lg" />
@@ -308,7 +378,7 @@ function Description({ desc }) {
                             {/* Show tooltip on click for 0.5 second */}
                             {showWishlistTooltip && (
                                 <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-[0.4rem] rounded bg-gray-800 text-white text-xs opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-                                    {iswishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                                    {isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                                 </span>
                             )}
                         </div>
@@ -342,6 +412,7 @@ function Description({ desc }) {
                                 placeholder="Your Name"
                                 className="border border-gray-300 rounded px-3 py-2 flex-1"
                                 required
+                                disabled={submittingReview}
                             />
                             <div className="flex items-center gap-1">
                                 <span className="text-gray-700 font-medium mr-2">Your Rating:</span>
@@ -360,41 +431,51 @@ function Description({ desc }) {
                             placeholder="Write your review..."
                             className="border border-gray-300 rounded px-3 py-2 min-h-[60px] resize-y"
                             required
+                            disabled={submittingReview}
                         />
                         <button
                             type="submit"
                             className="self-end bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg transition"
+                            disabled={submittingReview}
                         >
-                            Submit Review
+                            {submittingReview ? "Submitting..." : "Submit Review"}
                         </button>
                     </form>
                 )}
 
                 {/* Reviews List */}
                 <div className="flex flex-col gap-2 lg:gap-4">
-                    {reviews.length === 0 ? (
+                    {loadingReviews ? (
+                        <div className="text-gray-500 text-center py-6">Loading reviews...</div>
+                    ) : getValidReviewRatings(reviews).length === 0 ? (
                         <div className="text-gray-500 text-center py-6">No reviews yet. Be the first to review!</div>
                     ) : (
                         <>
-                            {reviews.slice(0, visibleReviews).map((rev, idx) => (
-                                <div
-                                    key={idx}
-                                    className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col sm:flex-row sm:items-center gap-0 lg:gap-2"
-                                >
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="font-semibold text-gray-800">{rev.name}</span>
-                                            <span className="text-gray-400 text-xs">{rev.date}</span>
+                            {reviews.slice(0, visibleReviews).map((rev, idx) => {
+                                // Defensive: skip reviews with no valid rating or missing fields
+                                if (!rev || typeof rev.rating === "undefined" || rev.rating === null || isNaN(Number(rev.rating))) return null;
+                                return (
+                                    <div
+                                        key={idx}
+                                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col sm:flex-row sm:items-center gap-0 lg:gap-2"
+                                    >
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="font-semibold text-gray-800">{rev.name}</span>
+                                                <span className="text-gray-400 text-xs">
+                                                    {getDatePart(rev.date)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1 mb-1">
+                                                {renderStars(Number(rev.rating), "text-yellow-400 text-base")}
+                                                <span className="ml-2 text-gray-600 text-xs font-medium">{Number(rev.rating).toFixed(1)}</span>
+                                            </div>
+                                            <div className="text-gray-700">{rev.comment}</div>
                                         </div>
-                                        <div className="flex items-center gap-1 mb-1">
-                                            {renderStars(rev.rating, "text-yellow-400 text-base")}
-                                            <span className="ml-2 text-gray-600 text-xs font-medium">{rev.rating.toFixed(1)}</span>
-                                        </div>
-                                        <div className="text-gray-700">{rev.comment}</div>
                                     </div>
-                                </div>
-                            ))}
-                            {reviews.length > visibleReviews && (
+                                );
+                            })}
+                            {getValidReviewRatings(reviews).length > visibleReviews && (
                                 <div className="flex justify-center mt-2">
                                     <Button
                                         variant="outlined"

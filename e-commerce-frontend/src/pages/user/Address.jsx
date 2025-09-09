@@ -1,13 +1,50 @@
-import React, { useState } from "react";
-import { TextField, Button, Paper } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { TextField, Button, Paper, CircularProgress} from "@mui/material";
+import API_BASE from "../../utils/API_BASE";
+import notify from "../../components/Notification/notify";
 
-function Address() {
+function Address({ auth }) {
   const [addressInfo, setAddressInfo] = useState({
-    address: "Basantabati",
-    city: "Arambagh",
-    state: "hooghly",
-    zip: "712617",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
   });
+  const [loading, setLoading] = useState(false);
+
+  // Fetch address from backend on mount
+  useEffect(() => {
+    const fetchAddress = async () => {
+      if (!auth?._id) return;
+      setLoading(true);
+      try {
+        const res = await fetch(
+          `${API_BASE}/user/${auth._id}/address`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+        if (data.success && data.address) {
+          setAddressInfo({
+            address: data.address.address || "",
+            city: data.address.city || "",
+            state: data.address.state || "",
+            zip: data.address.zip || "",
+          });
+        }
+      } catch (err) {
+        // Optionally handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAddress();
+    // eslint-disable-next-line
+  }, [auth?.user?._id]);
 
   const handleChange = (e) => {
     setAddressInfo({
@@ -16,12 +53,41 @@ function Address() {
     });
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    // Here you would save the address to backend or context
-    alert(
-      `Address Saved!\nAddress: ${addressInfo.address}\nCity: ${addressInfo.city}\nState: ${addressInfo.state}\nZip: ${addressInfo.zip}`
-    );
+    if (!auth?._id) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${API_BASE}/user/${auth._id}/address`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(addressInfo),
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        notify("success", data.message || "updated");
+        setAddressInfo({
+          address: data.address.address,
+          city: data.address.city,
+          state: data.address.state,
+          zip: data.address.zip,
+        });
+      } else {
+        notify("error", data.message || "Failed to save address.");
+      }
+    } catch (err) {
+      notify("error", "An error occurred while saving the address.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,6 +102,7 @@ function Address() {
             onChange={handleChange}
             required
             fullWidth
+            disabled={loading}
           />
           <TextField
             label="City"
@@ -44,6 +111,7 @@ function Address() {
             onChange={handleChange}
             required
             fullWidth
+            disabled={loading}
           />
           <TextField
             label="State"
@@ -52,6 +120,7 @@ function Address() {
             onChange={handleChange}
             required
             fullWidth
+            disabled={loading}
           />
           <TextField
             label="Zip Code"
@@ -60,14 +129,16 @@ function Address() {
             onChange={handleChange}
             required
             fullWidth
+            disabled={loading}
           />
           <Button
             type="submit"
             variant="contained"
             className="!bg-pink-600 hover:!bg-black !text-white !font-semibold !rounded-md"
             fullWidth
+            disabled={loading}
           >
-            Save Address
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Save Address"}
           </Button>
         </form>
       </Paper>

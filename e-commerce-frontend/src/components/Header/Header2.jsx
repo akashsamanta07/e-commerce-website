@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch, FaHeart, FaShoppingCart } from 'react-icons/fa';
 import { HiMenuAlt2 } from 'react-icons/hi';
 import { IconButton, Badge, Avatar, Button, Popover, Typography, Box, Divider } from '@mui/material';
-import logo from '../../assets/logo/logo1.jpg';
 import { SlideDrawer } from '../Slideber.jsx';
 import { DrawerContentMenu } from '../Slideber.jsx';
 import { DrawerContentCart } from '../Slideber.jsx';
 import { Link, useNavigate } from "react-router-dom";
 import getImageUrl from '../getImageUrl.js';
+import API_BASE from '../../utils/API_BASE';
 
 // Helper to get first letter of name, fallback to "A"
 const getInitial = (name) => {
@@ -16,16 +16,45 @@ const getInitial = (name) => {
 };
 
 function Header2({ header2 }) {
-  let { cartCount, search, setSearch, wishlistcount, setmenu, setsubcategory, setis, categories, auth } = header2;
+  let { cartlist, search, setSearch, wishlistcount, setmenu, setsubcategory, setis, categories, auth } = header2;
   const [openMenu, setOpenMenu] = useState(false);
   const [openCart, setOpenCart] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [logoUrl, setLogoUrl] = useState();
   let menuobj = {
     setmenu,
     setsubcategory,
     categories
   };
   const navigate = useNavigate();
+
+  // Fetch logo from DB
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLogo = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/admin/get-logo`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (isMounted) {
+          if (data.success && data.data && data.data.image) {
+            setLogoUrl(getImageUrl(data.data.image));
+          } else {
+            setLogoUrl();
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLogoUrl();
+        }
+      }
+    };
+    fetchLogo();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const onsubmit = (event) => {
     event.preventDefault();
@@ -54,7 +83,7 @@ function Header2({ header2 }) {
     <div className='bg-white border-b border-gray-200'>
       {/* Drawers */}
       <SlideDrawer open={openMenu} side="left" onClose={() => setOpenMenu(false)}>
-        <DrawerContentMenu menuobj={menuobj} />
+        <DrawerContentMenu menuobj={menuobj} setOpenMenu={setOpenMenu}/>
       </SlideDrawer>
       <SlideDrawer open={openCart} side="right" onClose={() => setOpenCart(false)}>
         <DrawerContentCart header2={header2} onClose={() => setOpenCart(false)} />
@@ -71,9 +100,13 @@ function Header2({ header2 }) {
           {/* Logo */}
           <div>
             <img
-              src={logo}
+              src={logoUrl}
               alt="Logo"
               className="h-8 w-auto object-contain md:h-10"
+              onError={e => {
+                e.target.onerror = null;
+                e.target.src = "https://via.placeholder.com/120x60?text=No+Logo";
+              }}
             />
           </div>
           {/* Desktop: Search box absolutely centered */}
@@ -196,7 +229,7 @@ function Header2({ header2 }) {
             {/* Cart (desktop only) */}
             <div className="relative group hidden md:flex items-center" onClick={() => { setis(0) }}>
               <IconButton aria-label="cart" onClick={() => setOpenCart(true)}>
-                <Badge badgeContent={cartCount} color="primary">
+                <Badge badgeContent={cartlist.length} color="primary">
                   <FaShoppingCart className="text-gray-600" />
                 </Badge>
               </IconButton>
@@ -207,7 +240,7 @@ function Header2({ header2 }) {
             {/* Mobile: Cart icon on right */}
             <div className="md:hidden flex items-center" onClick={() => { setis(0) }}>
               <IconButton aria-label="cart" onClick={() => setOpenCart(true)}>
-                <Badge badgeContent={cartCount} color="primary">
+                <Badge badgeContent={cartlist.length} color="primary">
                   <FaShoppingCart className="text-gray-600" />
                 </Badge>
               </IconButton>

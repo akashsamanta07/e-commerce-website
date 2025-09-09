@@ -38,9 +38,7 @@ function App() {
 
   const [search, setSearch] = useState('');
   const [cartCount, setCartCount] = useState(0);
-  const [wishlistcount, setwishlistcount] = useState(0);
   const [wishlist, setWishlist] = useState([]);
-  const [wishlistProduct, setWishlistProduct] = useState([]);
   const [cartlist, setCartlist] = useState([]);
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -48,21 +46,17 @@ function App() {
   const [subcategory, setsubcategory] = useState('');
   const [is, setis] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState([]);
+  const [data,setData]=useState(false);
+  let obj = {
+    data,
+    setData
+  };
 
   // State for authentication
   const [auth, setAuth] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Populate wishlistProduct with full product objects for each id in wishlist
-  useEffect(() => {
-    if (Array.isArray(wishlist) && Array.isArray(products)) {
-      const matchedProducts = products.filter(prod => wishlist.includes(prod._id));
-      setWishlistProduct(matchedProducts);
-    } else {
-      setWishlistProduct([]);
-    }
-  }, [wishlist, products]);
-
+console.log(wishlist,cartlist)
 
  useEffect(() => {
   if (Array.isArray(products) && catname) {
@@ -75,20 +69,16 @@ function App() {
 
   // Compose props for headers and pages
   const header2 = {
-    cartCount,
-    setCartCount,
-    search,
-    setSearch,
-    wishlistcount,
-    setwishlistcount,
-    setmenu,
-    setsubcategory,
     cartlist,
     setCartlist,
+    search,
+    setSearch,
+    wishlistcount: wishlist.length,
+    setmenu,
+    setsubcategory,
     setis,
     categories,
-    auth,
-    products
+    auth
   };
   const header3 = {
     menu,
@@ -101,8 +91,6 @@ function App() {
     categories
   };
   const product = {
-    wishlistcount,
-    setwishlistcount,
     cartCount,
     setCartCount,
     wishlist,
@@ -113,8 +101,6 @@ function App() {
     selectedProduct,
   };
   const desc = {
-    wishlistcount,
-    setwishlistcount,
     cartCount,
     setCartCount,
     wishlist,
@@ -124,8 +110,6 @@ function App() {
     filteredProducts: relate
   };
   const mylist = {
-    wishlistcount,
-    setwishlistcount,
     wishlist,
     setWishlist
   };
@@ -155,7 +139,7 @@ function App() {
     };
     checkAuth();
     // eslint-disable-next-line
-  }, []);
+  }, [data]);
 
   // Fetch categories and store in setCategories
   useEffect(() => {
@@ -209,8 +193,9 @@ function App() {
     fetchProducts();
   }, []);
 
-  // Fetch wishlist when auth._id changes (only one auth id)
-  useEffect(() => {
+
+   // Fetch wishlist (array of product IDs), then populate wishlist with minimal product info
+   useEffect(() => {
     const fetchWishlist = async () => {
       if (auth && auth._id) {
         try {
@@ -218,31 +203,55 @@ function App() {
             credentials: 'include',
           });
           const data = await res.json();
+          // data.wishlist should be array of product IDs
           if (data.success && Array.isArray(data.wishlist)) {
-            // Sort wishlist by updatedAt ascending (oldest first)
-            const sortedWishlist = [...data.wishlist].sort((a, b) => {
-              const dateA = new Date(a.updatedAt);
-              const dateB = new Date(b.updatedAt);
-              return dateA - dateB;
-            });
-            setWishlist(sortedWishlist);
-            setwishlistcount(sortedWishlist.length);
+            if (Array.isArray(products)) {
+              // Sort data.wishlist (array of IDs) by product updatedAt ascending (oldest first)
+              const sortedWishlistIds = [...data.wishlist].sort((idA, idB) => {
+                const prodA = products.find(prod => prod._id === idA);
+                const prodB = products.find(prod => prod._id === idB);
+                const dateA = prodA ? new Date(prodA.updatedAt) : 0;
+                const dateB = prodB ? new Date(prodB.updatedAt) : 0;
+                return dateA - dateB;
+              });
+              const matchedProducts = sortedWishlistIds
+                .map(id => {
+                  const prod = products.find(prod => prod._id === id);
+                  if (prod) {
+                    // Only return minimal info for wishlist
+                    return {
+                      _id: prod._id,
+                      title: prod.title,
+                      brand: prod.brand,
+                      images: prod.images,
+                      discountPrice: prod.discountPrice,
+                      originalPrice: prod.originalPrice,
+                      discountPercent: prod.discountPercent,
+                      rating: prod.rating,
+                      description: prod.description,
+                    };
+                  }
+                  return null;
+                })
+                .filter(Boolean);
+              setWishlist(matchedProducts);
+            } else {
+              setWishlist([]);
+            }
           } else {
             setWishlist([]);
-            setwishlistcount(0);
           }
         } catch (err) {
           setWishlist([]);
-          setwishlistcount(0);
         }
       } else {
         setWishlist([]);
-        setwishlistcount(0);
       }
     };
     fetchWishlist();
-    // Only run when auth._id changes
-  }, [auth && auth._id || wishlist.length]);
+    // Only run when auth._id or products changes
+  }, [(auth && auth._id), products]);
+
 
   // Fetch cartlist when auth._id changes (same as wishlist)
   useEffect(() => {
@@ -274,6 +283,10 @@ function App() {
                       brand: prod.brand,
                       images: prod.images,
                       discountPrice: prod.discountPrice,
+                      originalPrice: prod.originalPrice,
+                      discountPercent: prod.discountPercent,
+                      rating: prod.rating,
+                      description: prod.description,
                       quantity: item.quantity
                     };
                   }
@@ -299,7 +312,7 @@ function App() {
     };
     fetchCartlistAndProducts();
     // Only run when auth._id or products changes
-  }, [auth && auth._id, products]);
+  }, [(auth && auth._id), products]);
 
   // selectedProduct: filter from products by menu, subcategory, search
   useEffect(() => {
@@ -382,7 +395,7 @@ function App() {
             path="/my-account"
             element={
               <ProtectedRoute auth={auth}>
-                <Account />
+                <Account auth={auth} />
               </ProtectedRoute>
             }
           />
@@ -390,7 +403,7 @@ function App() {
             path="/change-profile"
             element={
               <ProtectedRoute auth={auth}>
-                <ChangeProfile />
+                <ChangeProfile auth={auth} obj={obj}/>
               </ProtectedRoute>
             }
           />
@@ -398,7 +411,7 @@ function App() {
             path="/address"
             element={
               <ProtectedRoute auth={auth}>
-                <Address />
+                <Address auth={auth} />
               </ProtectedRoute>
             }
           />

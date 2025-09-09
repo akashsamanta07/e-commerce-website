@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import logo from '../assets/logo/logo1.jpg';
+import React, { useState, useEffect } from 'react';
 import { AiOutlinePlus, AiOutlineMinus } from 'react-icons/ai';
 import { Link } from 'react-router-dom';
 import Card from './Order/Card.jsx';
 import { Button } from "@mui/material";
 import LoginIcon from '@mui/icons-material/Login';
+import getImageUrl from './getImageUrl.js';
+import API_BASE from '../utils/API_BASE';
 
 // Local categories/subcategories definition
 const localCategories = [
@@ -19,10 +20,45 @@ const localCategories = [
 ];
 
 export function SlideDrawer({ open, side, onClose, children }) {
+  // Add DB logo support
+  const [logoUrl, setLogoUrl] = useState();
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLogo = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/admin/get-logo`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (isMounted) {
+          if (data.success && data.data && data.data.image) {
+            setLogoUrl(getImageUrl(data.data.image));
+          } else {
+            setLogoUrl();
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLogoUrl();
+        }
+      }
+    };
+    // Only fetch logo if left drawer (menu)
+    if (side === 'left') {
+      fetchLogo();
+    }
+    return () => {
+      isMounted = false;
+    };
+    // Only refetch if side changes to left
+    // eslint-disable-next-line
+  }, [side]);
+
   const fnlogo = () => (
     <div className="flex justify-center py-4 border-b">
       <img
-        src={logo}
+        src={logoUrl}
         alt="Logo"
         className="h-8 w-auto object-contain md:h-10"
       />

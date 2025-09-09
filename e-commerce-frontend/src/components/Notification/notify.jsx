@@ -14,7 +14,9 @@ const notify = (type,massage) => {
         toast.warning(massage, toastOptions);
     } else if (type === "error") {
         toast.error(massage, toastOptions);
-    } else {
+    } else if(type === "info"){
+        toast.info(massage, toastOptions);
+    }else{
         toast.success(massage, toastOptions);
     }
 

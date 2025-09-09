@@ -3,17 +3,21 @@ import { MdLocalOffer } from 'react-icons/md';
 import { AiFillStar, AiOutlineStar } from 'react-icons/ai';
 import { FaHeart, FaRegHeart, FaShoppingCart } from 'react-icons/fa';
 import { IconButton } from '@mui/material';
-import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import getImageUrl from './getImageUrl';
 import { GlobalContext } from "./UserContext/UserContext";
+import {
+
+  toggleWishlist,
+  addToCart
+} from './HandleWishlistandCartlist';
 
 const ProductCard = ({
   product,
-  onAddToCart,
-  onToggleWishlist,
-  isWishlisted,
-  iscart
+  cartlist,
+  setCartlist,
+  wishlist,
+  setWishlist
 }) => {
   // Destructure all needed fields from product
   const {
@@ -46,38 +50,26 @@ const ProductCard = ({
   const tooltipTimeout = useRef(null);
   const { setCurrent, setCatname } = useContext(GlobalContext);
 
+  const isInCart = cartlist.find(item => item._id === product._id);
+  const isWishlisted = wishlist.find(item => item._id === product._id);
+
+  // Use helper for wishlist toggle
+  const handleToggleWishlist = () => {
+    toggleWishlist(wishlist, setWishlist, product);
+  };
+
+  // Use helper for add to cart
+  const handleAddToCart = () => {
+      addToCart(cartlist, setCartlist, product);
+  };
+
   const handleWishlistClick = (e) => {
-    if (onToggleWishlist) onToggleWishlist(_id);
+    handleToggleWishlist();
     setShowWishlistTooltip(true);
     if (tooltipTimeout.current) clearTimeout(tooltipTimeout.current);
     tooltipTimeout.current = setTimeout(() => {
       setShowWishlistTooltip(false);
     }, 1000);
-  };
-
-  // Use iscart as a boolean for cart status
-  const isInCart = iscart;
-
-  // Modified notify to show toast in the bottom corner on mobile, smaller size
-  const notify = () => {
-    if (!isInCart && onAddToCart) {
-
-      onAddToCart();
-    }
-    const isMobile = window.innerWidth <= 640;
-    const toastOptions = {
-      autoClose: 1000,
-      position: "top-right",
-      className: isMobile ? "text-xs px-2 py-1 rounded-md" : "",
-      style: isMobile
-        ? { minWidth: "150px", maxWidth: "60vw", fontSize: "0.85rem", borderRadius: "10px", margin: "0.5rem" }
-        : {},
-    };
-    if (isInCart) {
-      toast.warning("Item already added", toastOptions);
-    } else {
-      toast.success("Item successfully added", toastOptions);
-    }
   };
 
   return (
@@ -89,7 +81,7 @@ const ProductCard = ({
             src={imageUrl}
             alt={title}
             className="w-full h-[12rem] lg:h-[14rem] flex rounded-xl overflow-hidden"
-            onClick={()=>{setCurrent(product); setCatname(product.category)}}
+            onClick={() => { setCurrent(product); setCatname(product.category) }}
           />
         </Link>
         {/* Discount badge */}
@@ -154,11 +146,11 @@ const ProductCard = ({
       {/* Add to Cart button */}
       <div className="px-3 pb-3">
         <button
-          onClick={notify}
+          onClick={handleAddToCart}
           className="w-full flex items-center justify-center gap-2 border-[1px] lg:border-2 border-pink-500 text-pink-500 bg-white font-medium lg:font-bold rounded-lg py-2 text-base transition-all duration-200 shadow hover:bg-black hover:text-white hover:border-white min-h-[40px]"
         >
           <FaShoppingCart className="text-lg" />
-          Add to Cart
+          {isInCart ? "Added to Cart" : "Add to Cart"}
         </button>
       </div>
     </div>

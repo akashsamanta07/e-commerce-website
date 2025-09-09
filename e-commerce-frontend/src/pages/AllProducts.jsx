@@ -5,7 +5,6 @@ import { MdCategory, MdSort, MdArrowDownward, MdArrowUpward, MdSearchOff } from 
 import { FormControl, Select, MenuItem } from '@mui/material';
 import PageNotFound from './PageNotFound.jsx';
 
-
 const SORT_FIELDS = [
   { value: 'title', label: 'Name' },
   { value: 'discountedPrice', label: 'Price' },
@@ -18,7 +17,8 @@ const SORT_ORDERS = [
 ];
 
 function AllProducts({ product }) {
-  let { wishlistcount, setwishlistcount, cartCount, setCartCount, wishlist, setWishlist, cartlist, setCartlist, categories, selectedProduct } = product;
+  // Remove count: don't destructure wishlistcount, setwishlistcount, cartCount, setCartCount
+  let { wishlist, setWishlist, cartlist, setCartlist, categories, selectedProduct } = product;
   const location = useLocation();
   const pathSegments = location.pathname.split('/').filter(Boolean);
   const rawCategory = pathSegments[pathSegments.length - 1] || '';
@@ -76,36 +76,6 @@ function AllProducts({ product }) {
   const handleSortFieldChange = (e) => setSortField(e.target.value);
   const handleSortOrderChange = (e) => setSortOrder(e.target.value);
 
-  // Wishlist and cart handlers
-  const handleToggleWishlist = (id) => {
-    if (wishlist.includes(id)) {
-      setwishlistcount(wishlistcount - 1);
-      setWishlist(wishlist.filter(item => item !== id));
-    } else {
-      setwishlistcount(wishlistcount + 1);
-      setWishlist([...wishlist, id]);
-    }
-  };
-
-  // cartlist is now an array of objects: [{id, quantity}]
-  // cartCount should be the sum of all quantities in cartlist
-  const handleAddToCart = (prod) => {
-  
-    const existingItem = cartlist.find(item => item._id === prod._id);
-    if (existingItem) {
-      return;
-    } else {
-      // Add new product with quantity 1
-      setCartlist([...cartlist, {
-        _id: prod._id,
-        title: prod.title,
-        brand: prod.brand,
-        images: prod.images,
-        discountPrice: prod.discountPrice,
-        quantity: 1 }]);
-      setCartCount(cartCount + 1);
-    }
-  };
 
   if (!isValidCategory) {
     return <PageNotFound />;
@@ -225,12 +195,12 @@ function AllProducts({ product }) {
         ) : (
           sortedProducts.map((prod) => (
             <ProductCard
-            key={prod._id}
+              key={prod._id}
               product={prod}
-              onAddToCart={() => handleAddToCart(prod)}
-              onToggleWishlist={() => handleToggleWishlist(prod._id)}
-              isWishlisted={wishlist.includes(prod._id)}
-              iscart={cartlist.find(item => item._id === prod._id)}
+              cartlist={cartlist}
+              setCartlist={setCartlist}
+              wishlist={wishlist}
+              setWishlist={setWishlist}
             />
           ))
         )}

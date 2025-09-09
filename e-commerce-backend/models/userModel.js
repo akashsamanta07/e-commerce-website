@@ -23,10 +23,6 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 9876543210,
     },
-    refresh_token: {
-      type: String,
-      default: "",
-    },
     verify_email: {
       type: Boolean,
       default: false,

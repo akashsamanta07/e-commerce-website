@@ -6,10 +6,6 @@ import { Link } from 'react-router-dom';
 
 function DefaultProduct({ product, name, category }) {
   let {
-    wishlistcount = 0,
-    setwishlistcount = () => {},
-    cartCount = 0,
-    setCartCount = () => {},
     wishlist = [],
     setWishlist = () => {},
     cartlist = [],
@@ -82,37 +78,7 @@ function DefaultProduct({ product, name, category }) {
     };
   }, []);
 
-  // Wishlist and cart handlers (AllProducts style)
-  const handleToggleWishlist = (id) => {
-    if (wishlist.includes(id)) {
-      setwishlistcount(wishlistcount - 1);
-      setWishlist(wishlist.filter(item => item !== id));
-    } else {
-      setwishlistcount(wishlistcount + 1);
-      setWishlist([...wishlist, id]);
-    }
-  };
 
-  // cartlist is now an array of objects: [{_id, ...product, quantity}]
-  const handleAddToCart = (prod) => {
-    const existingItem = cartlist.find(item => item._id === prod._id);
-    if (existingItem) {
-      return;
-    } else {
-      setCartlist([
-        ...cartlist,
-        {
-          _id: prod._id,
-          title: prod.title,
-          brand: prod.brand,
-          images: prod.images,
-          discountPrice: prod.discountPrice,
-          quantity: 1
-        }
-      ]);
-      setCartCount(cartCount + 1);
-    }
-  };
 
   if (!Array.isArray(filteredProducts) || filteredProducts.length === 0) return null;
 
@@ -154,13 +120,13 @@ function DefaultProduct({ product, name, category }) {
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {filteredProducts.map((prod) => (
-          <ProductCard
+            <ProductCard
             key={prod._id}
             product={prod}
-            onAddToCart={() => handleAddToCart(prod)}
-            onToggleWishlist={() => handleToggleWishlist(prod._id)}
-            isWishlisted={wishlist.includes(prod._id)}
-            iscart={cartlist.find(item => item._id === prod._id)}
+            cartlist={cartlist}
+            setCartlist={setCartlist}
+            wishlist={wishlist}
+            setWishlist={setWishlist}
           />
         ))}
       </div>

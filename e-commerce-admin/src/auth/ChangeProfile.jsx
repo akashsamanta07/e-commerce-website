@@ -55,6 +55,7 @@ function ChangeProfile({obj, auth }) {
       let formData;
       let isMultipart = false;
       if (selectedFile) {
+
         // If a new profile picture is selected, use FormData
         formData = new FormData();
         formData.append("id", auth._id);

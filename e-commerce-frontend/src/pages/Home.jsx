@@ -14,7 +14,7 @@ function Home({ product }) {
   return (
     <div className="flex flex-col min-h-screen">
       <Slider />
-      <CategoryNavBar />
+      <CategoryNavBar categories={categories} />
       <Popular_products product={product} />
       <FirstSlider />
       <FreeShippingBanner />

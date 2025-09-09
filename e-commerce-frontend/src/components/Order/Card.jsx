@@ -1,72 +1,48 @@
 import React, { useContext } from 'react';
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { FaShoppingCart } from 'react-icons/fa';
-import notify from '../Notification/notify.jsx';
 import { GlobalContext } from '../UserContext/UserContext.jsx'
 import { Link } from 'react-router-dom';
+import getImageUrl from '../getImageUrl.js';
+import {
+  removeFromCart,
+  incrementCartQuantity,
+  decrementCartQuantity
+ 
+} from '../HandleWishlistandCartlist.jsx';
 
 // Use product schema keys: title, brand, description, category, subcategory, originalPrice, discountPrice, inStock, rating, images, sales, reviewlist, _id
 function Card({ header2, onClose }) {
-  const { cartCount, setCartCount, setCartlist, cartlistproduct } = header2;
-  const { total, setTotal } = useContext(GlobalContext);
+  const { cartlist, setCartlist } = header2;
+  const { total, setTotal,setCurrent } = useContext(GlobalContext);
 
-  // Use product schema keys
-  const cartItems = cartlistproduct || [];
+  // cartlist is the array of cart items, each with keys: _id, title, brand, images, discountPrice, quantity, etc.
+  const cartItems = cartlist || [];
 
-  const subtotal = cartItems.reduce((sum, item) => sum + ((item.discountPrice || 0) * (item.quantity || 1)), 0);
+  // Calculate subtotal, delivery fee, taxes, and set total
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + ((item.discountPrice || 0) * (item.quantity || 1)),
+    0
+  );
   const deliveryFee = cartItems.length > 0 && subtotal <= 1000 && subtotal > 0 ? 80 : 0;
   const taxes = cartItems.length > 0 ? 11.49 : 0;
-  setTotal(cartItems.length > 0 ? Math.round(subtotal + deliveryFee + taxes) : 0);
+
+  React.useEffect(() => {
+    setTotal(cartItems.length > 0 ? Math.round(subtotal + deliveryFee + taxes) : 0);
+    // eslint-disable-next-line
+  }, [subtotal, deliveryFee, taxes, cartItems.length]);
 
   // Handlers
   const handleRemoveOne = (prodId) => {
-    const newList = cartItems
-      .map(item => {
-        const itemId = item._id;
-        if (String(itemId) === String(prodId)) {
-          if (item.quantity > 1) {
-            return { ...item, quantity: item.quantity - 1 };
-          }
-          // If quantity is 1, remove the item
-          return null;
-        }
-        return item;
-      })
-      .filter(Boolean);
-    setCartlist(newList.map(item => ({
-      product: item._id,
-      quantity: item.quantity
-    })));
-    // Update cart count
-    const removedItem = cartItems.find(item => String(item._id) === String(prodId));
-    if (removedItem && removedItem.quantity === 1) {
-      notify("warning", "Item Removed from Cart");
-      setCartCount(cartCount > 0 ? cartCount - 1 : 0);
-    }
+    decrementCartQuantity(cartlist,setCartlist,prodId);
   };
 
   const handleAddOne = (prodId) => {
-    const newList = cartItems.map(item => {
-      const itemId = item._id;
-      if (String(itemId) === String(prodId)) {
-        return { ...item, quantity: item.quantity + 1 };
-      }
-      return item;
-    });
-    setCartlist(newList.map(item => ({
-      product: item._id,
-      quantity: item.quantity
-    })));
+    incrementCartQuantity(cartlist,setCartlist,prodId);
   };
 
   const handleDeleteAll = (prodId) => {
-    const newList = cartItems.filter(item => String(item._id) !== String(prodId));
-    setCartlist(newList.map(item => ({
-      product: item._id,
-      quantity: item.quantity
-    })));
-    setCartCount(cartCount > 0 ? cartCount - 1 : 0);
-    notify("warning", "Item Removed from Cart");
+    removeFromCart(cartlist,setCartlist,prodId);
   };
 
   return (
@@ -88,9 +64,11 @@ function Card({ header2, onClose }) {
             {cartItems.map((item) => (
               <div key={item._id} className="w-full flex flex-row items-center justify-center border-b py-3 gap-3 lg:gap-4">
                 <Link to={`/product/${item._id}`}>
-                  <div className="h-[5rem]  lg:h-[6rem] flex-shrink-0 flex items-center justify-center overflow-hidden rounded">
+                  <div className="h-[5rem]  lg:h-[6rem] flex-shrink-0 flex items-center justify-center overflow-hidden rounded"
+                  onClick={() => {setCurrent(item);onClose();}}
+                  >
                     <img
-                      src={item.images && item.images.length > 0 ? item.images[0] : ""}
+                      src={item.images && item.images.length > 0 ? getImageUrl(item.images[0]) : ""}
                       alt={item.title}
                       className="h-[5rem] lg:h-[6rem] w-full flex rounded-lg"
                     />

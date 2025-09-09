@@ -11,5 +11,12 @@ const userController = require("../controllers/userController");
  userRouter.post("/cart/:userId/add", userController.addToCart);
  userRouter.post("/cart/:userId/delete", userController.cartDelete);
 
+userRouter.post("/review/:productId/add", userController.addReview);
+userRouter.get("/reviews/:productId", userController.getReviews);
+
+userRouter.get("/:userId/address", userController.getAddress);
+userRouter.post("/:userId/address", userController.addOrUpdateAddress);
+
+
 
 module.exports = userRouter;

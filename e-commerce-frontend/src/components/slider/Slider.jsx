@@ -14,6 +14,16 @@ import './style.css';
 import { Navigation, Autoplay } from 'swiper/modules';
 import API_BASE from '../../utils/API_BASE';
 
+function duplicateSlides(slides, minCount = 3) {
+  // Swiper loop mode needs at least 2-3 slides to work properly.
+  // If not enough slides, duplicate them to reach minCount.
+  if (slides.length >= minCount) return slides;
+  let result = [];
+  while (result.length < minCount) {
+    result = result.concat(slides);
+  }
+  return result.slice(0, minCount);
+}
 
 function Slider() {
   const [slides, setSlides] = useState([]);
@@ -47,6 +57,13 @@ function Slider() {
     fetchSlides();
   }, []);
 
+  // Swiper loop mode needs at least 2-3 slides to work properly.
+  // We'll duplicate slides if not enough, but only if not loading and there is at least 1 slide.
+  const slidesForSwiper = !loading && slides.length > 0 ? duplicateSlides(slides, 3) : slides;
+
+  // Only enable loop if there are at least 2 slides (after duplication)
+  const enableLoop = slidesForSwiper.length > 1;
+
   return (
     <>
       <Swiper
@@ -57,7 +74,7 @@ function Slider() {
           disableOnInteraction: false,
           pauseOnMouseEnter: true,
         }}
-        loop={true}
+        loop={enableLoop}
         className="mySwiper"
       >
         {loading ? (
@@ -67,9 +84,9 @@ function Slider() {
               Loading...
             </div>
           </SwiperSlide>
-        ) : slides.length > 0 ? (
-          slides.map((slide) => (
-            <SwiperSlide key={slide._id}>
+        ) : slidesForSwiper.length > 0 ? (
+          slidesForSwiper.map((slide, idx) => (
+            <SwiperSlide key={slide._id ? slide._id + '-' + idx : idx}>
               <img src={getImageUrl(slide.image)} alt="" style={{ width: '100%', objectFit: 'cover' }} />
             </SwiperSlide>
           ))
