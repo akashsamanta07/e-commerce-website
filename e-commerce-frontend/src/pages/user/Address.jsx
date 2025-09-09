@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TextField, Button, Paper, CircularProgress} from "@mui/material";
 import API_BASE from "../../utils/API_BASE";
 import notify from "../../components/Notification/notify";
+import { useNavigate } from "react-router-dom";
 
 function Address({ auth }) {
   const [addressInfo, setAddressInfo] = useState({
@@ -11,6 +12,7 @@ function Address({ auth }) {
     zip: "",
   });
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Fetch address from backend on mount
   useEffect(() => {
@@ -80,6 +82,7 @@ function Address({ auth }) {
           state: data.address.state,
           zip: data.address.zip,
         });
+        navigate("/my-account");
       } else {
         notify("error", data.message || "Failed to save address.");
       }

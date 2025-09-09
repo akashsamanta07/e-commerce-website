@@ -56,7 +56,6 @@ function App() {
   const [auth, setAuth] = useState({});
   const [loading, setLoading] = useState(false);
 
-console.log(wishlist,cartlist)
 
  useEffect(() => {
   if (Array.isArray(products) && catname) {
@@ -376,18 +375,18 @@ console.log(wishlist,cartlist)
         <Header2 header2={header2} auth={auth} />
         <Header3 header3={header3} />
         <Routes>
-          <Route path="/" element={<Home product={product} />} />
+          <Route path="/" element={<Home product={product} auth={auth}/>} />
           <Route path="/login" element={<Login auth={auth} setAuth={setAuth} />} />
           <Route path="/logout" element={<Logout setAuth={setAuth} />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/product/:id" element={<Description desc={desc} />} />
-          <Route path="/menu/:category" element={<AllProducts product={product} />} />
+          <Route path="/product/:id" element={<Description desc={desc} auth={auth} />} />
+          <Route path="/menu/:category" element={<AllProducts product={product} auth={auth} />} />
           <Route path="/forgot-password" element={<ForgetPassword />} />
           <Route
             path="/checkout"
             element={
               <ProtectedRoute auth={auth}>
-                <Checkout />
+                <Checkout auth={auth} setCartlist={setCartlist} />
               </ProtectedRoute>
             }
           />
@@ -427,7 +426,7 @@ console.log(wishlist,cartlist)
             path="/my-list"
             element={
               <ProtectedRoute auth={auth}>
-                <MyList mylist={mylist} />
+                <MyList mylist={mylist} auth={auth} />
               </ProtectedRoute>
             }
           />
@@ -435,14 +434,14 @@ console.log(wishlist,cartlist)
             path="/my-order"
             element={
               <ProtectedRoute auth={auth}>
-                <MyOrder />
+                <MyOrder auth={auth}  />
               </ProtectedRoute>
             }
           />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
         <div>
-          <FixedBar setis={setis}/>
+          <FixedBar setis={setis} auth={auth}/>
         </div>
         <div className="w-full">
           <Footer />

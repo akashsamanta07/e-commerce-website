@@ -6,6 +6,7 @@ import { toggleWishlist } from '../../components/HandleWishlistandCartlist';
 import getImageUrl from '../../components/getImageUrl';
 import { GlobalContext } from "../../components/UserContext/UserContext";
 
+
 // Star rating component
 function StarRating({ rating }) {
   const stars = [];
@@ -21,7 +22,7 @@ function StarRating({ rating }) {
   return <span className="flex items-center gap-0.5">{stars}</span>;
 }
 
-function MyList({ mylist }) {
+function MyList({ mylist,auth }) {
   let { wishlist, setWishlist } = mylist;
   const { setCurrent } = useContext(GlobalContext);
 
@@ -74,7 +75,7 @@ function MyList({ mylist }) {
                     <div className="bg-gray-200 rounded-full p-1 mt-2 mr-2 shadow-sm flex items-center justify-center">
                       <Tooltip title="Remove from wishlist" arrow>
                         <IconButton
-                          onClick={() => toggleWishlist(wishlist, setWishlist, product)}
+                          onClick={() => toggleWishlist(wishlist, setWishlist, product,auth._id)}
                           color="error"
                           size="small"
                           className="!p-1"

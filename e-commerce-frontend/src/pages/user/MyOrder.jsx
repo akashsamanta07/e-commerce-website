@@ -1,66 +1,7 @@
-import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, TextField, InputAdornment } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, TextField, InputAdornment, CircularProgress } from '@mui/material';
 import { MdReceipt, MdLocalShipping, MdCheckCircle, MdCancel, MdSearch } from "react-icons/md";
-
-// Dummy order data for demonstration
-const initialOrders = [
-  {
-    id: 'ORD123456',
-    date: '2024-06-01',
-    status: 'Delivered',
-    total: 1299,
-    items: [
-      { title: 'Wireless Headphones rwtwtwtwtwtwtwtwtwtwtwtre', qty: 1, price: 999 },
-      { title: 'USB-C Cable', qty: 2, price: 150 }
-    ]
-  },
-  {
-    id: 'ORD123457',
-    date: '2024-05-28',
-    status: 'Shipped',
-    total: 499,
-    items: [
-      { title: 'Bluetooth Mouse drswyre ersy tryesysw', qty: 1, price: 499 }
-    ]
-  },
-  {
-    id: 'ORD123458',
-    date: '2024-05-20',
-    status: 'Cancelled',
-    total: 799,
-    items: [
-      { title: 'Smart Watch', qty: 1, price: 799 }
-    ]
-  },
-  {
-    id: 'ORD123459',
-    date: '2024-06-01',
-    status: 'Delivered',
-    total: 1299,
-    items: [
-      { title: 'Wireless Headphones rwtwtwtwtwtwtwtwtwtwtwtre', qty: 1, price: 999 },
-      { title: 'USB-C Cable', qty: 2, price: 150 }
-    ]
-  },
-  {
-    id: 'ORD123451',
-    date: '2024-05-28',
-    status: 'Shipped',
-    total: 499,
-    items: [
-      { title: 'Bluetooth Mouse drswyre ersy tryesysw', qty: 1, price: 499 }
-    ]
-  },
-  {
-    id: 'ORD123452',
-    date: '2024-05-20',
-    status: 'Cancelled',
-    total: 799,
-    items: [
-      { title: 'Smart Watch', qty: 1, price: 799 }
-    ]
-  }
-];
+import API_BASE from '../../utils/API_BASE';
 
 function getStatusChip(status) {
   switch (status) {
@@ -75,15 +16,62 @@ function getStatusChip(status) {
   }
 }
 
-function MyOrder() {
-  const [orders] = useState(initialOrders);
+function MyOrder({ auth }) {
+  const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Fetch orders for the logged-in user using auth._id
+    async function fetchOrders() {
+      if (!auth || !auth._id) return;
+      setLoading(true);
+      try {
+        // You may need to adjust the endpoint according to your backend API
+        // Example: GET /api/user/:userId/orders
+        const res = await fetch(`${API_BASE}/user/${auth._id}/orders`, {
+          headers: {
+            'Content-Type': 'application/json',
+            // If you use JWT, you may need to add Authorization header here
+            // 'Authorization': `Bearer ${auth.token}`,
+          },
+          credentials: 'include', // if your backend uses cookies for auth
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders)) {
+          // Normalize order data to match the table structure
+          setOrders(
+            data.orders.map(order => ({
+              id:order._id,
+              date: order.createdAt ? order.createdAt.slice(0, 10) : '',
+              status: order.status,
+              total: order.total || 0,
+              items: Array.isArray(order.items)
+                ? order.items.map(item => ({
+                    title: item.title ,
+                    qty: item.qty || 1,
+                    price: item.price ||0,
+                  }))
+                : [],
+            }))
+          );
+        } else {
+          setOrders([]);
+        }
+      } catch (err) {
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOrders();
+  }, [auth]);
 
   // Filter orders by order id only
   const filteredOrders = orders.filter(order => {
     const searchLower = search.trim().toLowerCase();
     if (searchLower === '') return true;
-    return order.id.toLowerCase().includes(searchLower);
+    return (order.id || '').toLowerCase().includes(searchLower);
   });
 
   // Determine if we need to set a max height and scroll for the table container
@@ -180,38 +168,45 @@ function MyOrder() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredOrders.map(order => (
-                  <TableRow key={order.id}>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>{order.id}</TableCell>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>{order.date}</TableCell>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>
-                      <ul className="list-disc pl-4">
-                        {order.items.map((item, idx) => (
-                          <li key={idx}>
-                            <span
-                              className="font-medium inline-block max-w-[160px] align-middle"
-                              style={{
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                verticalAlign: 'middle'
-                              }}
-                              title={item.title}
-                            >
-                              {item.title}
-                            </span>
-                            {' '}( x{item.qty}, <span className="text-gray-500">₹{item.price} )</span>
-                          </li>
-                        ))}
-                      </ul>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" className="py-8 text-gray-500" style={{ border: '1px solid #e5e7eb' }}>
+                      <CircularProgress size={28} />
                     </TableCell>
-                    <TableCell className="font-semibold text-pink-600" style={{ border: '1px solid #e5e7eb' }}>
-                      ₹{order.total}
-                    </TableCell>
-                    <TableCell style={{ border: '1px solid #e5e7eb' }}>{getStatusChip(order.status)}</TableCell>
                   </TableRow>
-                ))}
-                {filteredOrders.length === 0 && (
+                ) : filteredOrders.length > 0 ? (
+                  filteredOrders.map(order => (
+                    <TableRow key={order.id}>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>{order.id}</TableCell>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>{order.date}</TableCell>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>
+                        <ul className="list-disc pl-4">
+                          {order.items.map((item, idx) => (
+                            <li key={idx}>
+                              <span
+                                className="font-medium inline-block max-w-[160px] align-middle"
+                                style={{
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  verticalAlign: 'middle'
+                                }}
+                                title={item.title}
+                              >
+                                {item.title}
+                              </span>
+                              {' '}( x{item.qty}, <span className="text-gray-500">₹{item.price} )</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </TableCell>
+                      <TableCell className="font-semibold text-pink-600" style={{ border: '1px solid #e5e7eb' }}>
+                        ₹{order.total}
+                      </TableCell>
+                      <TableCell style={{ border: '1px solid #e5e7eb' }}>{getStatusChip(order.status)}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow>
                     <TableCell colSpan={5} align="center" className="py-8 text-gray-500" style={{ border: '1px solid #e5e7eb' }}>
                       No orders found.

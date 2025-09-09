@@ -5,7 +5,7 @@ import { ArrowForward } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
 // Latest_products rewritten to match AllProducts format
-function Latest_products({ product }) {
+function Latest_products({ product,auth }) {
   let {
     wishlist = [],
     setWishlist = () => {},
@@ -115,6 +115,7 @@ function Latest_products({ product }) {
             setCartlist={setCartlist}
             wishlist={wishlist}
             setWishlist={setWishlist}
+            auth={auth}
           />
         ))}
       </div>

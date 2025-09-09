@@ -86,7 +86,7 @@ function Header2({ header2 }) {
         <DrawerContentMenu menuobj={menuobj} setOpenMenu={setOpenMenu}/>
       </SlideDrawer>
       <SlideDrawer open={openCart} side="right" onClose={() => setOpenCart(false)}>
-        <DrawerContentCart header2={header2} onClose={() => setOpenCart(false)} />
+        <DrawerContentCart header2={header2} onClose={() => setOpenCart(false)} auth={auth} />
       </SlideDrawer>
       <div className="Container border-b border-gray-200 py-2 md:py-3">
         <div className="w-full flex items-center justify-between gap-[10px]">

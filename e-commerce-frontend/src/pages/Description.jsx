@@ -41,7 +41,7 @@ async function submitProductReview(productId, review) {
         });
         const data = await res.json();
         if (!res.ok) {
-            notify("error", data?.message || "Failed to submit review.");
+            notify("error", data?.message);
             return;
         }
         return data.review;
@@ -60,7 +60,7 @@ function getDatePart(dateString) {
 }
 
 // --- Main Component ---
-function Description({ desc }) {
+function Description({ desc,auth }) {
     // --- Context and Props ---
     const { current } = useContext(GlobalContext);
     const product = current;
@@ -72,7 +72,7 @@ function Description({ desc }) {
     const tooltipTimeout = useRef(null);
 
     const [reviews, setReviews] = useState([]);
-    const [reviewForm, setReviewForm] = useState({ name: '', rating: 0, comment: '' });
+    const [reviewForm, setReviewForm] = useState({ name: auth.name , rating: 0, comment: '' });
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [loadingReviews, setLoadingReviews] = useState(false);
     const [submittingReview, setSubmittingReview] = useState(false);
@@ -114,12 +114,12 @@ function Description({ desc }) {
     };
 
     const handleToggleWishlist = () => {
-        toggleWishlist(wishlist, setWishlist, product);
+        toggleWishlist(wishlist, setWishlist, product,auth._id);
       };
 
 
     const handleAddToCart = (quantity) => {
-        addToCart(cartlist, setCartlist, product,quantity);
+        addToCart(cartlist, setCartlist, product,auth._id, quantity);
     };
 
     const handleWishlistClick = () => {
@@ -209,6 +209,7 @@ function Description({ desc }) {
         setSubmittingReview(true);
         try {
             const newReview = {
+                userId:auth._id,
                 name: reviewForm.name,
                 comment: reviewForm.comment,
                 rating: reviewForm.rating

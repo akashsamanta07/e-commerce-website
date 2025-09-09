@@ -4,7 +4,7 @@ import ProductCard from '../components/ProductCard.jsx';
 import { ArrowForward } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
-function DefaultProduct({ product, name, category }) {
+function DefaultProduct({ product, name, category,auth }) {
   let {
     wishlist = [],
     setWishlist = () => {},
@@ -127,6 +127,7 @@ function DefaultProduct({ product, name, category }) {
             setCartlist={setCartlist}
             wishlist={wishlist}
             setWishlist={setWishlist}
+            auth={auth}
           />
         ))}
       </div>

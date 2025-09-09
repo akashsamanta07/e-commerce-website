@@ -1,13 +1,18 @@
 import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { GlobalContext } from "../../components/UserContext/UserContext";
 import { FaUser, FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaCreditCard } from "react-icons/fa";
 import { MdPayment } from "react-icons/md";
-import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Stepper, Step, StepLabel, Paper } from "@mui/material";
+import { Button, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Stepper, Step, StepLabel, Paper, CircularProgress } from "@mui/material";
+import API_BASE from "../../utils/API_BASE";
+import notify from "../../components/Notification/notify";
+
 
 const steps = ["Personal Info", "Delivery Info", "Payment"];
 
-function Checkout() {
+function Checkout({ auth,setCartlist}) {
   const { total } = useContext(GlobalContext);
+  const navigate = useNavigate();
 
   // Stepper state
   const [activeStep, setActiveStep] = useState(0);
@@ -36,6 +41,10 @@ function Checkout() {
     nameOnCard: "",
   });
 
+  // Loading and error state for order placement
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [orderError, setOrderError] = useState("");
+
   // Handle changes
   const handlePersonalChange = (e) => {
     setPersonalInfo({ ...personalInfo, [e.target.name]: e.target.value });
@@ -51,11 +60,45 @@ function Checkout() {
   const handleNext = () => setActiveStep((prev) => prev + 1);
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
-  // Dummy submit
-  const handleSubmit = (e) => {
+  // Place order API call (no data sent, backend fetches from user cart)
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would handle the order placement logic
-    alert("Order placed successfully!");
+    setOrderError("");
+
+    if (!auth || !auth._id) {
+      notify("error", "You are not logged in");
+      return;
+    }
+
+    setPlacingOrder(true);
+    try {
+      // Only send payment method if you want, but as per prompt, no cart/order data sent
+      const res = await fetch(`${API_BASE}/user/${auth._id}/order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          paymentMethod, // optional, backend can ignore or use
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Show notify message on success
+
+        notify("success", "Order placed successfully!");
+        setCartlist([]);
+        // Navigate to home after successful order
+        navigate("/");
+      } else {
+        notify("error","Order placed failed");
+      }
+    } catch (err) {
+      notify("error","Network Error");
+    } finally {
+      setPlacingOrder(false);
+    }
   };
 
   // Responsive container
@@ -274,6 +317,7 @@ function Checkout() {
                     color="secondary"
                     onClick={handleBack}
                     className="border-pink-600 text-pink-600"
+                    disabled={placingOrder}
                   >
                     Back
                   </Button>
@@ -283,17 +327,28 @@ function Checkout() {
                     type="submit"
                     className="bg-pink-600 hover:bg-pink-700"
                     disabled={
-                      paymentMethod === "card" &&
-                      (!cardInfo.cardNumber ||
-                        !cardInfo.expiry ||
-                        !cardInfo.cvv ||
-                        !cardInfo.nameOnCard)
+                      placingOrder ||
+                      (paymentMethod === "card" &&
+                        (!cardInfo.cardNumber ||
+                          !cardInfo.expiry ||
+                          !cardInfo.cvv ||
+                          !cardInfo.nameOnCard))
                     }
                   >
-                    Place Order
+                    {placingOrder ? (
+                      <span className="flex items-center gap-2">
+                        <CircularProgress size={20} color="inherit" />
+                        Placing Order...
+                      </span>
+                    ) : (
+                      "Place Order"
+                    )}
                   </Button>
                 </div>
               </div>
+              {orderError && (
+                <div className="text-red-600 font-semibold mt-4">{orderError}</div>
+              )}
             </div>
           )}
         </form>

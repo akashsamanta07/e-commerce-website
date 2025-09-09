@@ -12,7 +12,7 @@ import {
 } from '../HandleWishlistandCartlist.jsx';
 
 // Use product schema keys: title, brand, description, category, subcategory, originalPrice, discountPrice, inStock, rating, images, sales, reviewlist, _id
-function Card({ header2, onClose }) {
+function Card({ header2, onClose,auth }) {
   const { cartlist, setCartlist } = header2;
   const { total, setTotal,setCurrent } = useContext(GlobalContext);
 
@@ -34,15 +34,15 @@ function Card({ header2, onClose }) {
 
   // Handlers
   const handleRemoveOne = (prodId) => {
-    decrementCartQuantity(cartlist,setCartlist,prodId);
+    decrementCartQuantity(cartlist,setCartlist,prodId,auth._id);
   };
 
   const handleAddOne = (prodId) => {
-    incrementCartQuantity(cartlist,setCartlist,prodId);
+    incrementCartQuantity(cartlist,setCartlist,prodId,auth._id);
   };
 
   const handleDeleteAll = (prodId) => {
-    removeFromCart(cartlist,setCartlist,prodId);
+    removeFromCart(cartlist,setCartlist,prodId,auth._id);
   };
 
   return (

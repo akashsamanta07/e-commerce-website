@@ -19,6 +19,7 @@ function getStatusChip(status) {
 }
 
 const statusOptions = [
+  { value: 'Pending', label: 'Pending', icon: <MdReceipt /> },
   { value: 'Delivered', label: 'Delivered', icon: <MdCheckCircle style={{ color: "#16a34a" }} /> },
   { value: 'Shipped', label: 'Shipped', icon: <MdLocalShipping style={{ color: "#f59e42" }} /> },
   { value: 'Cancelled', label: 'Cancelled', icon: <MdCancel style={{ color: "#ef4444" }} /> },

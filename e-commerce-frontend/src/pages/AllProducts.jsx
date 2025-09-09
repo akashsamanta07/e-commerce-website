@@ -16,7 +16,7 @@ const SORT_ORDERS = [
   { value: 'desc', label: 'Descending' },
 ];
 
-function AllProducts({ product }) {
+function AllProducts({ product,auth }) {
   // Remove count: don't destructure wishlistcount, setwishlistcount, cartCount, setCartCount
   let { wishlist, setWishlist, cartlist, setCartlist, categories, selectedProduct } = product;
   const location = useLocation();
@@ -201,6 +201,7 @@ function AllProducts({ product }) {
               setCartlist={setCartlist}
               wishlist={wishlist}
               setWishlist={setWishlist}
+              auth={auth}
             />
           ))
         )}

@@ -197,11 +197,11 @@ export function DrawerContentMenu({ menuobj, setOpenMenu }) {
 }
 
 // DrawerContentCart component
-export function DrawerContentCart({ header2, onClose }) {
+export function DrawerContentCart({ header2, onClose,auth }) {
   // You can add cart items here for non-empty cart
   return (
     <div>
-      <Card header2={header2} onClose={onClose}/>
+      <Card header2={header2} onClose={onClose} auth={auth}/>
     </div>
   );
 }

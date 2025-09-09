@@ -8,17 +8,17 @@ import Latest_products from '../components/Latest_products.jsx';
 import StaticAdd from '../components/ad/StaticAdd.jsx';
 import DefaultProduct from '../components/DefaultProduct.jsx';
 
-function Home({ product }) {
+function Home({ product,auth }) {
   let { categories, selectedProduct } = product;
 
   return (
     <div className="flex flex-col min-h-screen">
       <Slider />
       <CategoryNavBar categories={categories} />
-      <Popular_products product={product} />
+      <Popular_products product={product} auth={auth} />
       <FirstSlider />
       <FreeShippingBanner />
-      <Latest_products product={product} />
+      <Latest_products product={product} auth={auth}/>
       <StaticAdd />
       {
         categories && categories.length > 0 && categories.map((cat, idx) => {
@@ -39,6 +39,7 @@ function Home({ product }) {
               product={{ ...product, filteredProducts: filteredProducts }}
               name={catName}
               category={catName}
+              auth={auth}
             />
           );
         })

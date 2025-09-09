@@ -6,6 +6,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import notify from '../Notification/notify';
 
 const NAV_ITEMS = [
   {
@@ -25,19 +26,37 @@ const NAV_ITEMS = [
     label: 'Wishlist',
     icon: <FavoriteBorderIcon sx={{ fontSize: '1.7rem', p: '4px' }} />,
     to: '/my-list',
-    onClick: setis => setis(0),
+    onClick: (setis, auth) => {
+      if (auth && auth._id) {
+        setis(0);
+      } else {
+        notify("warning", "You are not logged in");
+      }
+    },
   },
   {
     label: 'Order',
     icon: <ListAltIcon sx={{ fontSize: '1.7rem', p: '4px' }} />,
     to: '/my-order',
-    onClick: setis => setis(0),
+    onClick: (setis, auth) => {
+      if (auth && auth._id) {
+        setis(0);
+      } else {
+        notify("warning", "You are not logged in");
+      }
+    },
   },
   {
     label: 'Account',
     icon: <AccountCircleIcon sx={{ fontSize: '1.7rem', p: '4px' }} />,
     to: '/my-account',
-    onClick: setis => setis(0),
+    onClick: (setis, auth) => {
+      if (auth && auth._id) {
+        setis(0);
+      } else {
+        notify("warning", "You are not logged in");
+      }
+    },
     sx: { px: 1.5 },
   },
 ];
@@ -62,7 +81,7 @@ function getCurrentIndex(pathname) {
   return 0;
 }
 
-function FixedBar({ setis }) {
+function FixedBar({ setis ,auth }) {
   const location = useLocation();
   const currentIndex = useMemo(() => getCurrentIndex(location.pathname), [location.pathname]);
   const [value, setValue] = useState(currentIndex);
@@ -125,7 +144,7 @@ function FixedBar({ setis }) {
             component={Link}
             to={item.to}
             sx={{ ...actionSx, ...(item.sx || {}) }}
-            onClick={() => item.onClick(setis)}
+            onClick={() => item.onClick(setis,auth)}
           />
         ))}
       </BottomNavigation>

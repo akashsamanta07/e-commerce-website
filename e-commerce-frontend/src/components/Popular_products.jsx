@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import ProductCard from '../components/ProductCard.jsx';
 
-function Popular_products({ product }) {
+function Popular_products({ product,auth }) {
   // Destructure props, remove count for wishlist, cartlist
   let {
     wishlist = [],
@@ -186,6 +186,7 @@ function Popular_products({ product }) {
             setCartlist={setCartlist}
             wishlist={wishlist}
             setWishlist={setWishlist}
+            auth={auth}
           />
           ))
         )}

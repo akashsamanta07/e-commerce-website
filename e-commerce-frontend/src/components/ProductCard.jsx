@@ -17,7 +17,8 @@ const ProductCard = ({
   cartlist,
   setCartlist,
   wishlist,
-  setWishlist
+  setWishlist,
+  auth
 }) => {
   // Destructure all needed fields from product
   const {
@@ -55,12 +56,12 @@ const ProductCard = ({
 
   // Use helper for wishlist toggle
   const handleToggleWishlist = () => {
-    toggleWishlist(wishlist, setWishlist, product);
+    toggleWishlist(wishlist, setWishlist, product,auth._id);
   };
 
   // Use helper for add to cart
   const handleAddToCart = () => {
-      addToCart(cartlist, setCartlist, product);
+      addToCart(cartlist, setCartlist, product,auth._id);
   };
 
   const handleWishlistClick = (e) => {
