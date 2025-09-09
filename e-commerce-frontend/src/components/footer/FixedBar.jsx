@@ -8,6 +8,20 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import notify from '../Notification/notify';
 
+// Custom hook to detect if screen width is less than 765px
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 765);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth < 765);
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isMobile;
+}
+
 const NAV_ITEMS = [
   {
     label: 'Home',
@@ -30,7 +44,7 @@ const NAV_ITEMS = [
       if (auth && auth._id) {
         setis(0);
       } else {
-        notify("warning", "You are not logged in");
+        notify("error", "You are not logged in");
       }
     },
   },
@@ -42,7 +56,7 @@ const NAV_ITEMS = [
       if (auth && auth._id) {
         setis(0);
       } else {
-        notify("warning", "You are not logged in");
+        notify("error", "You are not logged in");
       }
     },
   },
@@ -54,7 +68,7 @@ const NAV_ITEMS = [
       if (auth && auth._id) {
         setis(0);
       } else {
-        notify("warning", "You are not logged in");
+        notify("error", "You are not logged in");
       }
     },
     sx: { px: 1.5 },
@@ -81,7 +95,8 @@ function getCurrentIndex(pathname) {
   return 0;
 }
 
-function FixedBar({ setis ,auth }) {
+function FixedBar({ setis, auth }) {
+  const isMobile = useIsMobile();
   const location = useLocation();
   const currentIndex = useMemo(() => getCurrentIndex(location.pathname), [location.pathname]);
   const [value, setValue] = useState(currentIndex);
@@ -113,6 +128,8 @@ function FixedBar({ setis ,auth }) {
     },
   };
 
+  if (!isMobile) return null;
+
   return (
     <Paper
       sx={{
@@ -121,7 +138,7 @@ function FixedBar({ setis ,auth }) {
         left: 0,
         right: 0,
         zIndex: 1000,
-        display: { xs: 'block', md: 'none' },
+        display: 'block',
         pb: 'env(safe-area-inset-bottom)',
       }}
       elevation={3}
@@ -144,7 +161,7 @@ function FixedBar({ setis ,auth }) {
             component={Link}
             to={item.to}
             sx={{ ...actionSx, ...(item.sx || {}) }}
-            onClick={() => item.onClick(setis,auth)}
+            onClick={() => item.onClick(setis, auth)}
           />
         ))}
       </BottomNavigation>

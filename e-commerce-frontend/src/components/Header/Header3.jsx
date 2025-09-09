@@ -81,7 +81,7 @@ function Header3({ header3 }) {
       <SlideDrawer open={openMenu} side="left" onClose={() => setOpenMenu(false)}>
         <DrawerContentMenu menuobj={menuobj} setOpenMenu={setOpenMenu} />
       </SlideDrawer>
-      <div className=" flex items-center justify-between py-2 px-1 Container">
+      <div className={`flex items-center py-2 px-1 Container ${is === 0 ? 'justify-between' : 'justify-center'}`}>
         {/* Left: Shop by Categories (hidden on small/tab screens) */}
         <div className="hidden xl:flex items-center gap-2">
           <button
@@ -144,7 +144,7 @@ function Header3({ header3 }) {
         </div>
         <div className={`${is === 0 ? 'hidden' : 'block'} w-full max-w-md`}>
           <form
-            className="flex items-center bg-gray-100 rounded-md px-2 py-1"
+            className="flex items-center justify-center bg-gray-100 rounded-md px-2 py-1"
             onSubmit={onsubmit}
           >
             <input
