@@ -60,12 +60,12 @@ function Slideber({ open, side, onClose }) {
           if (data.success && data.data && data.data.image) {
             setLogoUrl(getImageUrl(data.data.image));
           } else {
-            setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+            setLogoUrl('');
           }
         }
       } catch (err) {
         if (isMounted) {
-          setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+          setLogoUrl('');
         }
       }
     };
@@ -83,7 +83,7 @@ function Slideber({ open, side, onClose }) {
         className="h-8 w-auto object-contain md:h-10"
         onError={e => {
           e.target.onerror = null;
-          setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+          setLogoUrl('');
         }}
       />
     </div>

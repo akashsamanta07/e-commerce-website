@@ -144,7 +144,7 @@ function ManageLogo({obj}) {
           </Box>
         ) : (
           <img
-            src={preview || "https://via.placeholder.com/120x60?text=No+Logo"}
+            src={preview || ""}
             alt="Current Logo"
             style={{
               width: 120,
@@ -158,7 +158,7 @@ function ManageLogo({obj}) {
             }}
             onError={e => {
               e.target.onerror = null;
-              e.target.src = "https://via.placeholder.com/120x60?text=No+Logo";
+              e.target.src = "";
             }}
           />
         )}

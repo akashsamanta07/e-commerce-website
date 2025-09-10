@@ -17,7 +17,7 @@ function Header2({ auth, obj }) {
   let { data } = obj;
   const [anchorEl, setAnchorEl] = useState(null);
   const [openMenu, setOpenMenu] = useState(false);
-  const [logoUrl, setLogoUrl] = useState("https://via.placeholder.com/120x60?text=No+Logo");
+  const [logoUrl, setLogoUrl] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,12 +32,12 @@ function Header2({ auth, obj }) {
           if (data.success && data.data && data.data.image) {
             setLogoUrl(getImageUrl(data.data.image));
           } else {
-            setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+            setLogoUrl('');
           }
         }
       } catch (err) {
         if (isMounted) {
-          setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+          setLogoUrl('');
         }
       }
     };
@@ -79,7 +79,7 @@ function Header2({ auth, obj }) {
             className="h-10 object-contain hidden xl:block"
             onError={e => {
               e.target.onerror = null;
-              e.target.src = "https://via.placeholder.com/120x60?text=No+Logo";
+              e.target.src = "";
             }}
           />
           {/* Menu icon: only visible on small screens */}

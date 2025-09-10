@@ -6,6 +6,10 @@ const bannerSchema = new mongoose.Schema(
       type: String,
       required: [true, "Banner image is required"],
     },
+    imagePublicId: {
+      type: String,
+      required: [true, "Banner image public id is required"],
+    },
   },
   { timestamps: true }
 );

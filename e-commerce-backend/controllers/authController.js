@@ -3,8 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const ACCESS_SECRET = process.env.ACCESS_TOKEN_KEY;
 const REFRESH_SECRET = process.env.REFRESH_TOKEN_KEY;
-const fs = require("fs");
-
+const { uploadToCloudinary, deleteFromCloudinary } = require("../cloudinary");
 
 // Import mail verification helpers
 const { generateVerificationCode, sendVerificationEmail } = require("./mailVerification");
@@ -402,11 +401,9 @@ exports.changePassword = [
  * Update user profile (name, email, phone, profilePic)
  * Expects: { id, name, email, phone, profilePic }
  */
-// Update user profile (name, email, phone, photo via multer)
+// Update user profile (name, email, phone, photo via multer/cloudinary)
 exports.updateProfile = async (req, res) => {
     try {
-        // If using multer, photo will be in req.file
-        // Other fields will be in req.body
         const { id, name, email, phone } = req.body;
 
         if (!id) {
@@ -425,19 +422,21 @@ exports.updateProfile = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found." });
         }
 
-        // Handle photo (profilePic) via multer
+        // Handle photo (profilePic) via cloudinary
         if (req.file) {
-            // Remove previous pic if exists
-            if (user.avatar && fs.existsSync(user.avatar)) {
+            // Remove previous pic from cloudinary if exists
+            if (user.avatar && user.avatar_public_id) {
                 try {
-                    fs.unlinkSync(user.avatar);
+                    await deleteFromCloudinary(user.avatar_public_id);
                 } catch (err) {
-                    // Log error but don't block update
-                    console.error("Failed to remove previous profile pic:", err);
                 }
             }
-            // Save the file path or filename as profilePic
-            updateFields.avatar = req.file.path;
+            // Upload new image to cloudinary
+            console.log(req.file)
+            const uploadResult = await uploadToCloudinary(req.file.buffer, "user_avatars");
+            console.log(uploadResult)
+            updateFields.avatar = uploadResult.secure_url;
+            updateFields.avatar_public_id = uploadResult.public_id;
         }
 
         // Prevent empty update
@@ -464,7 +463,7 @@ exports.updateProfile = async (req, res) => {
         }
 
         const { password: _, ...userData } = user.toObject();
-        // If photo was updated, return the new profilePic path as well
+        // If photo was updated, return the new profilePic url as well
         let response = {
             success: true,
             message: "Profile updated successfully.",

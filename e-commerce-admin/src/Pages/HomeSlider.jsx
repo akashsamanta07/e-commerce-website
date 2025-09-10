@@ -253,7 +253,7 @@ function HomeSlider() {
                         style={{ width: 200, height: 80, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
                         onError={e => {
                           e.target.onerror = null;
-                          e.target.src = "https://via.placeholder.com/200x80?text=No+Image";
+                          e.target.src = "";
                         }}
                       />
                     ) : (
@@ -332,7 +332,7 @@ function HomeSlider() {
                   style={{ width: 300, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
                   onError={e => {
                     e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/300x120?text=No+Image";
+                    e.target.src = "";
                   }}
                 />
               </Box>
@@ -381,7 +381,7 @@ function HomeSlider() {
                   style={{ width: 300, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
                   onError={e => {
                     e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/300x120?text=No+Image";
+                    e.target.src = "";
                   }}
                 />
               </Box>

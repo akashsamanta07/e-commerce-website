@@ -46,6 +46,11 @@ const productSchema = new mongoose.Schema(
         type: String,
       },
     ],
+    imagePublicIds: [
+      {
+        type: String,
+      },
+    ],
     sales: {
       type: Number,
       default: 0,

@@ -6,7 +6,7 @@ import API_BASE from '../../utils/API_BASE';
 import getImageUrl from '../getImageUrl';
 
 function Header1({obj}) {
-  const [logoUrl, setLogoUrl] = useState("https://via.placeholder.com/120x60?text=No+Logo");
+  const [logoUrl, setLogoUrl] = useState("");
   let {data}=obj;
 
   useEffect(() => {
@@ -19,12 +19,12 @@ function Header1({obj}) {
           if (data.success && data.data && data.data.image) {
             setLogoUrl(getImageUrl(data.data.image));
           } else {
-            setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+            setLogoUrl('');
           }
         }
       } catch (err) {
         if (isMounted) {
-          setLogoUrl('https://via.placeholder.com/120x60?text=No+Logo');
+          setLogoUrl('');
         }
       }
     };
@@ -46,7 +46,7 @@ function Header1({obj}) {
             style={{ maxWidth: 160, minWidth: 60 }}
             onError={e => {
               e.target.onerror = null;
-              e.target.src = "https://via.placeholder.com/120x60?text=No+Logo";
+              e.target.src = "";
             }}
           />
         </div>

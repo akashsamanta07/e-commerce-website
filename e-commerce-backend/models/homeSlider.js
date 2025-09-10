@@ -6,6 +6,10 @@ const homeSliderSchema = new mongoose.Schema(
       type: String,
       required: [true, "Image is required"],
     },
+    imagePublicId: {
+      type: String,
+      required: [true, "Image public id is required"],
+    },
   },
   { timestamps: true }
 );

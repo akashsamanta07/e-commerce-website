@@ -12,6 +12,10 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: [true, "Category image is required"],
     },
+    imagePublicId: {
+      type: String,
+      required: [true, "Category image public id is required"],
+    },
   },
   { timestamps: true }
 );

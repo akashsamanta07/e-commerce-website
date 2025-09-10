@@ -6,6 +6,7 @@ const ProductModel = require("../models/productModel");
 const OrderModel = require("../models/orderModel"); // Add Order model
 const fs = require("fs");
 const authenticateToken = require("./authenticateToken");
+const { uploadToCloudinary, deleteFromCloudinary } = require("../cloudinary");
 
 // --- Home Slider Functions ---
 
@@ -17,14 +18,16 @@ exports.addHomeSlider = [
       return res.status(403).json({ success: false, message: "You are not Admin" });
     }
     try {
-      if (!req.file) {
+      if (!req.file || !req.file.buffer) {
         return res.status(400).json({ success: false, message: "Image is required" });
       }
 
-      const imagePath = req.file.path;
+      // Upload to Cloudinary using buffer
+      const uploadResult = await uploadToCloudinary(req.file.buffer, "homeSlider");
 
       const newSlider = new HomeSliderModel({
-        image: imagePath,
+        image: uploadResult.secure_url,
+        imagePublicId: uploadResult.public_id,
       });
 
       await newSlider.save();
@@ -54,13 +57,16 @@ exports.editHomeSlider = [
         return res.status(404).json({ success: false, message: "Not found" });
       }
 
-      // If new image uploaded, replace old image file
-      if (req.file) {
-        const oldImagePath = slider.image;
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
+      // If new image uploaded, replace old image in Cloudinary
+      if (req.file && req.file.buffer) {
+        // Remove old image from Cloudinary
+        if (slider.imagePublicId) {
+          await deleteFromCloudinary(slider.imagePublicId);
         }
-        slider.image = req.file.path;
+        // Upload new image to Cloudinary
+        const uploadResult = await uploadToCloudinary(req.file.buffer, "homeSlider");
+        slider.image = uploadResult.secure_url;
+        slider.imagePublicId = uploadResult.public_id;
       }
 
       await slider.save();
@@ -89,10 +95,9 @@ exports.deleteHomeSlider = [
       if (!slider) {
         return res.status(404).json({ success: false, message: "Not found" });
       }
-      // Remove image file from filesystem
-      const imagePath = slider.image;
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
+      // Remove image from Cloudinary
+      if (slider.imagePublicId) {
+        await deleteFromCloudinary(slider.imagePublicId);
       }
       await HomeSliderModel.findByIdAndDelete(id);
 
@@ -131,20 +136,23 @@ exports.addCategory = [
       return res.status(403).json({ success: false, message: "You are not Admin" });
     }
     try {
-      if (!req.file) {
+      if (!req.file || !req.file.buffer) {
         return res.status(400).json({ success: false, message: "Image is required" });
       }
 
-      const imagePath = req.file.path;
       const { name } = req.body;
 
       if (!name) {
         return res.status(400).json({ success: false, message: "Name is required" });
       }
 
+      // Upload to Cloudinary using buffer
+      const uploadResult = await uploadToCloudinary(req.file.buffer, "category");
+
       const newCategory = new CategoryModel({
         name,
-        image: imagePath,
+        image: uploadResult.secure_url,
+        imagePublicId: uploadResult.public_id,
       });
 
       await newCategory.save();
@@ -179,13 +187,16 @@ exports.editCategory = [
         category.name = req.body.name;
       }
 
-      // If new image uploaded, replace old image file
-      if (req.file) {
-        const oldImagePath = category.image;
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
+      // If new image uploaded, replace old image in Cloudinary
+      if (req.file && req.file.buffer) {
+        // Remove old image from Cloudinary
+        if (category.imagePublicId) {
+          await deleteFromCloudinary(category.imagePublicId);
         }
-        category.image = req.file.path;
+        // Upload new image to Cloudinary
+        const uploadResult = await uploadToCloudinary(req.file.buffer, "category");
+        category.image = uploadResult.secure_url;
+        category.imagePublicId = uploadResult.public_id;
       }
 
       await category.save();
@@ -214,10 +225,9 @@ exports.deleteCategory = [
       if (!category) {
         return res.status(404).json({ success: false, message: "Not found" });
       }
-      // Remove image file from filesystem
-      const imagePath = category.image;
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
+      // Remove image from Cloudinary
+      if (category.imagePublicId) {
+        await deleteFromCloudinary(category.imagePublicId);
       }
       await CategoryModel.findByIdAndDelete(id);
 
@@ -256,14 +266,16 @@ exports.addBanner = [
       return res.status(403).json({ success: false, message: "You are not Admin" });
     }
     try {
-      if (!req.file) {
+      if (!req.file || !req.file.buffer) {
         return res.status(400).json({ success: false, message: "Image is required" });
       }
 
-      const imagePath = req.file.path;
+      // Upload to Cloudinary using buffer
+      const uploadResult = await uploadToCloudinary(req.file.buffer, "banner");
 
       const newBanner = new BannerModel({
-        image: imagePath,
+        image: uploadResult.secure_url,
+        imagePublicId: uploadResult.public_id,
       });
 
       await newBanner.save();
@@ -293,13 +305,16 @@ exports.editBanner = [
         return res.status(404).json({ success: false, message: "Not found" });
       }
 
-      // If new image uploaded, replace old image file
-      if (req.file) {
-        const oldImagePath = banner.image;
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
+      // If new image uploaded, replace old image in Cloudinary
+      if (req.file && req.file.buffer) {
+        // Remove old image from Cloudinary
+        if (banner.imagePublicId) {
+          await deleteFromCloudinary(banner.imagePublicId);
         }
-        banner.image = req.file.path;
+        // Upload new image to Cloudinary
+        const uploadResult = await uploadToCloudinary(req.file.buffer, "banner");
+        banner.image = uploadResult.secure_url;
+        banner.imagePublicId = uploadResult.public_id;
       }
 
       await banner.save();
@@ -328,10 +343,9 @@ exports.deleteBanner = [
       if (!banner) {
         return res.status(404).json({ success: false, message: "Not found" });
       }
-      // Remove image file from filesystem
-      const imagePath = banner.image;
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
+      // Remove image from Cloudinary
+      if (banner.imagePublicId) {
+        await deleteFromCloudinary(banner.imagePublicId);
       }
       await BannerModel.findByIdAndDelete(id);
 
@@ -370,25 +384,26 @@ exports.addLogo = [
       return res.status(403).json({ success: false, message: "You are not Admin" });
     }
     try {
-      if (!req.file) {
+      if (!req.file || !req.file.buffer) {
         return res.status(400).json({ success: false, message: "Image is required" });
       }
 
-      const imagePath = req.file.path;
-
-      // Only one logo allowed, so remove existing logo document and file if present
+      // Only one logo allowed, so remove existing logo document and image from Cloudinary if present
       const existingLogo = await LogoModel.findOne();
       if (existingLogo) {
-        // Remove old logo file from filesystem
-        if (fs.existsSync(existingLogo.image)) {
-          fs.unlinkSync(existingLogo.image);
+        if (existingLogo.imagePublicId) {
+          await deleteFromCloudinary(existingLogo.imagePublicId);
         }
         await LogoModel.deleteMany({});
       }
 
+      // Upload to Cloudinary using buffer
+      const uploadResult = await uploadToCloudinary(req.file.buffer, "logo");
+
       // Save new logo document
       const newLogo = new LogoModel({
-        image: imagePath,
+        image: uploadResult.secure_url,
+        imagePublicId: uploadResult.public_id,
       });
       await newLogo.save();
 
@@ -411,20 +426,22 @@ exports.editLogo = [
       return res.status(403).json({ success: false, message: "You are not Admin" });
     }
     try {
-      if (!req.file) {
+      if (!req.file || !req.file.buffer) {
         return res.status(400).json({ success: false, message: "Image is required" });
       }
 
-      const imagePath = req.file.path;
-
       // Find existing logo document
       const existingLogo = await LogoModel.findOne();
+      // Upload new image to Cloudinary using buffer
+      const uploadResult = await uploadToCloudinary(req.file.buffer, "logo");
+
       if (existingLogo) {
-        // Remove old logo file from filesystem
-        if (fs.existsSync(existingLogo.image)) {
-          fs.unlinkSync(existingLogo.image);
+        // Remove old logo image from Cloudinary
+        if (existingLogo.imagePublicId) {
+          await deleteFromCloudinary(existingLogo.imagePublicId);
         }
-        existingLogo.image = imagePath;
+        existingLogo.image = uploadResult.secure_url;
+        existingLogo.imagePublicId = uploadResult.public_id;
         await existingLogo.save();
         return res.status(200).json({
           success: true,
@@ -433,7 +450,10 @@ exports.editLogo = [
         });
       } else {
         // If no logo exists, create new
-        const newLogo = new LogoModel({ image: imagePath });
+        const newLogo = new LogoModel({
+          image: uploadResult.secure_url,
+          imagePublicId: uploadResult.public_id,
+        });
         await newLogo.save();
         return res.status(201).json({
           success: true,
@@ -496,7 +516,14 @@ exports.addProduct = [
         return res.status(400).json({ success: false, message: "Title, category, and original price are required" });
       }
 
-      const images = req.files.map(file => file.path);
+      // Upload all images to Cloudinary using buffer
+      const images = [];
+      const imagePublicIds = [];
+      for (const file of req.files) {
+        const uploadResult = await uploadToCloudinary(file.buffer, "product");
+        images.push(uploadResult.secure_url);
+        imagePublicIds.push(uploadResult.public_id);
+      }
       let reviewlist = [];
       let sales = 0;
 
@@ -511,6 +538,7 @@ exports.addProduct = [
         inStock,
         rating,
         images,
+        imagePublicIds,
         sales,
         reviewlist
       });
@@ -560,17 +588,26 @@ exports.editProduct = [
         }
       });
 
-      // If new images uploaded, replace old images
+      // If new images uploaded, replace old images in Cloudinary
       if (req.files && req.files.length > 0) {
-        // Remove old images from filesystem
-        if (product.images && Array.isArray(product.images)) {
-          product.images.forEach(imgPath => {
-            if (fs.existsSync(imgPath)) {
-              fs.unlinkSync(imgPath);
+        // Remove old images from Cloudinary
+        if (product.imagePublicIds && Array.isArray(product.imagePublicIds)) {
+          for (const publicId of product.imagePublicIds) {
+            if (publicId) {
+              await deleteFromCloudinary(publicId);
             }
-          });
+          }
         }
-        product.images = req.files.map(file => file.path);
+        // Upload new images to Cloudinary using buffer
+        const images = [];
+        const imagePublicIds = [];
+        for (const file of req.files) {
+          const uploadResult = await uploadToCloudinary(file.buffer, "product");
+          images.push(uploadResult.secure_url);
+          imagePublicIds.push(uploadResult.public_id);
+        }
+        product.images = images;
+        product.imagePublicIds = imagePublicIds;
       }
 
       await product.save();
@@ -599,13 +636,13 @@ exports.deleteProduct = [
       if (!product) {
         return res.status(404).json({ success: false, message: "Product not found" });
       }
-      // Remove images from filesystem
-      if (product.images && Array.isArray(product.images)) {
-        product.images.forEach(imgPath => {
-          if (fs.existsSync(imgPath)) {
-            fs.unlinkSync(imgPath);
+      // Remove images from Cloudinary
+      if (product.imagePublicIds && Array.isArray(product.imagePublicIds)) {
+        for (const publicId of product.imagePublicIds) {
+          if (publicId) {
+            await deleteFromCloudinary(publicId);
           }
-        });
+        }
       }
       await ProductModel.findByIdAndDelete(id);
 

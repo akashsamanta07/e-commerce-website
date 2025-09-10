@@ -251,7 +251,7 @@ function Banner() {
                         style={{ width: 120, height: 60, objectFit: 'cover', borderRadius: 8, background: '#fff' }}
                         onError={e => {
                           e.target.onerror = null;
-                          e.target.src = "https://via.placeholder.com/120x60?text=No+Image";
+                          e.target.src = "";
                         }}
                       />
                     ) : (
@@ -330,7 +330,7 @@ function Banner() {
                   style={{ width: 200, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
                   onError={e => {
                     e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/200x100?text=No+Image";
+                    e.target.src = "";
                   }}
                 />
               </Box>
@@ -379,7 +379,7 @@ function Banner() {
                   style={{ width: 200, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #e5e7eb' }}
                   onError={e => {
                     e.target.onerror = null;
-                    e.target.src = "https://via.placeholder.com/200x100?text=No+Image";
+                    e.target.src = "";
                   }}
                 />
               </Box>
