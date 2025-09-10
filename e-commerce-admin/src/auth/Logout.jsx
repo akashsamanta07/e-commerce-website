@@ -16,7 +16,7 @@ const Logout = ({setAuth}) => {
         // Optionally handle error
       } finally {
         setAuth({});
-        navigate("/admin/login", { replace: true });
+        navigate("/", { replace: true });
       }
     };
     logout();

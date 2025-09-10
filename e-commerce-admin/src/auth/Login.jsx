@@ -209,12 +209,7 @@ function Login({ auth, setAuth }) {
             className="w-full"
             disabled={loading}
           >
-            {loading ? (
-              <CircularProgress size={24} sx={{ color: "#fff", mr: 1 }} />
-            ) : (
-              <LoginIcon sx={{ mr: 1 }} />
-            )}
-            {loading ? "Logging in..." : "Login"}
+            {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
           </IconButton>
         </div>
         <div className="flex items-center my-4">

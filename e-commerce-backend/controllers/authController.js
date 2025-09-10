@@ -6,6 +6,12 @@ const REFRESH_SECRET = process.env.REFRESH_TOKEN_KEY;
 const { uploadToCloudinary, deleteFromCloudinary } = require("../cloudinary");
 
 const isProduction = true;
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,                   // true only in production (HTTPS)
+    sameSite: isProduction ? "none" : "lax",// "none" for cross-site cookies in prod
+    path: "/",                               // important for clearing properly
+};
 
 // Import mail verification helpers
 const { generateVerificationCode, sendVerificationEmail } = require("./mailVerification");
@@ -16,18 +22,8 @@ const authenticateToken = require("./authenticateToken");
 // Logout controller
 exports.logoutUser = async (req, res) => {
     try {
-        res.clearCookie("accessToken", {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? "none" : "lax",
-            path: "/", // must match cookie path
-        });
-        res.clearCookie("refreshToken", {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? "none" : "lax",
-            path: "/",
-        });
+        res.clearCookie("accessToken", cookieOptions);
+        res.clearCookie("refreshToken", cookieOptions);
         return res.status(200).json({ success: true, message: "Logged out successfully." });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Logout failed.", error: error.message });
@@ -193,19 +189,14 @@ exports.loginUser = async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        // Set tokens as httpOnly cookies
         res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: isProduction, // true in production, false locally
-            sameSite: isProduction ? "none" : "lax", // cross-site in production, lax locally
-            maxAge: 15 * 60 * 1000,
+            ...cookieOptions,
+            maxAge: 15 * 60 * 1000, // 15 minutes
         });
         
         res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? "none" : "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            ...cookieOptions,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
         res.status(200).json({
@@ -246,10 +237,8 @@ exports.refreshToken = async (req, res) => {
             );
 
             res.cookie("accessToken", newAccessToken, {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: isProduction ? "none" : "lax",
-                maxAge: 15 * 60 * 1000,
+                ...cookieOptions,
+                maxAge: 15 * 60 * 1000, // 15 minutes
             });            
             return res.status(200).json({
                 message: "Access token refreshed.",
