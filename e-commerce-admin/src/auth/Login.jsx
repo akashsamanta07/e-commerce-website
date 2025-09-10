@@ -12,15 +12,6 @@ import notify from "../components/Notification/notify.jsx";
 
 import API_BASE from "../utils/API_BASE";
 
-// Helper to detect mobile device
-function isMobileScreen() {
-  // You can adjust this logic as needed for your app
-  if (typeof window !== "undefined") {
-    return window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent);
-  }
-  return false;
-}
-
 function Login({ auth, setAuth }) {
   const navigate = useNavigate();
   React.useEffect(() => {
@@ -69,18 +60,6 @@ function Login({ auth, setAuth }) {
         notify("error", data.message || "Login failed");
         setLoading(false);
         return;
-      }
-
-      // If backend signals to use localStorage (i.e., mobile), store tokens
-      if (data.useLocalStorage && isMobileScreen()) {
-        if (data.accessToken && data.refreshToken) {
-          localStorage.setItem("accessToken", data.accessToken);
-          localStorage.setItem("refreshToken", data.refreshToken);
-        }
-      } else {
-        // Clean up any old tokens if present
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
       }
 
       notify("success", "Login success");
@@ -230,7 +209,12 @@ function Login({ auth, setAuth }) {
             className="w-full"
             disabled={loading}
           >
-            {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
+            {loading ? (
+              <CircularProgress size={24} sx={{ color: "#fff", mr: 1 }} />
+            ) : (
+              <LoginIcon sx={{ mr: 1 }} />
+            )}
+            {loading ? "Logging in..." : "Login"}
           </IconButton>
         </div>
         <div className="flex items-center my-4">
