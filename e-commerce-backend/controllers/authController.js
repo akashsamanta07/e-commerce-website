@@ -8,9 +8,9 @@ const { uploadToCloudinary, deleteFromCloudinary } = require("../cloudinary");
 const isProduction = true;
 const cookieOptions = {
     httpOnly: true,
-    secure: isProduction,                   // true only in production (HTTPS)
-    sameSite: isProduction ? "none" : "lax",// "none" for cross-site cookies in prod
-    path: "/",                               // important for clearing properly
+    secure: isProduction,                  
+    sameSite: isProduction ? "none" : "lax",
+    path: "/",        
 };
 
 // Import mail verification helpers

@@ -1,20 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { IconButton, InputAdornment, CircularProgress } from "@mui/material";
+import { IconButton, InputAdornment, CircularProgress, Button } from "@mui/material";
 import LoginIcon from "@mui/icons-material/Login";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
-// import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
 import notify from "../components/Notification/notify";
 import API_BASE from "../utils/API_BASE";
 
-
 function Login({ auth, setAuth }) {
   const navigate = useNavigate();
-  React.useEffect(() => {
+  useEffect(() => {
     if (auth && auth._id != null) {
       navigate("/");
     }
@@ -72,12 +70,6 @@ function Login({ auth, setAuth }) {
     }
   };
 
-  // Dummy Google login handler
-  // const handleGoogleLogin = (e) => {
-  //   e.preventDefault();
-  //   notify("warning", "No Google yet");
-  // };
-
   return (
     <div className="my-8 mx-5 flex items-center justify-center">
       <form
@@ -97,9 +89,8 @@ function Login({ auth, setAuth }) {
             Email
           </label>
           <div className="relative">
-            <InputAdornment
-              position="start"
-              sx={{
+            <span
+              style={{
                 position: "absolute",
                 left: 8,
                 top: "50%",
@@ -109,7 +100,7 @@ function Login({ auth, setAuth }) {
               }}
             >
               <EmailOutlinedIcon color="secondary" sx={{ color: "#db2777" }} />
-            </InputAdornment>
+            </span>
             <input
               type="email"
               name="email"
@@ -133,9 +124,8 @@ function Login({ auth, setAuth }) {
             Password
           </label>
           <div className="relative">
-            <InputAdornment
-              position="start"
-              sx={{
+            <span
+              style={{
                 position: "absolute",
                 left: 8,
                 top: "50%",
@@ -145,7 +135,7 @@ function Login({ auth, setAuth }) {
               }}
             >
               <RiLockPasswordLine size={22} color="#db2777" />
-            </InputAdornment>
+            </span>
             <input
               type={showPassword ? "text" : "password"}
               name="password"
@@ -187,30 +177,18 @@ function Login({ auth, setAuth }) {
           </Link>
         </div>
         <div className="flex justify-center mb-2">
-          <IconButton
+          <Button
             type="submit"
-            color="primary"
-            size="large"
-            aria-label="login"
-            sx={{
-              backgroundColor: "#ec4899",
-              color: "#fff",
-              "&:hover": { backgroundColor: "black" },
-              borderRadius: "8px",
-              padding: "10px 24px",
-              fontWeight: "bold",
-              fontSize: "1rem",
-              boxShadow: 1,
-              transition: "background 0.2s",
-              width: "100%",
-              justifyContent: "center",
-              display: "flex"
-            }}
-            className="w-full"
+            variant="contained"
+            color="secondary"
+            className="w-full !bg-pink-600 !text-white py-2 rounded font-semibold hover:!bg-black transition"
+            startIcon={<LoginIcon />}
+            fullWidth
+            disableElevation
             disabled={loading}
           >
             {loading ? <CircularProgress size={22} color="inherit" /> : "Login"}
-          </IconButton>
+          </Button>
         </div>
         <div className="flex items-center my-4">
           <div className="flex-grow border-t border-gray-200" />
