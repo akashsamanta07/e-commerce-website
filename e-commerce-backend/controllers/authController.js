@@ -10,7 +10,8 @@ const cookieOptions = {
     httpOnly: true,
     secure: isProduction,                   // true only in production (HTTPS)
     sameSite: isProduction ? "none" : "lax",// "none" for cross-site cookies in prod
-    path: "/",                               // important for clearing properly
+    path: "/",  
+    domain: isProduction ? ".vercel.app" : undefined,                             // important for clearing properly
 };
 
 // Import mail verification helpers
