@@ -14,17 +14,33 @@ const app = express();
 
 app.use(cookieParser());
 
+// // Middleware
+// app.use(cors({
+//     origin: [
+//         // "http://localhost:3001",
+//         // "http://localhost:3000",
+//         "https://e-commerce-website-admin-phi.vercel.app",
+//         "https://e-commerce-website-07-sepia.vercel.app"
+//     ],
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//     credentials: true
+// }));
 // Middleware
 app.use(cors({
-    origin: [
-        // "http://localhost:3001",
-        // "http://localhost:3000",
-        "https://e-commerce-website-admin-phi.vercel.app",
-        "https://e-commerce-website-07-sepia.vercel.app"
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
+  origin: [
+      "http://localhost:3000", 
+      "http://localhost:3001", 
+      "https://e-commerce-website-admin-phi.vercel.app",
+      "https://e-commerce-website-07-sepia.vercel.app" 
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+  allowedHeaders: ["Content-Type", "Authorization"],   
+  credentials: true
 }));
+
+// 👇 This ensures preflight OPTIONS requests don’t get blocked
+app.options("*", cors());
+
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
