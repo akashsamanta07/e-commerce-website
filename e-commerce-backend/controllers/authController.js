@@ -18,13 +18,15 @@ exports.logoutUser = async (req, res) => {
     try {
         res.clearCookie("accessToken", {
             httpOnly: true,
-            secure: true,
-            sameSite: "strict",
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
+            path: "/", // must match cookie path
         });
         res.clearCookie("refreshToken", {
             httpOnly: true,
-            secure: true,
-            sameSite: "strict",
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
+            path: "/",
         });
         return res.status(200).json({ success: true, message: "Logged out successfully." });
     } catch (error) {
