@@ -42,7 +42,7 @@ Follow these steps to set up the project locally:
    ```
    npm start
    ```
-   The frontend will start on [http://localhost:3000](http://localhost:3000) by default.
+   The frontend will start on [https://e-commerce-website-07-sepia.vercel.app/](https://e-commerce-website-07-sepia.vercel.app/) by default.
 
 4. **(Optional) Set up and run the backend:**
    - Navigate to the backend folder:
@@ -58,7 +58,7 @@ Follow these steps to set up the project locally:
      ```
      npm run dev
      ```
-   - The backend will typically run on [http://localhost:5000](http://localhost:5000).
+   - The backend will typically run on [https://e-commerce-website-jade-eta-83.vercel.app/](https://e-commerce-website-jade-eta-83.vercel.app/).
 
 5. **(Optional) Seed the database:**
    - If provided, run the seed script to populate the database with sample products and users.
