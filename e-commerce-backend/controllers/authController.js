@@ -5,6 +5,8 @@ const ACCESS_SECRET = process.env.ACCESS_TOKEN_KEY;
 const REFRESH_SECRET = process.env.REFRESH_TOKEN_KEY;
 const { uploadToCloudinary, deleteFromCloudinary } = require("../cloudinary");
 
+const isProduction = true;
+
 // Import mail verification helpers
 const { generateVerificationCode, sendVerificationEmail } = require("./mailVerification");
 
@@ -192,14 +194,15 @@ exports.loginUser = async (req, res) => {
         // Set tokens as httpOnly cookies
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "strict",
+            secure: isProduction, // true in production, false locally
+            sameSite: isProduction ? "none" : "lax", // cross-site in production, lax locally
             maxAge: 15 * 60 * 1000,
         });
+        
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "strict",
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
@@ -242,10 +245,10 @@ exports.refreshToken = async (req, res) => {
 
             res.cookie("accessToken", newAccessToken, {
                 httpOnly: true,
-                secure: true,
-                sameSite: "strict",
+                secure: isProduction,
+                sameSite: isProduction ? "none" : "lax",
                 maxAge: 15 * 60 * 1000,
-            });
+            });            
             return res.status(200).json({
                 message: "Access token refreshed.",
                 accessToken: newAccessToken,
