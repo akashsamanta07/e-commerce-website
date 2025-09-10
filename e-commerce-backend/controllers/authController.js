@@ -5,11 +5,13 @@ const ACCESS_SECRET = process.env.ACCESS_TOKEN_KEY;
 const REFRESH_SECRET = process.env.REFRESH_TOKEN_KEY;
 const { uploadToCloudinary, deleteFromCloudinary } = require("../cloudinary");
 
-// Helper: detect if request is from mobile (very basic, can be improved)
-function isMobile(req) {
-    const ua = req.headers["user-agent"] || "";
-    return /android|iphone|ipad|ipod|mobile/i.test(ua);
-}
+const isProduction = true;
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,                   // true only in production (HTTPS)
+    sameSite: isProduction ? "none" : "lax",// "none" for cross-site cookies in prod
+    path: "/",                               // important for clearing properly
+};
 
 // Import mail verification helpers
 const { generateVerificationCode, sendVerificationEmail } = require("./mailVerification");
@@ -17,34 +19,28 @@ const { generateVerificationCode, sendVerificationEmail } = require("./mailVerif
 // Import authenticateToken middleware
 const authenticateToken = require("./authenticateToken");
 
-// Helper: get cookie options, change samesite/secure for mobile
-function getCookieOptions(req) {
-    const isProduction = process.env.NODE_ENV === "production";
-    if (isMobile(req)) {
-        // For mobile, use more compatible cookie settings
-        return {
-            httpOnly: true,
-            secure: false, // allow non-https for mobile
-            sameSite: "lax", // allow cookies to be sent in most cases
-            path: "/",
-        };
-    } else {
-        // For desktop/laptop, use stricter settings
-        return {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? "none" : "lax",
-            path: "/",
-        };
-    }
+// Helper to detect mobile user agent (very basic, can be improved)
+function isMobileUserAgent(req) {
+    const ua = req.headers['user-agent'] || '';
+    return /android|iphone|ipad|ipod|mobile/i.test(ua);
 }
 
 // Logout controller
 exports.logoutUser = async (req, res) => {
     try {
-        const cookieOptions = getCookieOptions(req);
+        // Always clear cookies
         res.clearCookie("accessToken", cookieOptions);
         res.clearCookie("refreshToken", cookieOptions);
+
+        // If mobile, instruct client to clear localStorage
+        if (isMobileUserAgent(req)) {
+            return res.status(200).json({ 
+                success: true, 
+                message: "Logged out successfully.",
+                clearLocalStorage: true // client should clear localStorage tokens
+            });
+        }
+
         return res.status(200).json({ success: true, message: "Logged out successfully." });
     } catch (error) {
         return res.status(500).json({ success: false, message: "Logout failed.", error: error.message });
@@ -210,22 +206,31 @@ exports.loginUser = async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        const cookieOptions = getCookieOptions(req);
+        // If mobile, send tokens in response for localStorage, else set cookies
+        if (isMobileUserAgent(req)) {
+            return res.status(200).json({
+                message: "Login successful.",
+                userData,
+                accessToken,
+                refreshToken,
+                useLocalStorage: true // client should store tokens in localStorage
+            });
+        } else {
+            res.cookie("accessToken", accessToken, {
+                ...cookieOptions,
+                maxAge: 15 * 60 * 1000, // 15 minutes
+            });
+            
+            res.cookie("refreshToken", refreshToken, {
+                ...cookieOptions,
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            });
 
-        res.cookie("accessToken", accessToken, {
-            ...cookieOptions,
-            maxAge: 15 * 60 * 1000, // 15 minutes
-        });
-        
-        res.cookie("refreshToken", refreshToken, {
-            ...cookieOptions,
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
-
-        res.status(200).json({
-            message: "Login successful.",
-            userData,
-        });
+            return res.status(200).json({
+                message: "Login successful.",
+                userData,
+            });
+        }
     } catch (error) {
         res.status(500).json({ message: "An error occurred during login.", error: error.message });
     }
@@ -233,7 +238,11 @@ exports.loginUser = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
     try {
-        const refreshToken = req.cookies?.refreshToken;
+        // Try to get refreshToken from cookie or from body (for mobile/localStorage)
+        let refreshToken = req.cookies?.refreshToken;
+        if (!refreshToken && req.body && req.body.refreshToken) {
+            refreshToken = req.body.refreshToken;
+        }
         if (!refreshToken) {
             return res.status(401).json({ message: "Refresh token required." });
         }
@@ -259,17 +268,26 @@ exports.refreshToken = async (req, res) => {
                 { expiresIn: "15m" }
             );
 
-            const cookieOptions = getCookieOptions(req);
-
-            res.cookie("accessToken", newAccessToken, {
-                ...cookieOptions,
-                maxAge: 15 * 60 * 1000, // 15 minutes
-            });            
-            return res.status(200).json({
-                message: "Access token refreshed.",
-                accessToken: newAccessToken,
-                userData: userObj,
-            });
+            // If mobile, send new accessToken in response for localStorage
+            if (isMobileUserAgent(req)) {
+                return res.status(200).json({
+                    message: "Access token refreshed.",
+                    refreshToken,
+                    accessToken: newAccessToken,
+                    userData: userObj,
+                    useLocalStorage: true // client should update localStorage
+                });
+            } else {
+                res.cookie("accessToken", newAccessToken, {
+                    ...cookieOptions,
+                    maxAge: 15 * 60 * 1000, // 15 minutes
+                });            
+                return res.status(200).json({
+                    message: "Access token refreshed.",
+                    accessToken: newAccessToken,
+                    userData: userObj,
+                });
+            }
         });
     } catch (error) {
         res.status(500).json({ message: "An error occurred during token refresh.", error: error.message });

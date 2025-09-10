@@ -7,7 +7,7 @@ import Footer from "./components/footer/Footer.jsx";
 import Login from './auth/Login.jsx';
 import Home from "./Pages/Home.jsx";
 import ChangeProfile from "./auth/ChangeProfile.jsx";
-import ChangePassword from "./auth/ChangePassword.jsx"; // <-- Add import for ChangePassword
+import ChangePassword from "./auth/ChangePassword.jsx";
 import { ToastContainer } from 'react-toastify';
 import MyOrder from "./Pages/User/MyOrder.jsx";
 import ManageLogo from "./Pages/User/ManageLogo.jsx";
@@ -21,6 +21,14 @@ import PageNotFound from "./Pages/PageNotFound.jsx";
 import Logout from "./auth/Logout.jsx";
 import API_BASE from "./utils/API_BASE";
 
+// Helper to detect mobile device
+function isMobileScreen() {
+  if (typeof window !== "undefined") {
+    return window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent);
+  }
+  return false;
+}
+
 function ProtectedRoute({ auth, children }) {
   // auth is an object; if it has any keys, user is authenticated
   const isAuthenticated = auth && Object.keys(auth).length > 0;
@@ -28,9 +36,9 @@ function ProtectedRoute({ auth, children }) {
 }
 
 function App() {
-  const [data, setData] = useState({ logo: true,update:true });
+  const [data, setData] = useState({ logo: true, update: true });
   const [auth, setAuth] = useState({});
-  const [loading,setloading] = useState(false); // Track if auth check is done
+  const [loading, setloading] = useState(false); // Track if auth check is done
 
   let obj = {
     data,
@@ -41,21 +49,55 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch(`${API_BASE}/auth/refresh`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-        const result = await res.json();
+        let result;
+        let res;
+        // If mobile and tokens exist in localStorage, use them for refresh
+        if (isMobileScreen() && localStorage.getItem("refreshToken")) {
+          res = await fetch(`${API_BASE}/auth/refresh`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              refreshToken: localStorage.getItem("refreshToken")
+            }),
+            credentials: "include"
+          });
+        } else {
+          // Desktop: use cookies
+          res = await fetch(`${API_BASE}/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json"
+            }
+          });
+        }
+        result = await res.json();
+
+        // If mobile and new tokens are returned, update localStorage
+        if (isMobileScreen() && result.accessToken && result.refreshToken) {
+          localStorage.setItem("accessToken", result.accessToken);
+          localStorage.setItem("refreshToken", result.refreshToken);
+        }
+
         if (!res.ok || result.userData == null) {
           setAuth({});
+          // If mobile, clear tokens if refresh failed
+          if (isMobileScreen()) {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+          }
         } else {
           setAuth(result.userData);
         }
       } catch (err) {
         setAuth({});
+        // If mobile, clear tokens on error
+        if (isMobileScreen()) {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+        }
       } finally {
         setloading(true);
       }
@@ -103,7 +145,7 @@ function App() {
             path="/admin/dashboard"
             element={
               <ProtectedRoute auth={auth}>
-                <Home><Dashbroad auth={auth}/></Home>
+                <Home><Dashbroad auth={auth} /></Home>
               </ProtectedRoute>
             }
           />
@@ -159,7 +201,7 @@ function App() {
             path="/admin/profile"
             element={
               <ProtectedRoute auth={auth}>
-                <Home><ChangeProfile obj={obj} auth={auth}/></Home>
+                <Home><ChangeProfile obj={obj} auth={auth} /></Home>
               </ProtectedRoute>
             }
           />
