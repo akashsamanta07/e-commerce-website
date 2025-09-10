@@ -7,7 +7,6 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import { FcGoogle } from "react-icons/fc";
 import { RiLockPasswordLine } from "react-icons/ri";
 import notify from "../components/Notification/notify";
 import API_BASE from "../utils/API_BASE";
@@ -151,11 +150,6 @@ function Register({ auth }) {
     }
   };
 
-  // Dummy Google register handler
-  const handleGoogleRegister = (e) => {
-    e.preventDefault();
-    notifySmall("info", "Not implemented");
-  };
 
   const handleResendCode = async () => {
     setLoading(true);
@@ -354,35 +348,6 @@ function Register({ auth }) {
               disabled={loading}
             >
               {loading ? <CircularProgress size={22} color="inherit" /> : "Register"}
-            </Button>
-            <div className="flex items-center my-4">
-              <div className="flex-grow border-t border-gray-200" />
-              <span className="mx-2 text-gray-400 text-xs">or</span>
-              <div className="flex-grow border-t border-gray-200" />
-            </div>
-            <Button
-              variant="outlined"
-              startIcon={<FcGoogle size={22} />}
-              onClick={handleGoogleRegister}
-              className="w-full"
-              sx={{
-                borderColor: "#db2777",
-                color: "#db2777",
-                fontWeight: "bold",
-                textTransform: "none",
-                borderRadius: "8px",
-                padding: "10px 24px",
-                fontSize: "1rem",
-                width: "100%",
-                justifyContent: "center",
-                mb: 1,
-                "&:hover": {
-                  borderColor: "#ec4899",
-                  backgroundColor: "#fdf2f8",
-                },
-              }}
-            >
-              Register with Google
             </Button>
             <div className="mt-4 text-center text-sm text-gray-600">
               Already have an account?{" "}

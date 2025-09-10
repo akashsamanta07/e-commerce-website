@@ -20,8 +20,8 @@ app.use(cookieParser());
 // Middleware
 app.use(cors({
     origin: [
-        "http://localhost:3001",
-        "http://localhost:3000",
+        // "http://localhost:3001",
+        // "http://localhost:3000",
         "https://e-commerce-website-07-sepia.vercel.app",
         "https://e-commerce-website-admin-phi.vercel.app"
     ],
@@ -136,7 +136,7 @@ app.use("/admin", adminRouter);
 
 // Root route
 app.get("/", (req, res) => {
-  res.json({ message: "Server is running securely 🚀" });
+  res.json({ message: "Server is running securely" });
 });
 
 // Connect to MongoDB and start server
