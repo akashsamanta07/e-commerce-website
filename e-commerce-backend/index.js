@@ -14,17 +14,28 @@ const app = express();
 
 app.use(cookieParser());
 
-// Middleware
-app.use(cors({
-    origin: [
-        "http://localhost:3001",
-        "http://localhost:3000",
-        "https://e-commerce-website-admin-phi.vercel.app",
-        "https://e-commerce-website-07-sepia.vercel.app"
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-}));
+// Dynamic CORS middleware to allow any of the allowed origins, matching the request's Origin header
+const allowedOrigins = [
+    "http://localhost:3001",
+    "http://localhost:3000",
+    "https://e-commerce-website-admin-phi.vercel.app",
+    "https://e-commerce-website-07-sepia.vercel.app"
+];
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.header("Access-Control-Allow-Origin", origin);
+    }
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    // Handle preflight requests
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(204);
+    }
+    next();
+});
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
