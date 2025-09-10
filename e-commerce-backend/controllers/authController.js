@@ -5,13 +5,11 @@ const ACCESS_SECRET = process.env.ACCESS_TOKEN_KEY;
 const REFRESH_SECRET = process.env.REFRESH_TOKEN_KEY;
 const { uploadToCloudinary, deleteFromCloudinary } = require("../cloudinary");
 
-const isProduction = true;
-const cookieOptions = {
-    httpOnly: true,
-    secure: isProduction,                   // true only in production (HTTPS)
-    sameSite: "lax",// "none" for cross-site cookies in prod
-    path: "/",                               // important for clearing properly
-};
+// Helper: detect if request is from mobile (very basic, can be improved)
+function isMobile(req) {
+    const ua = req.headers["user-agent"] || "";
+    return /android|iphone|ipad|ipod|mobile/i.test(ua);
+}
 
 // Import mail verification helpers
 const { generateVerificationCode, sendVerificationEmail } = require("./mailVerification");
@@ -19,9 +17,32 @@ const { generateVerificationCode, sendVerificationEmail } = require("./mailVerif
 // Import authenticateToken middleware
 const authenticateToken = require("./authenticateToken");
 
+// Helper: get cookie options, change samesite/secure for mobile
+function getCookieOptions(req) {
+    const isProduction = process.env.NODE_ENV === "production";
+    if (isMobile(req)) {
+        // For mobile, use more compatible cookie settings
+        return {
+            httpOnly: true,
+            secure: false, // allow non-https for mobile
+            sameSite: "lax", // allow cookies to be sent in most cases
+            path: "/",
+        };
+    } else {
+        // For desktop/laptop, use stricter settings
+        return {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax",
+            path: "/",
+        };
+    }
+}
+
 // Logout controller
 exports.logoutUser = async (req, res) => {
     try {
+        const cookieOptions = getCookieOptions(req);
         res.clearCookie("accessToken", cookieOptions);
         res.clearCookie("refreshToken", cookieOptions);
         return res.status(200).json({ success: true, message: "Logged out successfully." });
@@ -189,6 +210,8 @@ exports.loginUser = async (req, res) => {
             { expiresIn: "7d" }
         );
 
+        const cookieOptions = getCookieOptions(req);
+
         res.cookie("accessToken", accessToken, {
             ...cookieOptions,
             maxAge: 15 * 60 * 1000, // 15 minutes
@@ -235,6 +258,8 @@ exports.refreshToken = async (req, res) => {
                 ACCESS_SECRET,
                 { expiresIn: "15m" }
             );
+
+            const cookieOptions = getCookieOptions(req);
 
             res.cookie("accessToken", newAccessToken, {
                 ...cookieOptions,
