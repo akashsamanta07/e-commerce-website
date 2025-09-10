@@ -14,37 +14,38 @@ const app = express();
 
 app.use(cookieParser());
 
-// // Middleware
-// app.use(cors({
-//     origin: [
-//         // "http://localhost:3001",
-//         // "http://localhost:3000",
-//         "https://e-commerce-website-admin-phi.vercel.app",
-//         "https://e-commerce-website-07-sepia.vercel.app"
-//     ],
-//     methods: ["GET", "POST", "PUT", "DELETE"],
-//     credentials: true
-// }));
-// Middleware
-app.use(cors({
-  origin: [
-      "http://localhost:3000", 
-      "http://localhost:3001", 
-      "https://e-commerce-website-admin-phi.vercel.app",
-      "https://e-commerce-website-07-sepia.vercel.app" 
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
-  allowedHeaders: ["Content-Type", "Authorization"],   
-  credentials: true
-}));
+// ✅ Allow both localhost and Vercel frontends
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://e-commerce-website-admin-phi.vercel.app",
+  "https://e-commerce-website-07-sepia.vercel.app"
+];
 
-// 👇 This ensures preflight OPTIONS requests don’t get blocked
+// ✅ Apply CORS middleware globally
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  })
+);
+
+// ✅ Handle OPTIONS preflight for all routes
 app.options("*", cors());
 
-
+// Body parsers
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Multer handling
 app.use((req, res, next) => {
   if (
     (req.method === 'POST' || req.method === 'PUT') &&
@@ -56,7 +57,7 @@ app.use((req, res, next) => {
       req.url.startsWith('/admin/add-product') ||
       req.url.startsWith('/admin/edit-product')
     ) {
-      multerInstance.array('images', 10)(req, res, next); 
+      multerInstance.array('images', 10)(req, res, next);
     } else {
       multerInstance.single('photo')(req, res, next);
     }
@@ -64,7 +65,6 @@ app.use((req, res, next) => {
     next();
   }
 });
-
 
 // Routers
 app.use("/auth", authRouter);
@@ -76,14 +76,15 @@ app.get("/", (req, res) => {
   res.json({ message: "Server is running securely 🚀" });
 });
 
-// Connect to MongoDB and start server
-mongoose.connect(DB_PATH)
+// MongoDB connect
+mongoose
+  .connect(DB_PATH)
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server running on address http://localhost:${PORT}`);
+      console.log(`Server running on http://localhost:${PORT}`);
     });
   })
-  .catch(err => {
+  .catch((err) => {
     console.error("Failed to connect to MongoDB:", err);
     process.exit(1);
   });
