@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import logoFallback from '../assets/logo/logo1.jpg';
 import { Button, Divider } from '@mui/material';
 import { MdDashboard, MdCategory, MdShoppingCart, MdViewCarousel, MdImage, MdLogout, MdStore } from 'react-icons/md';
 import { FaRegImages } from 'react-icons/fa';
@@ -46,7 +45,7 @@ const sidebarItems = [
 ];
 
 function Slideber({ open, side, onClose }) {
-  const [logoUrl, setLogoUrl] = useState(logoFallback);
+  const [logoUrl, setLogoUrl] = useState();
   const navigate = useNavigate();
 
   // Fetch logo from API (like in Home.jsx/Header2.jsx)

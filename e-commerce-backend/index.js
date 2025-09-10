@@ -8,7 +8,6 @@ const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
 const cors = require("cors");
 const { multer, multerOptions } = require('./multer');
-const rootDir = require("./utils/pathUtil");
 const cookieParser = require("cookie-parser");
 
 const app = express();
@@ -20,8 +19,8 @@ app.use(cors({
     origin: [
         "http://localhost:3001",
         "http://localhost:3000",
-        "https://e-commerce-website-admin-phi.vercel.app/",
-        "https://e-commerce-website-07-sepia.vercel.app/"
+        "https://e-commerce-website-admin-phi.vercel.app",
+        "https://e-commerce-website-07-sepia.vercel.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
@@ -50,7 +49,6 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(express.static(path.join(rootDir, 'public')));
 
 // Routers
 app.use("/auth", authRouter);
