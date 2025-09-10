@@ -1,2 +1,3 @@
-const API_BASE = "http://localhost:3005";
+const API_BASE = "https://e-commerce-website-jade-eta-83.vercel.app";
+// http://localhost:3005
 export default API_BASE;
