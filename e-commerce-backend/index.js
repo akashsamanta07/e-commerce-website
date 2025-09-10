@@ -7,35 +7,102 @@ const authRouter = require("./routes/authRouter");
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
 const cors = require("cors");
-const { multer, multerOptions } = require('./multer');
+const multer = require('multer');
+const rootDir = require("./utils/pathUtil");
 const cookieParser = require("cookie-parser");
+
+
 
 const app = express();
 
 app.use(cookieParser());
 
-// Dynamic CORS middleware to allow any of the allowed origins, matching the request's Origin header
-const allowedOrigins = [
-    "http://localhost:3001",
-    "http://localhost:3000",
-    "https://e-commerce-website-admin-phi.vercel.app",
-    "https://e-commerce-website-07-sepia.vercel.app"
-];
+// Middleware
+app.use(cors({
+    origin: [
+        "http://localhost:3001",
+        "http://localhost:3000",
+        "https://e-commerce-website-07-sepia.vercel.app",
+        "https://e-commerce-website-admin-phi.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+}));
 
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-        res.header("Access-Control-Allow-Origin", origin);
+const randomString = (length) => {
+  const characters = 'abcdefghijklmnopqrstuvwxyz';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
+
+// Helper to get extension from mimetype
+const getExtension = (mimetype) => {
+  switch (mimetype) {
+    case 'image/png':
+      return '.png';
+    case 'image/jpeg':
+      return '.jpg';
+    case 'image/jpg':
+      return '.jpg';
+    default:
+      return '';
+  }
+};
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let dest = "public/";
+    if (req.url.startsWith("/admin/add-home-slider") || req.url.startsWith("/admin/edit-home-slider")) {
+      dest = "public/homeSlider/";
     }
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-    // Handle preflight requests
-    if (req.method === "OPTIONS") {
-        return res.sendStatus(204);
+    if (req.url.startsWith("/admin/add-category") || req.url.startsWith("/admin/edit-category")) {
+      dest = "public/category/";
     }
-    next();
+    if (req.url.startsWith("/admin/add-banner") || req.url.startsWith("/admin/edit-banner")) {
+      dest = "public/banner/";
+    }
+    if (req.url.startsWith("/admin/add-logo") || req.url.startsWith("/admin/edit-logo")) {
+      dest = "public/logo/";
+    }
+    // Add destination for product images
+    if (req.url.startsWith("/admin/add-product") || req.url.startsWith("/admin/edit-product")) {
+      dest = "public/product/";
+    }
+    if (req.url.startsWith("/auth/update-profile")) {
+      dest = "public/profilePic/";
+    }
+    // Ensure the folder exists, create if not
+    const fullDest = path.join(rootDir, dest);
+    if (!fs.existsSync(fullDest)) {
+      fs.mkdirSync(fullDest, { recursive: true });
+    }
+    cb(null, dest);
+  },
+  filename: (req, file, cb) => {
+    const ext = getExtension(file.mimetype);
+    cb(null, randomString(15) + ext);
+  }
 });
+
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === 'image/png' ||
+    file.mimetype === 'image/jpg' ||
+    file.mimetype === 'image/jpeg'
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+const multerOptions = {
+  storage,
+  fileFilter
+};
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -60,6 +127,7 @@ app.use((req, res, next) => {
   }
 });
 
+app.use(express.static(path.join(rootDir, 'public')));
 
 // Routers
 app.use("/auth", authRouter);
